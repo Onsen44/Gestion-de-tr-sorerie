@@ -1,0 +1,1344 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion de tresorerie ONSEN</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#eef3f9;
+  --panel:#ffffff;
+  --line:#d8e0ea;
+  --text:#102033;
+  --muted:#697b90;
+  --brand:#173d7a;
+  --brand-2:#3669be;
+  --ok:#0f9d58;
+  --warn:#d97706;
+  --danger:#c62828;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eef3fb 0%,#f8fafc 100%);color:var(--text)}
+.app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+.sidebar{background:#10284d;color:#fff;padding:22px 18px;border-right:1px solid #26446f}
+.brand{font-size:25px;font-weight:800;letter-spacing:-0.04em;margin-bottom:6px}
+.brand-sub{font-size:12px;opacity:.72;margin-bottom:24px;line-height:1.5}
+.nav{display:flex;flex-direction:column;gap:8px}
+.nav button{background:transparent;border:none;color:#d9e7ff;text-align:left;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.nav button.active,.nav button:hover{background:#eef4ff;color:#18396f}
+.main{padding:24px}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.title h1{margin:0;font-size:31px;letter-spacing:-0.04em}
+.title p{margin:6px 0 0;color:var(--muted);max-width:720px;line-height:1.5}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.secondary{background:#e6eefb;color:var(--brand)}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--text)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 6px 16px rgba(16,32,51,.04)}
+.card h3{margin:0 0 10px;font-size:16px}
+.kpi{grid-column:span 3}
+.kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.kpi .value{font-size:31px;font-weight:800;margin-top:10px}
+.kpi .hint{margin-top:6px;color:var(--muted);font-size:12px}
+.panel-wide{grid-column:span 8}
+.panel-side{grid-column:span 4}
+.panel-full{grid-column:span 12}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eef2f7;padding-bottom:10px}
+.row:last-child{border-bottom:none;padding-bottom:0}
+.row small{color:var(--muted);display:block;margin-top:2px}
+.note{background:#fff7e9;border:1px solid #f5d9a6;color:#8a5a00;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.5}
+.empty{color:var(--muted);font-size:14px}
+.hidden{display:none}
+.table-wrap{overflow:auto}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:14px;vertical-align:top}
+.table th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:#f9fbfd;position:sticky;top:0}
+.badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800}
+.badge.ok{background:#e7f6ed;color:var(--ok)}
+.badge.warn{background:#fff4df;color:var(--warn)}
+.badge.danger{background:#fdecec;color:var(--danger)}
+.chart{height:300px;display:flex;align-items:flex-end;gap:12px;padding-top:18px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;min-width:60px}
+.bar div{width:100%;max-width:56px;border-radius:12px 12px 4px 4px;background:linear-gradient(180deg,#6c97de,#173d7a);min-height:20px}
+.bar span{font-size:11px;color:var(--muted);text-align:center}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff}
+.field textarea{min-height:88px;resize:vertical}
+.import-preview{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:14px}
+.flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.inline-select,.inline-input{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+.inline-input{width:170px}
+.footer-note{font-size:12px;color:var(--muted)}
+.success{color:var(--ok);font-weight:700}
+.error{color:var(--danger);font-weight:700}
+@media (max-width:1120px){
+  .app{grid-template-columns:1fr}
+  .sidebar{border-right:none;border-bottom:1px solid #26446f}
+  .kpi,.panel-wide,.panel-side,.panel-full{grid-column:span 12}
+  .form-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:720px){
+  .form-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">ONSEN Cash</div>
+    <div class="brand-sub">Tresorerie actuelle, imports bancaires, previsionnel, rapprochement bancaire et factures a regler.</div>
+    <div class="nav" id="nav"></div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; gap:20px; align-items:center; flex:1;">
+        <div>
+          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Entité active</label>
+          <select id="selectedEntite" onchange="changeEntite()" style="padding:8px 12px; border:1px solid #d8e0ea; border-radius:8px; font-weight:700; background:#fff; cursor:pointer;">
+            <option value="TOUTES">TOUTES LES ENTITÉS</option>
+            <option value="ALTERACIG">ALTERACIG</option>
+            <option value="OSLO SHOP">OSLO SHOP</option>
+            <option value="LCDV">LCDV</option>
+            <option value="VAPOTE & COMPAGNIE">VAPOTE & COMPAGNIE</option>
+            <option value="GROUPE ONSEN">GROUPE ONSEN</option>
+          </select>
+        </div>
+        <div class="title" style="flex:1;">
+          <h1 id="pageTitle">Accueil</h1>
+          <p id="pageSubtitle">Vue immediate de la tresorerie actuelle, par entite et par compte bancaire.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" onclick="exportWorkbook()">Exporter Excel</button>
+        <button class="btn ghost" onclick="refreshData()">Actualiser</button>
+        <button class="btn secondary" onclick="installWorkbook()">Installer / synchroniser le sheet</button>
+        <button class="btn secondary" onclick="runInvoiceOcr()">Lancer OCR factures</button>
+        <button class="btn primary" onclick="syncDriveInvoices()">Indexer les factures Drive</button>
+      </div>
+    </div>
+
+    <section id="page-Accueil"></section>
+    <section id="page-Gestion de tresorerie" class="hidden"></section>
+    <section id="page-Graphiques" class="hidden"></section>
+    <section id="page-Previsionnel" class="hidden"></section>
+    <section id="page-Scenarios" class="hidden"></section>
+    <section id="page-Rapprochement bancaire" class="hidden"></section>
+    <section id="page-Parametres" class="hidden"></section>
+  </main>
+</div>
+
+<script>
+const state = {
+  bootstrap: null,
+  currentPage: 'Accueil',
+  selectedEntite: 'TOUTES',
+  dataCache: {},
+  cacheTimestamp: {},
+  cacheExpireMs: 5 * 60 * 1000, // 5 minutes
+  importRows: [],
+  importHeaders: [],
+  mapping: {
+    date: '',
+    dateValeur: '',
+    libelle: '',
+    debit: '',
+    credit: '',
+    montant: '',
+    solde: '',
+    reference: '',
+    modeReglement: ''
+  }
+};
+
+const pageMeta = {
+  'Accueil': 'Vue immediate de la tresorerie actuelle, par entite et par compte bancaire.',
+  'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions recentes et onglet A classer.',
+  'Graphiques': 'Courbes de tresorerie, previsionnel vs realise et comparaison avec la periode precedente.',
+  'Previsionnel': 'Previsions par categorie ou sous-categorie, frequences et comparaison des periodes.',
+  'Scenarios': 'Simulations separees du reel pour tester une hausse, une baisse ou un montant cible.',
+  'Rapprochement bancaire': 'Factures a regler, indexation Drive, factures a verifier et cas de rapprochement.',
+  'Parametres': 'Comptes, categories, regles, Drive et etat OCR.'
+};
+
+function init() {
+  google.script.run
+    .withSuccessHandler(function(data) {
+      state.bootstrap = data;
+      renderNav();
+      renderAll();
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .getAppBootstrap();
+}
+
+function renderNav() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = '';
+  state.bootstrap.menu.forEach(function(page) {
+    const button = document.createElement('button');
+    button.textContent = page;
+    button.className = page === state.currentPage ? 'active' : '';
+    button.onclick = function() { showPage(page); };
+    nav.appendChild(button);
+  });
+}
+
+function showPage(page) {
+  state.currentPage = page;
+  Object.keys(pageMeta).forEach(function(name) {
+    document.getElementById('page-' + name).classList.toggle('hidden', name !== page);
+  });
+  document.getElementById('pageTitle').textContent = page;
+  document.getElementById('pageSubtitle').textContent = pageMeta[page];
+  renderNav();
+}
+
+function changeEntite() {
+  // Récupère l'entité sélectionnée
+  const select = document.getElementById('selectedEntite');
+  const newEntite = select.value;
+
+  // Si même entité, ne rien faire
+  if (newEntite === state.selectedEntite) return;
+
+  // Changer l'entité
+  state.selectedEntite = newEntite;
+
+  // Vérifier si les données sont en cache et non expirées
+  const now = Date.now();
+  if (state.dataCache[newEntite] && state.cacheTimestamp[newEntite] &&
+      (now - state.cacheTimestamp[newEntite]) < state.cacheExpireMs) {
+    // Utiliser le cache
+    const cachedData = state.dataCache[newEntite];
+    updateStateWithData_(cachedData);
+    renderAll();
+    return;
+  }
+
+  // Sinon, charger les données du backend
+  google.script.run
+    .withSuccessHandler(function(data) {
+      // Mettre en cache
+      state.dataCache[newEntite] = data;
+      state.cacheTimestamp[newEntite] = Date.now();
+
+      // Mettre à jour l'état
+      updateStateWithData_(data);
+
+      // Actualiser l'affichage
+      renderAll();
+    })
+    .withFailureHandler(function(error) {
+      alert('Erreur lors du chargement de l\'entité: ' + error.message);
+    })
+    .getDataForEntite(newEntite);
+}
+
+function updateStateWithData_(data) {
+  // Met à jour l'état avec les nouvelles données
+  if (data.dashboard) state.bootstrap.dashboard = data.dashboard;
+  if (data.aClasser) state.bootstrap.aClasser = data.aClasser;
+  if (data.recentMovements) state.bootstrap.recentMovements = data.recentMovements;
+  if (data.recentPrevisions) state.bootstrap.recentPrevisions = data.recentPrevisions;
+  if (data.recentScenarios) state.bootstrap.recentScenarios = data.recentScenarios;
+  if (data.recentRapprochements) state.bootstrap.recentRapprochements = data.recentRapprochements;
+  if (data.facturesToVerify) state.bootstrap.facturesToVerify = data.facturesToVerify;
+  if (data.transactionsWithoutInvoice) state.bootstrap.transactionsWithoutInvoice = data.transactionsWithoutInvoice;
+  if (data.alerts) state.bootstrap.alerts = data.alerts;
+  if (data.forecastSummary) state.bootstrap.forecastSummary = data.forecastSummary;
+  if (data.scenarioSummary) state.bootstrap.scenarioSummary = data.scenarioSummary;
+  if (data.periodAnalytics) state.bootstrap.periodAnalytics = data.periodAnalytics;
+  if (data.graphData) state.bootstrap.graphData = data.graphData;
+  if (data.facturesToPay) state.bootstrap.facturesToPay = data.facturesToPay;
+  if (data.counts) state.bootstrap.counts = data.counts;
+}
+
+function refreshData() {
+  // Vider tout le cache et recharger
+  state.dataCache = {};
+  state.cacheTimestamp = {};
+  init();
+}
+
+function renderAll() {
+  renderAccueil();
+  renderTresorerie();
+  renderGraphiques();
+  renderPrevisionnel();
+  renderScenarios();
+  renderRapprochement();
+  renderParametres();
+  showPage(state.currentPage);
+  attachEventListeners();
+}
+
+function attachEventListeners() {
+  // Attacher les event listeners pour les classifications
+  document.querySelectorAll('.saveClassificationBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      const transactionUid = this.getAttribute('data-transaction-uid');
+      saveClassification(transactionUid);
+    };
+  });
+
+  document.querySelectorAll('.updateSousCategories').forEach(function(select) {
+    select.onchange = function() {
+      const transactionUid = this.getAttribute('data-transaction-uid');
+      updateSousCategories(transactionUid);
+    };
+  });
+
+  document.querySelectorAll('.saveInvoicePaymentBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      const invoiceId = this.getAttribute('data-invoice-id');
+      saveInvoicePayment(invoiceId);
+    };
+  });
+
+  document.querySelectorAll('.saveDriveRootBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      const entite = this.getAttribute('data-entite');
+      saveDriveRoot(entite);
+    };
+  });
+}
+
+function euro(value) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
+}
+
+function esc(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function exportWorkbook() {
+  const exportData = state.bootstrap.exportData || {};
+  const workbook = XLSX.utils.book_new();
+  const sheets = [
+    ['Mouvements', exportData.mouvements || []],
+    ['Factures', exportData.factures || []],
+    ['Rapprochements', exportData.rapprochements || []],
+    ['Previsions', exportData.previsions || []]
+  ];
+  sheets.forEach(function(item) {
+    const ws = XLSX.utils.json_to_sheet(item[1]);
+    XLSX.utils.book_append_sheet(workbook, ws, item[0]);
+  });
+  XLSX.writeFile(workbook, 'gestion_tresorerie_export.xlsx');
+}
+
+function saveCompte() {
+  const payload = {
+    Compte_id: document.getElementById('param-compte-id').value,
+    Entite: document.getElementById('param-compte-entite').value,
+    Groupe: 'GROUPE ONSEN',
+    Nom_compte: document.getElementById('param-compte-nom').value,
+    Banque: document.getElementById('param-compte-banque').value,
+    RIB_IBAN: document.getElementById('param-compte-rib').value,
+    Devise: document.getElementById('param-compte-devise').value || 'EUR',
+    Actif: document.getElementById('param-compte-actif').value,
+    Type_entite: document.getElementById('param-compte-type').value,
+    Commentaire: ''
+  };
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.config = result.config;
+      state.bootstrap.counts = result.counts;
+      renderAll();
+      showPage('Parametres');
+      alert('Compte enregistre.');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .upsertCompte(payload);
+}
+
+function saveCategorie() {
+  const payload = {
+    Categorie: document.getElementById('param-cat-categorie').value,
+    Sous_categorie: document.getElementById('param-cat-sous').value,
+    Type_flux: document.getElementById('param-cat-flux').value,
+    Frequence: document.getElementById('param-cat-frequence').value,
+    Active: document.getElementById('param-cat-active').value,
+    Commentaire: document.getElementById('param-cat-commentaire').value
+  };
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.config = result.config;
+      state.bootstrap.counts = result.counts;
+      renderAll();
+      showPage('Parametres');
+      alert('Categorie enregistree.');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .upsertCategorie(payload);
+}
+function savePrevision() {
+  const payload = {
+    Prevision_id: document.getElementById('prev-id').value,
+    Entite: document.getElementById('prev-entite').value,
+    Compte_id: document.getElementById('prev-compte').value,
+    Categorie: document.getElementById('prev-categorie').value,
+    Sous_categorie: document.getElementById('prev-sous').value,
+    Date_prevue: document.getElementById('prev-date').value,
+    Periode: document.getElementById('prev-periode').value,
+    Frequence: document.getElementById('prev-frequence').value,
+    Sens: document.getElementById('prev-sens').value,
+    Montant_prevu: document.getElementById('prev-montant').value,
+    Mode_calcul: document.getElementById('prev-mode-calcul').value,
+    Base_reference: document.getElementById('prev-base-reference').value,
+    Active: document.getElementById('prev-active').value,
+    Commentaire: document.getElementById('prev-commentaire').value
+  };
+  google.script.run
+      .withSuccessHandler(function(result) {
+        state.dataCache = {};
+        state.cacheTimestamp = {};
+        state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+        state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+        state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+        state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+        state.bootstrap.counts = result.counts || state.bootstrap.counts;
+        renderAll();
+        showPage('Previsionnel');
+        alert('Prevision enregistree.');
+      })
+      .withFailureHandler(function(error) {
+        alert(error.message || error);
+      })
+    .upsertPrevision(payload);
+}
+
+function saveScenario() {
+  const payload = {
+    Scenario_id: document.getElementById('scenario-id').value,
+    Nom_scenario: document.getElementById('scenario-nom').value,
+    Entite: document.getElementById('scenario-entite').value,
+    Categorie: document.getElementById('scenario-categorie').value,
+    Sous_categorie: document.getElementById('scenario-sous').value,
+    Type_ajustement: document.getElementById('scenario-type').value,
+    Valeur_ajustement: document.getElementById('scenario-valeur').value,
+    Montant_cible: document.getElementById('scenario-cible').value,
+    Date_effet: document.getElementById('scenario-date').value,
+    Active: document.getElementById('scenario-active').value,
+    Commentaire: document.getElementById('scenario-commentaire').value
+  };
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.dataCache = {};
+      state.cacheTimestamp = {};
+      state.bootstrap.recentScenarios = result.recentScenarios || state.bootstrap.recentScenarios;
+      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      renderAll();
+      showPage('Scenarios');
+      alert('Scenario enregistre.');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .upsertScenario(payload);
+}
+
+function saveAlertSettings() {
+  const payload = {
+    alertLowBalance: document.getElementById('setting-low-balance').value,
+    alertNegativeBalance: document.getElementById('setting-negative-balance').value,
+    alertVarianceAmount: document.getElementById('setting-variance-amount').value,
+    alertVariancePercent: document.getElementById('setting-variance-percent').value
+  };
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.settings = result.settings;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      renderAll();
+      showPage('Parametres');
+      alert('Seuils d alerte enregistres.');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .setAlertSettings(payload);
+}
+
+
+function enableAutomaticSync() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.automaticSync = result.automaticSync;
+      render();
+      alert(result.message || 'Synchronisation automatique activee.');
+    })
+    .withFailureHandler(handleError)
+    .installAutomaticSyncTrigger();
+}
+
+function disableAutomaticSync() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.automaticSync = result.automaticSync;
+      render();
+      alert(result.message || 'Synchronisation automatique desactivee.');
+    })
+    .withFailureHandler(handleError)
+    .removeAutomaticSyncTriggers();
+}
+function saveDriveRoot(entite) {
+  const input = document.getElementById('drive-root-' + entite);
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.driveConfig = result.driveConfig || state.bootstrap.driveConfig;
+      state.bootstrap.config.driveRoots = result.driveConfig || state.bootstrap.config.driveRoots;
+      renderAll();
+      showPage('Parametres');
+      alert('Dossier Drive enregistre.');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .setDriveRoot({ entite: entite, folderId: input ? input.value : '' });
+}
+
+function renderRecentPrevisions(rows) {
+  if (!rows.length) return '<div class="empty">Aucune prevision enregistree pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Date</th><th>Frequence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Categorie)}</td>
+      <td>${esc(row.Sous_categorie)}</td>
+      <td>${esc(row.Date_prevue)}</td>
+      <td>${esc(row.Frequence)}</td>
+      <td>${esc(row.Sens)}</td>
+      <td>${euro(row.Montant_prevu)}</td>
+      <td>${esc(row.Active)}</td>
+    </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function renderRecentScenarios(rows) {
+  if (!rows.length) return '<div class="empty">Aucun scenario enregistre pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Type</th><th>Valeur</th><th>Cible</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr>
+      <td>${esc(row.Nom_scenario)}</td>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Categorie)}</td>
+      <td>${esc(row.Sous_categorie)}</td>
+      <td>${esc(row.Type_ajustement)}</td>
+      <td>${row.Valeur_ajustement !== '' ? esc(row.Valeur_ajustement) : '-'}</td>
+      <td>${row.Montant_cible !== '' ? euro(row.Montant_cible) : '-'}</td>
+      <td>${esc(row.Active)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderScenarioTable(summary) {
+  const lines = (summary && summary.lines) || [];
+  if (!lines.length) return '<div class="empty">Aucun scenario actif pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Scenario</th><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Base</th><th>Projete</th><th>Impact</th></tr></thead><tbody>${lines.map(function(row) {
+    return `<tr>
+      <td>${esc(row.nom)}</td>
+      <td>${esc(row.entite)}</td>
+      <td>${esc(row.categorie)}</td>
+      <td>${esc(row.sousCategorie)}</td>
+      <td>${euro(row.baseAmount)}</td>
+      <td>${euro(row.projectedAmount)}</td>
+      <td>${euro(row.impact)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function renderAlerts(rows) {
+  if (!rows.length) return '<div class="empty">Aucune alerte majeure pour le moment.</div>';
+  return rows.map(function(row) {
+    return `<div class="row"><div>${esc(row.title)}<small>${esc(row.detail)}</small></div><div><span class="badge ${esc(row.level)}">${esc(row.level)}</span></div></div>`;
+  }).join('');
+}
+
+function renderPeriodAnalytics(periodAnalytics) {
+  if (!periodAnalytics) return '<div class="empty">Aucune analyse de periode pour le moment.</div>';
+  const labels = [
+    ['day', 'Jour'],
+    ['week', 'Semaine'],
+    ['month', 'Mois'],
+    ['quarter', 'Trimestre'],
+    ['semester', 'Semestre'],
+    ['year', 'Annee']
+  ];
+  return labels.map(function(item) {
+    const data = periodAnalytics[item[0]];
+    if (!data) return '';
+    return `<div class="row"><div>${item[1]}<small>${esc(data.currentLabel)} vs ${esc(data.previousLabel)}</small></div><div>${euro(data.current.net)} / ${euro(data.previous.net)}</div></div>`;
+  }).join('');
+}
+
+function renderTransactionsWithoutInvoice(rows) {
+  if (!rows || !rows.length) return '<div class="empty">Aucune transaction sans facture visible pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entite</th><th>Compte</th><th>Libelle</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr>
+      <td>${esc(row.Date)}</td>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Compte)}</td>
+      <td>${esc(row.Libelle)}</td>
+      <td>${euro(row.Montant)}</td>
+      <td>${esc(row.Statut_rapprochement || '')}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderForecastTable(summary) {
+  const lines = (summary && summary.lines) || [];
+  if (!lines.length) return '<div class="empty">Aucune ligne de prevision exploitable pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Prevu</th><th>Realise</th><th>Mois precedent</th><th>Ecart vs prevu</th><th>Ecart vs precedent</th></tr></thead><tbody>${lines.map(function(row) {
+    return `<tr>
+      <td>${esc(row.entite)}</td>
+      <td>${esc(row.categorie)}</td>
+      <td>${esc(row.sousCategorie)}</td>
+      <td>${euro(row.forecast)}</td>
+      <td>${euro(row.actual)}</td>
+      <td>${euro(row.previous)}</td>
+      <td>${euro(row.variance)}</td>
+      <td>${euro(row.variancePrevious)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function renderSimpleList(items, emptyText, subtitle) {
+  if (!items || !items.length) return `<div class="empty">${emptyText}</div>`;
+  return items.map(function(item) {
+    return `<div class="row"><div>${esc(item.label)}<small>${subtitle}</small></div><div>${euro(item.value)}</div></div>`;
+  }).join('');
+}
+
+function renderAccueil() {
+  const d = state.bootstrap.dashboard;
+  document.getElementById('page-Accueil').innerHTML = `
+    <div class="grid">
+      <div class="card kpi"><div class="label">Tresorerie actuelle</div><div class="value">${euro(d.tresorerieActuelle)}</div><div class="hint">Consolide actuel</div></div>
+      <div class="card kpi"><div class="label">Encaissements</div><div class="value">${euro(d.encaissements)}</div><div class="hint">Cumul des entrees</div></div>
+      <div class="card kpi"><div class="label">Decaissements</div><div class="value">${euro(d.decaissements)}</div><div class="hint">Cumul des sorties</div></div>
+      <div class="card kpi"><div class="label">Transactions</div><div class="value">${state.bootstrap.counts.Mouvements || 0}</div><div class="hint">Lignes dans le sheet</div></div>
+
+      <div class="card panel-wide">
+        <h3>Tresorerie par entite</h3>
+        <div class="list">${renderSimpleList(d.entites, 'Aucune entite alimentee pour le moment.', 'Solde de tresorerie calcule')}</div>
+      </div>
+        <div class="card panel-side">
+          <h3>Alertes principales</h3>
+          <div class="list">${renderAlerts(state.bootstrap.alerts || [])}</div>
+        </div>
+
+      <div class="card panel-wide">
+        <h3>Tresorerie par compte bancaire</h3>
+        <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimente.', 'Dernier solde connu ou net cumule')}</div>
+      </div>
+      <div class="card panel-side">
+        <h3>Base reliee</h3>
+        <div class="list">
+          <div class="row"><div>Google Sheet<small>Structure centrale du projet</small></div><div><span class="badge ok">Actif</span></div></div>
+          <div class="row"><div>ID du sheet<small>${esc(state.bootstrap.spreadsheetId)}</small></div><div></div></div>
+            <div class="row"><div>Onglets synchronises<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
+          </div>
+          <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le sheet</a></div>
+        </div>
+        <div class="card panel-full">
+          <h3>Lecture des periodes</h3>
+          <div class="list">${renderPeriodAnalytics(state.bootstrap.periodAnalytics)}</div>
+        </div>
+      </div>`;
+  }
+
+function renderTresorerie() {
+  const entites = state.bootstrap.config.entites || [];
+  const comptes = state.bootstrap.config.comptes || [];
+  const movementRows = state.bootstrap.recentMovements || [];
+  const aClasser = state.bootstrap.aClasser || [];
+
+  document.getElementById('page-Gestion de tresorerie').innerHTML = `
+    <div class="grid">
+      <div class="card panel-full">
+        <h3>Import bancaire</h3>
+        <div class="form-grid">
+          <div class="field"><label>Entite</label><select id="importEntite">${entites.map(e => `<option value="${esc(e)}"${state.selectedEntite === e ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="importCompte">${comptes.filter(c => state.selectedEntite === 'TOUTES' || c.Entite === state.selectedEntite).map(c => `<option value="${esc(c.Compte_id)}"${state.selectedEntite === c.Entite ? ' selected' : ''}>${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`).join('')}</select></div>
+          <div class="field"><label>Fichier bancaire</label><input type="file" id="bankFile" accept=".xlsx,.xls,.csv" onchange="handleBankFile(event)"></div>
+          <div class="field"><label>Nom source</label><input type="text" id="sourceName" value="import_banque"></div>
+        </div>
+        <div id="mappingArea" class="hidden" style="margin-top:16px"></div>
+      </div>
+
+      <div class="card panel-wide">
+        <h3>Derniers mouvements</h3>
+        <div class="table-wrap">${renderMovementsTable(movementRows)}</div>
+      </div>
+      <div class="card panel-side">
+        <h3>Etat des imports</h3>
+        <div class="list">
+          <div class="row"><div>A classer<small>Transactions non reconnues</small></div><div>${state.bootstrap.counts.Transactions_A_Classer || 0}</div></div>
+          <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
+          <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
+        </div>
+      </div>
+
+      <div class="card panel-full">
+        <h3>Transactions a classer</h3>
+        ${renderAClasserTable(aClasser)}
+      </div>
+    </div>`;
+}
+
+function renderMovementsTable(rows) {
+  if (!rows.length) return '<div class="empty">Aucun mouvement pour le moment.</div>';
+  return `<table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Categorie</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr><td>${esc(row.Date)}</td><td>${esc(row.Libelle)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Compte)}</td><td>${esc(row.Categorie || '-')} / ${esc(row.Sous_categorie || '-')}</td><td>${euro(row.Montant)}</td><td>${esc(row.Statut_classement || '-')}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function renderAClasserTable(rows) {
+  if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
+  const categoryMap = state.bootstrap.config.categoryMap || {};
+  const categories = Object.keys(categoryMap);
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+    const catOptions = categories.map(function(cat) {
+      return `<option value="${esc(cat)}">${esc(cat)}</option>`;
+    }).join('');
+    const firstCategory = row.Categorie_proposee || categories[0] || '';
+    const subOptions = (categoryMap[firstCategory] || []).map(function(sub) {
+      return `<option value="${esc(sub)}">${esc(sub)}</option>`;
+    }).join('');
+    return `<tr>
+      <td>${esc(row.Date)}</td>
+      <td>${esc(row.Libelle)}</td>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Compte)}</td>
+      <td>${euro(row.Montant)}</td>
+      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select></td>
+      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">A definir</option>'}</select></td>
+      <td>
+        <div class="flex">
+          <input type="checkbox" id="rule-${esc(row.Transaction_uid)}">
+          <input class="inline-input" id="ruleValue-${esc(row.Transaction_uid)}" placeholder="Mot-cle ou fournisseur">
+        </div>
+      </td>
+      <td><button class="btn secondary saveClassificationBtn" data-transaction-uid="${esc(row.Transaction_uid)}">Valider</button></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderGraphiques() {
+  const points = state.bootstrap.graphData || [];
+  const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, currentMonth:'', previousMonth:'' };
+  const periodAnalytics = state.bootstrap.periodAnalytics || {};
+  const comparisonValues = [
+    { label: 'Prevu', value: Math.abs((summary.totals || {}).forecast || 0), raw: (summary.totals || {}).forecast || 0, color: 'linear-gradient(180deg,#8db6ff,#3669be)' },
+    { label: 'Realise', value: Math.abs((summary.totals || {}).actual || 0), raw: (summary.totals || {}).actual || 0, color: 'linear-gradient(180deg,#68b887,#0f9d58)' },
+    { label: 'Mois precedent', value: Math.abs((summary.totals || {}).previous || 0), raw: (summary.totals || {}).previous || 0, color: 'linear-gradient(180deg,#f2b36d,#d97706)' }
+  ];
+  document.getElementById('page-Graphiques').innerHTML = `
+    <div class="grid">
+      <div class="card panel-wide">
+        <h3>Evolution mensuelle nette</h3>
+        <div class="chart">${points.length ? points.map(function(point) {
+          const height = Math.max(24, Math.min(240, Math.round(Math.abs(point.net) / 500)));
+          const color = point.net >= 0 ? 'linear-gradient(180deg,#68b887,#0f9d58)' : 'linear-gradient(180deg,#ef8d8d,#c62828)';
+          return `<div class="bar"><div style="height:${height}px;background:${color}"></div><span>${esc(point.label)}</span></div>`;
+        }).join('') : '<div class="empty">Les graphiques se rempliront apres import des mouvements.</div>'}</div>
+      </div>
+      <div class="card panel-side">
+        <h3>Lectures actives</h3>
+        <div class="list">
+          <div class="row"><div>Tresorerie<small>Jour, semaine, mois, trimestre, semestre, annee</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Previsionnel vs realise<small>Par categorie et sous-categorie</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Realise vs realise passe<small>Mensuel, trimestriel, semestriel, annuel</small></div><div><span class="badge ok">Oui</span></div></div>
+        </div>
+      </div>
+      <div class="card panel-full">
+        <h3>Comparaison ${esc(summary.currentMonth || '')}</h3>
+        <div class="chart">${comparisonValues.map(function(point) {
+          const height = Math.max(24, Math.min(240, Math.round(point.value / 500)));
+          return `<div class="bar"><div style="height:${height}px;background:${point.color}"></div><span>${esc(point.label)}<br>${euro(point.raw)}</span></div>`;
+        }).join('')}</div>
+      </div>
+      <div class="card panel-full">
+        <h3>Comparaisons par periode</h3>
+        <div class="list">${renderPeriodAnalytics(periodAnalytics)}</div>
+      </div>
+    </div>`;
+}
+
+function renderPrevisionnel() {
+  const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, lines:[], currentMonth:'', previousMonth:'' };
+  const entites = (state.bootstrap.config || {}).entites || [];
+  const comptes = (state.bootstrap.config || {}).comptes || [];
+  const categories = Object.keys(((state.bootstrap.config || {}).categoryMap) || {});
+  const recentPrevisions = state.bootstrap.recentPrevisions || [];
+  document.getElementById('page-Previsionnel').innerHTML = `
+    <div class="grid">
+      <div class="card kpi"><div class="label">Prevu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total previsionnel du mois</div></div>
+      <div class="card kpi"><div class="label">Realise ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).actual || 0)}</div><div class="hint">Total realise du mois</div></div>
+      <div class="card kpi"><div class="label">Realise ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative precedente</div></div>
+      <div class="card kpi"><div class="label">Lignes de prevision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">Previsions enregistrees dans le sheet</div></div>
+
+      <div class="card panel-full">
+        <h3>Ajouter / modifier une prevision</h3>
+        <div class="form-grid">
+          <div class="field"><label>Prevision_id</label><input id="prev-id" placeholder="Laisser vide pour creation"></div>
+          <div class="field"><label>Entite</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non specifie</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Categorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(c)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-categorie</label><input id="prev-sous" placeholder="Ex: Blain ou EDF"></div>
+          <div class="field"><label>Date prevue</label><input id="prev-date" type="date"></div>
+          <div class="field"><label>Periode</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
+          <div class="field"><label>Frequence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
+          <div class="field"><label>Sens</label><select id="prev-sens"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
+          <div class="field"><label>Montant prevu</label><input id="prev-montant" type="number" step="0.01" placeholder="1200"></div>
+          <div class="field"><label>Mode calcul</label><select id="prev-mode-calcul"><option value="Manuel">Manuel</option><option value="Historique">Historique</option><option value="Recurrent">Recurrent</option></select></div>
+          <div class="field"><label>Base reference</label><input id="prev-base-reference" placeholder="3 derniers mois"></div>
+          <div class="field"><label>Active</label><select id="prev-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
+          <div class="field"><label>Commentaire</label><input id="prev-commentaire" placeholder="Loyer mensuel magasin Blain"></div>
+        </div>
+        <div class="actions-row"><button class="btn primary" onclick="savePrevision()">Enregistrer prevision</button></div>
+      </div>
+
+      <div class="card panel-full">
+        <h3>Previsionnel vs realise</h3>
+        ${renderForecastTable(summary)}
+      </div>
+
+      <div class="card panel-full">
+        <h3>Previsions recentes</h3>
+        ${renderRecentPrevisions(recentPrevisions)}
+      </div>
+      </div>`;
+}
+
+function renderScenarios() {
+  const summary = state.bootstrap.scenarioSummary || { baseForecastTotal: 0, scenarioForecastTotal: 0, impactTotal: 0, lines: [] };
+  const entites = (state.bootstrap.config || {}).entites || [];
+  const categories = Object.keys(((state.bootstrap.config || {}).categoryMap) || {});
+  const recentScenarios = state.bootstrap.recentScenarios || [];
+  document.getElementById('page-Scenarios').innerHTML = `
+    <div class="grid">
+      <div class="card kpi"><div class="label">Base previsionnelle</div><div class="value">${euro(summary.baseForecastTotal || 0)}</div><div class="hint">Avant scenario</div></div>
+      <div class="card kpi"><div class="label">Projection scenario</div><div class="value">${euro(summary.scenarioForecastTotal || 0)}</div><div class="hint">Apres ajustements</div></div>
+      <div class="card kpi"><div class="label">Impact total</div><div class="value">${euro(summary.impactTotal || 0)}</div><div class="hint">Difference scenario - base</div></div>
+      <div class="card kpi"><div class="label">Scenarios</div><div class="value">${state.bootstrap.counts.Scenarios || 0}</div><div class="hint">Lignes dans le sheet</div></div>
+
+      <div class="card panel-full">
+        <h3>Ajouter / modifier un scenario</h3>
+        <div class="form-grid">
+          <div class="field"><label>Scenario_id</label><input id="scenario-id" placeholder="Laisser vide pour creation"></div>
+          <div class="field"><label>Nom du scenario</label><input id="scenario-nom" placeholder="Ex: Hausse loyer ete"></div>
+          <div class="field"><label>Entite</label><select id="scenario-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Categorie</label><select id="scenario-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(c)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-categorie</label><input id="scenario-sous" placeholder="Ex: Blain ou EDF"></div>
+          <div class="field"><label>Type ajustement</label><select id="scenario-type"><option value="pourcentage">Pourcentage</option><option value="montant">Montant ajoute / retire</option><option value="cible">Montant cible</option></select></div>
+          <div class="field"><label>Valeur ajustement</label><input id="scenario-valeur" type="number" step="0.01" placeholder="Ex: 10 ou -150"></div>
+          <div class="field"><label>Montant cible</label><input id="scenario-cible" type="number" step="0.01" placeholder="Ex: 1400"></div>
+          <div class="field"><label>Date effet</label><input id="scenario-date" type="date"></div>
+          <div class="field"><label>Active</label><select id="scenario-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
+          <div class="field"><label>Commentaire</label><input id="scenario-commentaire" placeholder="Scenario de test sans toucher au reel"></div>
+        </div>
+        <div class="actions-row"><button class="btn primary" onclick="saveScenario()">Enregistrer scenario</button></div>
+      </div>
+
+      <div class="card panel-full">
+        <h3>Impact des scenarios</h3>
+        ${renderScenarioTable(summary)}
+      </div>
+
+      <div class="card panel-full">
+        <h3>Scenarios recents</h3>
+        ${renderRecentScenarios(recentScenarios)}
+      </div>
+    </div>`;
+}
+
+function renderFacturesToPay(rows) {
+  if (!rows.length) return '<div class="empty">Aucune facture a regler pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Mois</th><th>Fournisseur</th><th>Numero</th><th>Montant TTC</th><th>Statut</th><th>Paiement</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+    const id = esc(row.Facture_id);
+    const status = esc(row.Statut_paiement || 'A_REGLER');
+    return `<tr>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Annee)} / ${esc(row.Mois)}</td>
+      <td>${esc(row.Fournisseur || row.Nom_fichier || '')}</td>
+      <td>${esc(row.Numero_facture)}</td>
+      <td>${row.Montant_TTC ? euro(row.Montant_TTC) : '-'}</td>
+      <td>${status}</td>
+      <td>
+        <div class="flex">
+          <select class="inline-select" id="pay-status-${id}">
+            <option value="A_REGLER" ${status === 'A_REGLER' ? 'selected' : ''}>A regler</option>
+            <option value="PARTIELLEMENT_REGLEE" ${status === 'PARTIELLEMENT_REGLEE' ? 'selected' : ''}>Partiellement reglee</option>
+            <option value="REGLEE" ${status === 'REGLEE' ? 'selected' : ''}>Reglee</option>
+            <option value="ANNULEE" ${status === 'ANNULEE' ? 'selected' : ''}>Annulee</option>
+          </select>
+          <input class="inline-input" type="date" id="pay-date-${id}" value="${esc(row.Date_paiement)}">
+          <input class="inline-input" type="text" id="pay-mode-${id}" value="${esc(row.Mode_paiement)}" placeholder="Virement, CB...">
+        </div>
+      </td>
+      <td><button class="btn secondary saveInvoicePaymentBtn" data-invoice-id="${esc(id)}">Enregistrer</button></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderRapprochementTable(rows) {
+  if (!rows.length) return '<div class="empty">Aucun rapprochement enregistre pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Transaction</th><th>Facture</th><th>Ecart</th><th>Score</th><th>Statut</th><th>Commentaire</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Transaction_uid)}</td>
+      <td>${esc(row.Facture_id)}</td>
+      <td>${euro(row.Ecart)}</td>
+      <td>${esc(row.Score_confiance)}</td>
+      <td>${esc(row.Statut)}</td>
+      <td>${esc(row.Commentaire || '')}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderFacturesToVerify(rows) {
+  if (!rows.length) return '<div class="empty">Aucune facture a verifier pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Nom fichier</th><th>Probleme</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Nom_fichier)}</td>
+      <td>${esc(row.Probleme)}</td>
+      <td>${esc(row.Statut)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderRapprochement() {
+  const factures = state.bootstrap.facturesToPay || [];
+  const rapprochements = state.bootstrap.recentRapprochements || [];
+  const facturesToVerify = state.bootstrap.facturesToVerify || [];
+  const transactionsWithoutInvoice = state.bootstrap.transactionsWithoutInvoice || [];
+  document.getElementById('page-Rapprochement bancaire').innerHTML = `
+    <div class="grid">
+      <div class="card panel-wide">
+        <h3>Factures a regler</h3>
+        ${renderFacturesToPay(factures)}
+      </div>
+      <div class="card panel-side">
+        <h3>Compteurs</h3>
+        <div class="list">
+          <div class="row"><div>Factures<small>Indexees dans le sheet</small></div><div>${state.bootstrap.counts.Factures || 0}</div></div>
+          <div class="row"><div>Factures a verifier<small>Lecture ou classement incertain</small></div><div>${state.bootstrap.counts.Factures_A_Verifier || 0}</div></div>
+          <div class="row"><div>Rapprochements<small>Liens enregistres</small></div><div>${state.bootstrap.counts.Rapprochements || 0}</div></div>
+        </div>
+      </div>
+      <div class="card panel-full">
+        <h3>Rapprochements automatiques et a verifier</h3>
+        ${renderRapprochementTable(rapprochements)}
+      </div>
+      <div class="card panel-full">
+        <h3>Factures a verifier</h3>
+        ${renderFacturesToVerify(facturesToVerify)}
+      </div>
+      <div class="card panel-full">
+        <h3>Transactions sans facture</h3>
+        ${renderTransactionsWithoutInvoice(transactionsWithoutInvoice)}
+      </div>
+      <div class="card panel-full">
+        <h3>Logique de rapprochement</h3>
+        <table class="table"><thead><tr><th>Statut</th><th>Description</th></tr></thead><tbody>
+          <tr><td>RAPPROCHE / AUTO_RAPPROCHE</td><td>Transaction bancaire reliee a une facture avec score fort.</td></tr>
+          <tr><td>A_VERIFIER</td><td>Correspondance plausible mais pas assez fiable pour etre validee sans controle.</td></tr>
+          <tr><td>Transaction sans facture</td><td>Sortie ou entree bancaire sans document rattache.</td></tr>
+          <tr><td>Facture sans paiement</td><td>Facture presente dans Drive / Sheet sans transaction correspondante.</td></tr>
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+function renderParametres() {
+  const comptes = state.bootstrap.config.comptes || [];
+  const categories = state.bootstrap.config.categories || [];
+  const regles = state.bootstrap.config.regles || [];
+  const settings = state.bootstrap.settings || {};
+  const automaticSync = state.bootstrap.automaticSync || { enabled: false, frequency: 'Desactive' };
+  const driveRoots = state.bootstrap.driveConfig || [];
+  document.getElementById('page-Parametres').innerHTML = `
+    <div class="grid">
+      <div class="card panel-wide">
+        <h3>Comptes bancaires</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Compte_id</th><th>Entite</th><th>Nom</th><th>Banque</th><th>RIB / IBAN</th><th>Actif</th></tr></thead><tbody>${comptes.map(function(row) {
+          return `<tr><td>${esc(row.Compte_id)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Nom_compte)}</td><td>${esc(row.Banque)}</td><td>${esc(row.RIB_IBAN)}</td><td>${esc(row.Actif)}</td></tr>`;
+        }).join('')}</tbody></table></div>
+      </div>
+      <div class="card panel-side">
+        <h3>Structure</h3>
+        <div class="list">${Object.entries(state.bootstrap.counts).map(function(entry) {
+          return `<div class="row"><div>${esc(entry[0])}<small>Nombre de lignes</small></div><div>${entry[1]}</div></div>`;
+        }).join('')}</div>
+      </div>
+      <div class="card panel-wide">
+        <h3>Categories de gestion</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Categorie</th><th>Sous-categorie</th><th>Flux</th><th>Frequence</th></tr></thead><tbody>${categories.map(function(row) {
+          return `<tr><td>${esc(row.Categorie)}</td><td>${esc(row.Sous_categorie)}</td><td>${esc(row.Type_flux)}</td><td>${esc(row.Frequence)}</td></tr>`;
+        }).join('')}</tbody></table></div>
+      </div>
+        <div class="card panel-side">
+          <h3>Drive et OCR</h3>
+          <div class="list">
+            ${driveRoots.map(function(row) {
+              return `<div class="row"><div>${esc(row.entite)}<small>Dossier factures racine</small></div><div><span class="badge ok">Lie</span></div></div>`;
+            }).join('')}
+            <div class="row"><div>OCR facture<small>OCR.space (gratuit)</small></div><div><span class="badge ok">Pret</span></div></div>
+          </div>
+        <div class="form-grid" style="margin-top:12px">
+          <div class="field"><label>Limite OCR</label><input id="ocr-limit" type="number" min="1" value="10"></div>
+        </div>
+        <div class="actions-row">
+            <button class="btn primary" onclick="runInvoiceOcr()">Lancer OCR maintenant</button>
+          </div>
+        </div>
+        <div class="card panel-full">
+          <h3>Seuils d alerte</h3>
+          <div class="form-grid">
+            <div class="field"><label>Solde faible</label><input id="setting-low-balance" type="number" step="0.01" value="${esc(settings.alertLowBalance)}"></div>
+            <div class="field"><label>Solde negatif</label><input id="setting-negative-balance" type="number" step="0.01" value="${esc(settings.alertNegativeBalance)}"></div>
+            <div class="field"><label>Ecart montant</label><input id="setting-variance-amount" type="number" step="0.01" value="${esc(settings.alertVarianceAmount)}"></div>
+            <div class="field"><label>Ecart pourcentage</label><input id="setting-variance-percent" type="number" step="0.01" value="${esc(settings.alertVariancePercent)}"></div>
+          </div>
+          <div class="actions-row"><button class="btn secondary" onclick="saveAlertSettings()">Enregistrer seuils</button></div>
+        </div>
+        <div class="card panel-full">
+          <h3>Dossiers Drive des factures</h3>
+          <div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Dossier racine</th><th>Action</th></tr></thead><tbody>${['GROUPE ONSEN','ALTERACIG','OSLO SHOP','VAPOTE & COMPAGNIE','LCDV'].map(function(entite) {
+            const match = driveRoots.find(function(row) { return row.entite === entite; }) || { folderId: '' };
+            return `<tr>
+              <td>${esc(entite)}</td>
+              <td><input class="inline-input" style="width:100%" id="drive-root-${entite}" value="${esc(match.folderId || '')}" placeholder="ID dossier Drive"></td>
+              <td><button class="btn secondary saveDriveRootBtn" data-entite="${esc(entite)}">Enregistrer</button></td>
+            </tr>`;
+          }).join('')}</tbody></table></div>
+        </div>
+        <div class="card panel-full">
+          <h3>Ajouter / modifier un compte</h3>
+        <div class="form-grid">
+          <div class="field"><label>Compte_id</label><input id="param-compte-id" placeholder="OSLO-002"></div>
+          <div class="field"><label>Entite</label><input id="param-compte-entite" placeholder="OSLO SHOP"></div>
+          <div class="field"><label>Nom compte</label><input id="param-compte-nom" placeholder="Compte secondaire"></div>
+          <div class="field"><label>Banque</label><input id="param-compte-banque" placeholder="BNP"></div>
+          <div class="field"><label>RIB / IBAN</label><input id="param-compte-rib" placeholder="FR..."></div>
+          <div class="field"><label>Devise</label><input id="param-compte-devise" value="EUR"></div>
+          <div class="field"><label>Actif</label><select id="param-compte-actif"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
+          <div class="field"><label>Type entite</label><select id="param-compte-type"><option value="societe">societe</option><option value="groupe">groupe</option></select></div>
+        </div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveCompte()">Enregistrer compte</button></div>
+      </div>
+      <div class="card panel-full">
+        <h3>Ajouter / modifier une categorie</h3>
+        <div class="form-grid">
+          <div class="field"><label>Categorie</label><input id="param-cat-categorie" placeholder="Electricite"></div>
+          <div class="field"><label>Sous-categorie</label><input id="param-cat-sous" placeholder="EDF"></div>
+          <div class="field"><label>Type flux</label><select id="param-cat-flux"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option><option value="Neutre">Neutre</option></select></div>
+          <div class="field"><label>Frequence</label><input id="param-cat-frequence" placeholder="Mensuelle"></div>
+          <div class="field"><label>Active</label><select id="param-cat-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
+          <div class="field"><label>Commentaire</label><input id="param-cat-commentaire" placeholder="Sous-categorie = fournisseur"></div>
+        </div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveCategorie()">Enregistrer categorie</button></div>
+      </div>
+      <div class="card panel-full">
+        <h3>Regles actives</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Valeur</th><th>Categorie</th><th>Sous-categorie</th></tr></thead><tbody>${regles.length ? regles.slice(0, 20).map(function(row) {
+          return `<tr><td>${esc(row.Valeur)}</td><td>${esc(row.Categorie)}</td><td>${esc(row.Sous_categorie)}</td></tr>`;
+        }).join('') : '<tr><td colspan="3" class="empty">Les regles apparaitront au fur et a mesure de l apprentissage.</td></tr>'}</tbody></table></div>
+      </div>
+    </div>`;
+}
+
+function handleBankFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = e.target.result;
+    let rows = [];
+    let headers = [];
+    if (file.name.toLowerCase().endsWith('.csv')) {
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    } else {
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    }
+    headers = rows.length ? Object.keys(rows[0]) : [];
+    state.importRows = rows;
+    state.importHeaders = headers;
+    autoDetectMapping(headers);
+    renderMappingArea(file.name);
+  };
+  reader.readAsBinaryString(file);
+}
+
+function autoDetectMapping(headers) {
+  const lower = headers.map(function(h) { return { raw: h, value: String(h).toLowerCase() }; });
+  function findMatch(patterns) {
+    for (let i = 0; i < lower.length; i++) {
+      for (let j = 0; j < patterns.length; j++) {
+        if (lower[i].value.indexOf(patterns[j]) !== -1) return lower[i].raw;
+      }
+    }
+    return '';
+  }
+  state.mapping = {
+    date: findMatch(['date operation', 'date', 'booking date']),
+    dateValeur: findMatch(['valeur', 'date valeur', 'value date']),
+    libelle: findMatch(['libelle', 'description', 'label', 'motif']),
+    debit: findMatch(['debit']),
+    credit: findMatch(['credit']),
+    montant: findMatch(['montant', 'amount']),
+    solde: findMatch(['solde', 'balance']),
+    reference: findMatch(['reference', 'ref']),
+    modeReglement: findMatch(['mode_reglement', 'mode reglement', 'payment'])
+  };
+}
+
+function renderMappingArea(fileName) {
+  const headers = state.importHeaders;
+  const area = document.getElementById('mappingArea');
+  area.classList.remove('hidden');
+  area.innerHTML = `
+    <div class="note">Fichier charge: <strong>${esc(fileName)}</strong>. Verifie le mapping avant l import. Les doublons seront controles dans Apps Script.</div>
+    <div class="form-grid" style="margin-top:12px">
+      ${renderMappingSelect('Date operation', 'date', headers)}
+      ${renderMappingSelect('Date valeur', 'dateValeur', headers)}
+      ${renderMappingSelect('Libelle', 'libelle', headers)}
+      ${renderMappingSelect('Reference bancaire', 'reference', headers)}
+      ${renderMappingSelect('Debit', 'debit', headers)}
+      ${renderMappingSelect('Credit', 'credit', headers)}
+      ${renderMappingSelect('Montant signe', 'montant', headers)}
+      ${renderMappingSelect('Solde', 'solde', headers)}
+      ${renderMappingSelect('Mode reglement', 'modeReglement', headers)}
+    </div>
+    <div class="actions-row">
+      <button class="btn primary" onclick="submitImport()">Importer les mouvements</button>
+      <span class="footer-note">${state.importRows.length} lignes detectees.</span>
+    </div>
+    <div class="import-preview" style="margin-top:12px">${renderImportPreview()}</div>`;
+}
+
+function renderMappingSelect(label, key, headers) {
+  return `<div class="field"><label>${label}</label><select id="map-${key}" onchange="state.mapping.${key}=this.value">` +
+    `<option value="">Non mappe</option>` +
+    headers.map(function(header) {
+      const selected = state.mapping[key] === header ? 'selected' : '';
+      return `<option value="${esc(header)}" ${selected}>${esc(header)}</option>`;
+    }).join('') +
+    `</select></div>`;
+}
+
+function renderImportPreview() {
+  if (!state.importRows.length) return '<div class="empty" style="padding:14px">Aucune ligne a previsualiser.</div>';
+  const previewHeaders = state.importHeaders.slice(0, 8);
+  const previewRows = state.importRows.slice(0, 8);
+  return `<table class="table"><thead><tr>${previewHeaders.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${previewRows.map(function(row) {
+    return `<tr>${previewHeaders.map(function(h) { return `<td>${esc(row[h])}</td>`; }).join('')}</tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function submitImport() {
+  const entite = document.getElementById('importEntite').value;
+  const compteId = document.getElementById('importCompte').value;
+  const sourceName = document.getElementById('sourceName').value || 'import_banque';
+  ['date','dateValeur','libelle','reference','debit','credit','montant','solde','modeReglement'].forEach(function(key) {
+    const el = document.getElementById('map-' + key);
+    if (el) state.mapping[key] = el.value;
+  });
+  if (!state.mapping.date || !state.mapping.libelle) {
+    alert('Le mapping Date et Libelle est obligatoire.');
+    return;
+  }
+  if (!state.mapping.montant && !state.mapping.debit && !state.mapping.credit) {
+    alert('Renseigne soit Montant, soit Debit et Credit.');
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      alert(`Import termine. ${result.inserted} nouvelles lignes, ${result.duplicates} doublons, ${result.toClassify} a classer.`);
+      state.dataCache = {};
+      state.cacheTimestamp = {};
+      state.bootstrap.dashboard = result.dashboard;
+      state.bootstrap.aClasser = result.aClasser;
+      state.bootstrap.recentMovements = result.recentMovements;
+      state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+      state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
+      state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
+      state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+      state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
+      state.bootstrap.graphData = result.graphData;
+      state.bootstrap.counts = result.counts;
+      state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
+      renderAll();
+      showPage('Gestion de tresorerie');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .importBankRows({
+      entite: entite,
+      compteId: compteId,
+      sourceName: sourceName,
+      mapping: state.mapping,
+      rows: state.importRows
+    });
+}
+
+function updateSousCategories(transactionUid) {
+  const categoryMap = state.bootstrap.config.categoryMap || {};
+  const cat = document.getElementById('cat-' + transactionUid).value;
+  const sub = document.getElementById('sub-' + transactionUid);
+  const options = categoryMap[cat] || [];
+  sub.innerHTML = options.length ? options.map(function(value) {
+    return `<option value="${esc(value)}">${esc(value)}</option>`;
+  }).join('') : '<option value="">A definir</option>';
+}
+
+function saveClassification(transactionUid) {
+  const categorie = document.getElementById('cat-' + transactionUid).value;
+  const sousCategorie = document.getElementById('sub-' + transactionUid).value;
+  const createRule = document.getElementById('rule-' + transactionUid).checked;
+  const ruleValue = document.getElementById('ruleValue-' + transactionUid).value;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.aClasser = result.aClasser;
+      state.bootstrap.recentMovements = result.recentMovements;
+      state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+      state.bootstrap.counts = result.counts;
+      state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
+      state.bootstrap.dashboard = result.dashboard;
+      state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
+      state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
+      state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+      state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
+      state.bootstrap.graphData = result.graphData;
+      renderAll();
+      showPage('Gestion de tresorerie');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .classifyTransaction({
+      transactionUid: transactionUid,
+      categorie: categorie,
+      sousCategorie: sousCategorie,
+      createRule: createRule,
+      ruleValue: ruleValue
+    });
+}
+
+function saveInvoicePayment(factureId) {
+  const status = document.getElementById('pay-status-' + factureId).value;
+  const date = document.getElementById('pay-date-' + factureId).value;
+  const mode = document.getElementById('pay-mode-' + factureId).value;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.facturesToPay = result.facturesARegler || [];
+      state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
+      state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+      state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      renderAll();
+      showPage('Rapprochement bancaire');
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .updateInvoicePaymentStatus({ factureId: factureId, statutPaiement: status, datePaiement: date, modePaiement: mode, transactionUid: '' });
+}
+
+function runInvoiceOcr() {
+  const limitElement = document.getElementById('ocr-limit');
+  const limit = limitElement ? Number(limitElement.value || 10) : 10;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
+      state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
+      state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
+      state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+      state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      state.bootstrap.ocrReady = result.ocrReady;
+      state.bootstrap.ocrConfig = result.ocrConfig;
+      renderAll();
+      showPage('Rapprochement bancaire');
+      alert(`OCR termine. ${result.ok} factures lues, ${result.failed} en echec.`);
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .runInvoiceOcr({ limit: limit });
+}
+
+function syncDriveInvoices() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      alert(`Indexation Drive terminee. ${result.inserted} factures ajoutees, ${result.toVerify} a verifier.`);
+      refreshData();
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .syncDriveInvoices({});
+}
+function installWorkbook() {
+  google.script.run
+    .withSuccessHandler(function(result) {
+      alert(result.message);
+      refreshData();
+    })
+    .withFailureHandler(function(error) {
+      alert(error.message || error);
+    })
+    .installOrUpdateWorkbook();
+}
+
+init();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
