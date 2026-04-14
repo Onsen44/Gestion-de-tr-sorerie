@@ -100,11 +100,15 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 <div id="login-screen">
   <div id="login-container">
     <h1>Accès sécurisé</h1>
-    <p>Entrez l'URL et le mot de passe pour accéder à la gestion de trésorerie</p>
-    <input id="login-url" type="text" placeholder="URL du site" onkeypress="if(event.key==='Enter') loginSubmit()">
+    <p>Entrez le mot de passe pour accéder à la gestion de trésorerie</p>
     <input id="login-pwd" type="password" placeholder="Mot de passe" onkeypress="if(event.key==='Enter') loginSubmit()">
     <button id="login-btn" onclick="loginSubmit()">Connexion</button>
     <div id="login-error"></div>
+    <div id="login-setup" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;text-align:left;font-size:12px;color:#92400e;line-height:1.6;margin-top:12px;display:none;">
+      <strong>⚙️ Configuration (première fois)</strong><br>
+      URL Google Apps Script :<br>
+      <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:6px 10px;border:1px solid #fde68a;border-radius:6px;font-size:12px;margin-top:6px;" onchange="saveApiUrl_(this.value)">
+    </div>
   </div>
 </div>
 
@@ -153,27 +157,188 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 </div>
 
 <script>
-function loginSubmit() {
-  const url = document.getElementById('login-url').value;
-  const pwd = document.getElementById('login-pwd').value;
+let TRESOR_API_URL = localStorage.getItem('tresor_api_url') || '';
+const hasNativeAppsScriptRuntime = !!(window.google && google.script && google.script.run);
 
-  if (!url || !pwd) {
-    showLoginError('Veuillez entrer l\'URL et le mot de passe');
+if (!hasNativeAppsScriptRuntime) {
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  window.google.script.run = createAppsScriptRunner_();
+}
+
+function createAppsScriptRunner_(successHandler, failureHandler) {
+  return new Proxy({}, {
+    get: function(target, prop) {
+      if (prop === 'withSuccessHandler') {
+        return function(fn) {
+          return createAppsScriptRunner_(fn, failureHandler);
+        };
+      }
+      if (prop === 'withFailureHandler') {
+        return function(fn) {
+          return createAppsScriptRunner_(successHandler, fn);
+        };
+      }
+      return function(payload) {
+        callAppsScriptApi_(String(prop), payload)
+          .then(function(result) {
+            if (typeof successHandler === 'function') successHandler(result);
+          })
+          .catch(function(error) {
+            if (typeof failureHandler === 'function') failureHandler(error);
+            else throw error;
+          });
+      };
+    }
+  });
+}
+
+function getBackendUrl_() {
+  if (TRESOR_API_URL) return TRESOR_API_URL;
+  if (state.backendUrl) return state.backendUrl;
+  return '';
+}
+
+function normalizeBackendUrl_(url) {
+  return String(url || '').trim().replace(/\?$/, '');
+}
+
+function callAppsScriptApi_(action, payload) {
+  const apiUrl = getBackendUrl_();
+  if (!apiUrl) {
+    return Promise.reject(new Error('URL Apps Script manquante.'));
+  }
+
+  return fetch(apiUrl, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      action: action,
+      payload: payload,
+      password: state.password
+    })
+  })
+    .then(function(response) {
+      return response.text();
+    })
+    .then(function(text) {
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (error) {
+        throw new Error('Réponse API invalide');
+      }
+
+      if (!parsed.success) {
+        throw new Error(parsed.error || 'Erreur Apps Script');
+      }
+
+      return parsed.data;
+    });
+}
+
+function saveApiUrl_(url) {
+  TRESOR_API_URL = url.trim();
+  localStorage.setItem('tresor_api_url', TRESOR_API_URL);
+  const setup = document.getElementById('login-setup');
+  if (setup) {
+    setup.style.display = TRESOR_API_URL ? 'none' : '';
+  }
+}
+
+async function autoLogin_() {
+  const pwd = sessionStorage.getItem('tresor_password');
+  if (!pwd || !TRESOR_API_URL) return;
+
+  state.password = pwd;
+  const loginBtn = document.getElementById('login-btn');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Connexion...';
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .check_password();
+    });
+
+    if (result && result.success) {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.querySelector('.app').classList.remove('hidden');
+      init();
+    } else {
+      sessionStorage.removeItem('tresor_password');
+      state.password = '';
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+    }
+  } catch (error) {
+    sessionStorage.removeItem('tresor_password');
+    state.password = '';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Connexion';
+  }
+}
+
+function prefillLoginUrl_() {
+  const input = document.getElementById('login-url');
+  if (input && !input.value) {
+    input.value = window.location.href.split('?')[0];
+  }
+}
+
+function loginSubmit() {
+  const pwd = document.getElementById('login-pwd').value;
+  const loginBtn = document.getElementById('login-btn');
+
+  if (!TRESOR_API_URL) {
+    showLoginError('Configurez l\'URL Google Apps Script');
     return;
   }
 
-  // Vérification instantanée - utilise l'URL actuelle
-  const expectedUrl = window.location.href.split('?')[0]; // URL actuelle du site (sans paramètres)
-  const expectedPwd = '@pilori44';
+  if (!pwd) {
+    showLoginError('Entrez le mot de passe');
+    return;
+  }
 
-  if (url.trim() === expectedUrl && pwd === expectedPwd) {
-    // Identifiants corrects - connexion instantanée
+  showLoginError('');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Connexion...';
+
+  state.password = pwd;
+
+  function finishLogin_() {
+    sessionStorage.setItem('tresor_password', state.password);
     document.getElementById('login-screen').classList.add('hidden');
     document.querySelector('.app').classList.remove('hidden');
+    document.getElementById('login-pwd').value = '';
     init();
-  } else {
-    showLoginError('URL ou mot de passe incorrect');
   }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+
+      if (!result || !result.success) {
+        state.password = '';
+        showLoginError((result && result.error) || 'Connexion impossible');
+        return;
+      }
+
+      finishLogin_();
+    })
+    .withFailureHandler(function(error) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+      state.password = '';
+      showLoginError((error && error.message) || 'Erreur serveur pendant la connexion');
+    })
+    .check_password();
 }
 
 function showLoginError(msg) {
@@ -184,6 +349,8 @@ const state = {
   bootstrap: null,
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
+  backendUrl: '',
+  password: '',
   dataCache: {},
   cacheTimestamp: {},
   cacheExpireMs: 5 * 60 * 1000, // 5 minutes
@@ -1373,15 +1540,17 @@ function installWorkbook() {
     .installOrUpdateWorkbook();
 }
 
-init();
+prefillLoginUrl_();
+autoLogin_();
+
+// Pré-remplir et afficher la section config
+const apiInput = document.getElementById('api-url-input');
+const setup = document.getElementById('login-setup');
+if (apiInput) apiInput.value = TRESOR_API_URL;
+if (setup) setup.style.display = TRESOR_API_URL ? 'none' : '';
 </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
