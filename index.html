@@ -100,11 +100,15 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 <div id="login-screen">
   <div id="login-container">
     <h1>Accès sécurisé</h1>
-    <p>Entrez l'URL et le mot de passe pour accéder à la gestion de trésorerie</p>
-    <input id="login-url" type="text" placeholder="URL du site" onkeypress="if(event.key==='Enter') loginSubmit()">
+    <p>Entrez le mot de passe pour accéder à la gestion de trésorerie</p>
     <input id="login-pwd" type="password" placeholder="Mot de passe" onkeypress="if(event.key==='Enter') loginSubmit()">
     <button id="login-btn" onclick="loginSubmit()">Connexion</button>
     <div id="login-error"></div>
+    <div id="login-setup" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;text-align:left;font-size:12px;color:#92400e;line-height:1.6;margin-top:12px;display:none;">
+      <strong>⚙️ Configuration (première fois)</strong><br>
+      URL Google Apps Script :<br>
+      <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:6px 10px;border:1px solid #fde68a;border-radius:6px;font-size:12px;margin-top:6px;" onchange="saveApiUrl_(this.value)">
+    </div>
   </div>
 </div>
 
@@ -153,6 +157,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 </div>
 
 <script>
+let TRESOR_API_URL = localStorage.getItem('tresor_api_url') || '';
 const hasNativeAppsScriptRuntime = !!(window.google && google.script && google.script.run);
 
 if (!hasNativeAppsScriptRuntime) {
@@ -189,9 +194,9 @@ function createAppsScriptRunner_(successHandler, failureHandler) {
 }
 
 function getBackendUrl_() {
+  if (TRESOR_API_URL) return TRESOR_API_URL;
   if (state.backendUrl) return state.backendUrl;
-  const input = document.getElementById('login-url');
-  return input ? normalizeBackendUrl_(input.value) : '';
+  return '';
 }
 
 function normalizeBackendUrl_(url) {
@@ -212,7 +217,8 @@ function callAppsScriptApi_(action, payload) {
     },
     body: JSON.stringify({
       action: action,
-      payload: payload
+      payload: payload,
+      password: state.password
     })
   })
     .then(function(response) {
@@ -234,8 +240,51 @@ function callAppsScriptApi_(action, payload) {
     });
 }
 
+function saveApiUrl_(url) {
+  TRESOR_API_URL = url.trim();
+  localStorage.setItem('tresor_api_url', TRESOR_API_URL);
+  const setup = document.getElementById('login-setup');
+  if (setup) {
+    setup.style.display = TRESOR_API_URL ? 'none' : '';
+  }
+}
+
+async function autoLogin_() {
+  const pwd = sessionStorage.getItem('tresor_password');
+  if (!pwd || !TRESOR_API_URL) return;
+
+  state.password = pwd;
+  const loginBtn = document.getElementById('login-btn');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Connexion...';
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .check_password();
+    });
+
+    if (result && result.success) {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.querySelector('.app').classList.remove('hidden');
+      init();
+    } else {
+      sessionStorage.removeItem('tresor_password');
+      state.password = '';
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+    }
+  } catch (error) {
+    sessionStorage.removeItem('tresor_password');
+    state.password = '';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Connexion';
+  }
+}
+
 function prefillLoginUrl_() {
-  if (!hasNativeAppsScriptRuntime) return;
   const input = document.getElementById('login-url');
   if (input && !input.value) {
     input.value = window.location.href.split('?')[0];
@@ -243,12 +292,16 @@ function prefillLoginUrl_() {
 }
 
 function loginSubmit() {
-  const url = normalizeBackendUrl_(document.getElementById('login-url').value);
   const pwd = document.getElementById('login-pwd').value;
   const loginBtn = document.getElementById('login-btn');
 
-  if (!url || !pwd) {
-    showLoginError('Veuillez entrer l\'URL et le mot de passe');
+  if (!TRESOR_API_URL) {
+    showLoginError('Configurez l\'URL Google Apps Script');
+    return;
+  }
+
+  if (!pwd) {
+    showLoginError('Entrez le mot de passe');
     return;
   }
 
@@ -256,28 +309,36 @@ function loginSubmit() {
   loginBtn.disabled = true;
   loginBtn.textContent = 'Connexion...';
 
+  state.password = pwd;
+
+  function finishLogin_() {
+    sessionStorage.setItem('tresor_password', state.password);
+    document.getElementById('login-screen').classList.add('hidden');
+    document.querySelector('.app').classList.remove('hidden');
+    document.getElementById('login-pwd').value = '';
+    init();
+  }
+
   google.script.run
     .withSuccessHandler(function(result) {
       loginBtn.disabled = false;
       loginBtn.textContent = 'Connexion';
 
       if (!result || !result.success) {
+        state.password = '';
         showLoginError((result && result.error) || 'Connexion impossible');
         return;
       }
 
-      state.backendUrl = url;
-      document.getElementById('login-screen').classList.add('hidden');
-      document.querySelector('.app').classList.remove('hidden');
-      document.getElementById('login-pwd').value = '';
-      init();
+      finishLogin_();
     })
     .withFailureHandler(function(error) {
       loginBtn.disabled = false;
       loginBtn.textContent = 'Connexion';
+      state.password = '';
       showLoginError((error && error.message) || 'Erreur serveur pendant la connexion');
     })
-    .verifyLogin({ url: url, pwd: pwd });
+    .check_password();
 }
 
 function showLoginError(msg) {
@@ -289,6 +350,7 @@ const state = {
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
   backendUrl: '',
+  password: '',
   dataCache: {},
   cacheTimestamp: {},
   cacheExpireMs: 5 * 60 * 1000, // 5 minutes
@@ -1479,11 +1541,16 @@ function installWorkbook() {
 }
 
 prefillLoginUrl_();
+autoLogin_();
+
+// Pré-remplir et afficher la section config
+const apiInput = document.getElementById('api-url-input');
+const setup = document.getElementById('login-setup');
+if (apiInput) apiInput.value = TRESOR_API_URL;
+if (setup) setup.style.display = TRESOR_API_URL ? 'none' : '';
 </script>
 </body>
 </html>
-
-
 
 
 
