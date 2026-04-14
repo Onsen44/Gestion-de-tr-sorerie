@@ -162,8 +162,8 @@ function loginSubmit() {
     return;
   }
 
-  // Vérification instantanée
-  const expectedUrl = 'https://script.google.com/macros/s/AKfycbwt9kiLUBAw1DN9nrCzsdTxw_hO-zzlvAg1F1PGnlTN4hc4GCpR37NAXd4_-ENI-GZQ/exec';
+  // Vérification instantanée - utilise l'URL actuelle
+  const expectedUrl = window.location.href.split('?')[0]; // URL actuelle du site (sans paramètres)
   const expectedPwd = '@pilori44';
 
   if (url.trim() === expectedUrl && pwd === expectedPwd) {
