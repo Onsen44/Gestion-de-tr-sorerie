@@ -86,10 +86,29 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 @media (max-width:720px){
   .form-grid{grid-template-columns:1fr}
 }
+#login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,#eef3fb 0%,#f8fafc 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
+#login-container{background:#fff;border-radius:18px;padding:40px;box-shadow:0 10px 40px rgba(16,32,51,.15);max-width:400px;width:100%;text-align:center}
+#login-container h1{margin:0 0 10px;font-size:28px;color:var(--text)}
+#login-container p{margin:0 0 30px;color:var(--muted);font-size:14px}
+#login-url,#login-pwd{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;margin-bottom:12px}
+#login-btn{width:100%;padding:12px 16px;background:var(--brand);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer}
+#login-btn:hover{background:#0d1e52}
+#login-error{color:var(--danger);margin-top:12px;font-size:14px}
 </style>
 </head>
 <body>
-<div class="app">
+<div id="login-screen">
+  <div id="login-container">
+    <h1>Accès sécurisé</h1>
+    <p>Entrez l'URL et le mot de passe pour accéder à la gestion de trésorerie</p>
+    <input id="login-url" type="text" placeholder="URL du site" onkeypress="if(event.key==='Enter') loginSubmit()">
+    <input id="login-pwd" type="password" placeholder="Mot de passe" onkeypress="if(event.key==='Enter') loginSubmit()">
+    <button id="login-btn" onclick="loginSubmit()">Accès</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div class="app hidden">
   <aside class="sidebar">
     <div class="brand">ONSEN Cash</div>
     <div class="brand-sub">Tresorerie actuelle, imports bancaires, previsionnel, rapprochement bancaire et factures a regler.</div>
@@ -134,6 +153,43 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 </div>
 
 <script>
+function loginSubmit() {
+  const url = document.getElementById('login-url').value;
+  const pwd = document.getElementById('login-pwd').value;
+
+  if (!url || !pwd) {
+    showLoginError('Veuillez entrer l\'URL et le mot de passe');
+    return;
+  }
+
+  document.getElementById('login-btn').disabled = true;
+  document.getElementById('login-btn').textContent = 'Vérification...';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      if (result.success) {
+        // Identifiants corrects
+        document.getElementById('login-screen').classList.add('hidden');
+        document.querySelector('.app').classList.remove('hidden');
+        init();
+      } else {
+        showLoginError(result.error || 'Accès refusé');
+        document.getElementById('login-btn').disabled = false;
+        document.getElementById('login-btn').textContent = 'Accès';
+      }
+    })
+    .withFailureHandler(function(error) {
+      showLoginError('Erreur: ' + (error.message || error));
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('login-btn').textContent = 'Accès';
+    })
+    .verifyLogin(url, pwd);
+}
+
+function showLoginError(msg) {
+  document.getElementById('login-error').textContent = msg;
+}
+
 const state = {
   bootstrap: null,
   currentPage: 'Accueil',
