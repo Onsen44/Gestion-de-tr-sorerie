@@ -403,13 +403,33 @@ const pageMeta = {
 };
 
 function init() {
+  console.log('init() called');
   google.script.run
     .withSuccessHandler(function(data) {
+      console.log('getAppBootstrap success, data keys:', data ? Object.keys(data) : 'null');
       state.bootstrap = data;
-      renderNav();
-      renderAll();
+      if (!data || !data.menu) {
+        console.error('ERROR: data.menu is missing!', data);
+        alert('Erreur: données bootstrap manquantes');
+        return;
+      }
+      try {
+        renderNav();
+        console.log('renderNav() succeeded');
+      } catch (e) {
+        console.error('ERROR in renderNav():', e);
+        alert('Erreur renderNav: ' + e.message);
+      }
+      try {
+        renderAll();
+        console.log('renderAll() succeeded');
+      } catch (e) {
+        console.error('ERROR in renderAll():', e);
+        alert('Erreur renderAll: ' + e.message);
+      }
     })
     .withFailureHandler(function(error) {
+      console.error('getAppBootstrap FAILED:', error);
       alert(error.message || error);
     })
     .getAppBootstrap();
