@@ -162,28 +162,18 @@ function loginSubmit() {
     return;
   }
 
-  document.getElementById('login-btn').disabled = true;
-  document.getElementById('login-btn').textContent = 'Vérification...';
+  // Vérification instantanée
+  const expectedUrl = 'https://onsen44.github.io/Gestion-de-tr-sorerie/';
+  const expectedPwd = '@pilori44';
 
-  google.script.run
-    .withSuccessHandler(function(result) {
-      if (result.success) {
-        // Identifiants corrects
-        document.getElementById('login-screen').classList.add('hidden');
-        document.querySelector('.app').classList.remove('hidden');
-        init();
-      } else {
-        showLoginError(result.error || 'Accès refusé');
-        document.getElementById('login-btn').disabled = false;
-        document.getElementById('login-btn').textContent = 'Accès';
-      }
-    })
-    .withFailureHandler(function(error) {
-      showLoginError('Erreur: ' + (error.message || error));
-      document.getElementById('login-btn').disabled = false;
-      document.getElementById('login-btn').textContent = 'Accès';
-    })
-    .verifyLogin(url, pwd);
+  if (url.trim() === expectedUrl && pwd === expectedPwd) {
+    // Identifiants corrects - connexion instantanée
+    document.getElementById('login-screen').classList.add('hidden');
+    document.querySelector('.app').classList.remove('hidden');
+    init();
+  } else {
+    showLoginError('URL ou mot de passe incorrect');
+  }
 }
 
 function showLoginError(msg) {
