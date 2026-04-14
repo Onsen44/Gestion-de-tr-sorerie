@@ -208,6 +208,8 @@ function normalizeBackendUrl_(url) {
 
 function callAppsScriptApi_(action, payload) {
   const apiUrl = getBackendUrl_();
+  console.log('callAppsScriptApi_ called with action=', action, 'apiUrl=', apiUrl);
+
   if (!apiUrl) {
     return Promise.reject(new Error('URL Apps Script manquante.'));
   }
@@ -306,8 +308,11 @@ function loginSubmit() {
   const pwd = document.getElementById('login-pwd').value;
   const loginBtn = document.getElementById('login-btn');
 
+  console.log('loginSubmit called, TRESOR_API_URL=', TRESOR_API_URL, 'pwd=', pwd ? '***' : '');
+
   if (!TRESOR_API_URL) {
     showLoginError('Configurez l\'URL Google Apps Script');
+    console.error('API URL not configured');
     return;
   }
 
@@ -321,6 +326,7 @@ function loginSubmit() {
   loginBtn.textContent = 'Connexion...';
 
   state.password = pwd;
+  console.log('About to call check_password with API URL:', TRESOR_API_URL);
 
   function finishLogin_() {
     sessionStorage.setItem('tresor_password', state.password);
@@ -332,22 +338,28 @@ function loginSubmit() {
 
   google.script.run
     .withSuccessHandler(function(result) {
+      console.log('check_password success:', result);
       loginBtn.disabled = false;
       loginBtn.textContent = 'Connexion';
 
       if (!result || !result.success) {
         state.password = '';
-        showLoginError((result && result.error) || 'Connexion impossible');
+        const errorMsg = (result && result.error) || 'Connexion impossible';
+        showLoginError(errorMsg);
+        console.error('Login failed:', errorMsg);
         return;
       }
 
+      console.log('Login successful, finishing...');
       finishLogin_();
     })
     .withFailureHandler(function(error) {
+      console.error('check_password error:', error);
       loginBtn.disabled = false;
       loginBtn.textContent = 'Connexion';
       state.password = '';
-      showLoginError((error && error.message) || 'Erreur serveur pendant la connexion');
+      const errorMsg = (error && error.message) || 'Erreur serveur pendant la connexion';
+      showLoginError(errorMsg);
     })
     .check_password();
 }
