@@ -109,6 +109,9 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
       URL Google Apps Script :<br>
       <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:6px 10px;border:1px solid #fde68a;border-radius:6px;font-size:12px;margin-top:6px;" onchange="saveApiUrl_(this.value)">
     </div>
+    <div style="text-align:center;margin-top:12px;">
+      <button id="config-toggle-btn" onclick="toggleConfigSection_()" style="background:none;border:none;color:#697b90;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;">Paramètres</button>
+    </div>
   </div>
 </div>
 
@@ -246,6 +249,14 @@ function saveApiUrl_(url) {
   const setup = document.getElementById('login-setup');
   if (setup) {
     setup.style.display = TRESOR_API_URL ? 'none' : '';
+  }
+}
+
+function toggleConfigSection_() {
+  const setup = document.getElementById('login-setup');
+  if (setup) {
+    const isHidden = setup.style.display === 'none';
+    setup.style.display = isHidden ? '' : 'none';
   }
 }
 
