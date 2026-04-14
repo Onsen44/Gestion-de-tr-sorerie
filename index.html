@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -153,27 +153,131 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 </div>
 
 <script>
+const hasNativeAppsScriptRuntime = !!(window.google && google.script && google.script.run);
+
+if (!hasNativeAppsScriptRuntime) {
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  window.google.script.run = createAppsScriptRunner_();
+}
+
+function createAppsScriptRunner_(successHandler, failureHandler) {
+  return new Proxy({}, {
+    get: function(target, prop) {
+      if (prop === 'withSuccessHandler') {
+        return function(fn) {
+          return createAppsScriptRunner_(fn, failureHandler);
+        };
+      }
+      if (prop === 'withFailureHandler') {
+        return function(fn) {
+          return createAppsScriptRunner_(successHandler, fn);
+        };
+      }
+      return function(payload) {
+        callAppsScriptApi_(String(prop), payload)
+          .then(function(result) {
+            if (typeof successHandler === 'function') successHandler(result);
+          })
+          .catch(function(error) {
+            if (typeof failureHandler === 'function') failureHandler(error);
+            else throw error;
+          });
+      };
+    }
+  });
+}
+
+function getBackendUrl_() {
+  if (state.backendUrl) return state.backendUrl;
+  const input = document.getElementById('login-url');
+  return input ? normalizeBackendUrl_(input.value) : '';
+}
+
+function normalizeBackendUrl_(url) {
+  return String(url || '').trim().replace(/\?$/, '');
+}
+
+function callAppsScriptApi_(action, payload) {
+  const apiUrl = getBackendUrl_();
+  if (!apiUrl) {
+    return Promise.reject(new Error('URL Apps Script manquante.'));
+  }
+
+  return fetch(apiUrl, {
+    method: 'POST',
+    redirect: 'follow',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      action: action,
+      payload: payload
+    })
+  })
+    .then(function(response) {
+      return response.text();
+    })
+    .then(function(text) {
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (error) {
+        throw new Error('Réponse API invalide');
+      }
+
+      if (!parsed.success) {
+        throw new Error(parsed.error || 'Erreur Apps Script');
+      }
+
+      return parsed.data;
+    });
+}
+
+function prefillLoginUrl_() {
+  if (!hasNativeAppsScriptRuntime) return;
+  const input = document.getElementById('login-url');
+  if (input && !input.value) {
+    input.value = window.location.href.split('?')[0];
+  }
+}
+
 function loginSubmit() {
-  const url = document.getElementById('login-url').value;
+  const url = normalizeBackendUrl_(document.getElementById('login-url').value);
   const pwd = document.getElementById('login-pwd').value;
+  const loginBtn = document.getElementById('login-btn');
 
   if (!url || !pwd) {
     showLoginError('Veuillez entrer l\'URL et le mot de passe');
     return;
   }
 
-  // Vérification instantanée - utilise l'URL actuelle
-  const expectedUrl = window.location.href.split('?')[0]; // URL actuelle du site (sans paramètres)
-  const expectedPwd = '@pilori44';
+  showLoginError('');
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Connexion...';
 
-  if (url.trim() === expectedUrl && pwd === expectedPwd) {
-    // Identifiants corrects - connexion instantanée
-    document.getElementById('login-screen').classList.add('hidden');
-    document.querySelector('.app').classList.remove('hidden');
-    init();
-  } else {
-    showLoginError('URL ou mot de passe incorrect');
-  }
+  google.script.run
+    .withSuccessHandler(function(result) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+
+      if (!result || !result.success) {
+        showLoginError((result && result.error) || 'Connexion impossible');
+        return;
+      }
+
+      state.backendUrl = url;
+      document.getElementById('login-screen').classList.add('hidden');
+      document.querySelector('.app').classList.remove('hidden');
+      document.getElementById('login-pwd').value = '';
+      init();
+    })
+    .withFailureHandler(function(error) {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Connexion';
+      showLoginError((error && error.message) || 'Erreur serveur pendant la connexion');
+    })
+    .verifyLogin({ url: url, pwd: pwd });
 }
 
 function showLoginError(msg) {
@@ -184,6 +288,7 @@ const state = {
   bootstrap: null,
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
+  backendUrl: '',
   dataCache: {},
   cacheTimestamp: {},
   cacheExpireMs: 5 * 60 * 1000, // 5 minutes
@@ -1373,13 +1478,10 @@ function installWorkbook() {
     .installOrUpdateWorkbook();
 }
 
-init();
+prefillLoginUrl_();
 </script>
 </body>
 </html>
-
-
-
 
 
 
