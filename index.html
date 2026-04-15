@@ -605,20 +605,25 @@ function esc(value) {
     .replace(/"/g, '&quot;');
 }
 
-function exportWorkbook() {
-  const exportData = state.bootstrap.exportData || {};
-  const workbook = XLSX.utils.book_new();
-  const sheets = [
-    ['Mouvements', exportData.mouvements || []],
-    ['Factures', exportData.factures || []],
-    ['Rapprochements', exportData.rapprochements || []],
-    ['Previsions', exportData.previsions || []]
-  ];
-  sheets.forEach(function(item) {
-    const ws = XLSX.utils.json_to_sheet(item[1]);
-    XLSX.utils.book_append_sheet(workbook, ws, item[0]);
-  });
-  XLSX.writeFile(workbook, 'gestion_tresorerie_export.xlsx');
+async function exportWorkbook() {
+  try {
+    const exportData = await callAppsScriptApi_('getExportPayload');
+    const workbook = XLSX.utils.book_new();
+    const sheets = [
+      ['Mouvements', exportData.mouvements || []],
+      ['Factures', exportData.factures || []],
+      ['Rapprochements', exportData.rapprochements || []],
+      ['Previsions', exportData.previsions || []]
+    ];
+    sheets.forEach(function(item) {
+      const ws = XLSX.utils.json_to_sheet(item[1]);
+      XLSX.utils.book_append_sheet(workbook, ws, item[0]);
+    });
+    XLSX.writeFile(workbook, 'gestion_tresorerie_export.xlsx');
+  } catch (error) {
+    console.error('exportWorkbook failed:', error);
+    alert('Export impossible: ' + (error && error.message ? error.message : error));
+  }
 }
 
 function saveCompte() {
