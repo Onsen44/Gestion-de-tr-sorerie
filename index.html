@@ -197,6 +197,7 @@ function createAppsScriptRunner_(successHandler, failureHandler) {
 }
 
 function getBackendUrl_() {
+  if (hasNativeAppsScriptRuntime) return '';
   if (TRESOR_API_URL) return TRESOR_API_URL;
   if (state.backendUrl) return state.backendUrl;
   return '';
@@ -214,30 +215,40 @@ function callAppsScriptApi_(action, payload) {
     return Promise.reject(new Error('URL Apps Script manquante.'));
   }
 
-  return fetch(apiUrl, {
-    method: 'POST',
-    redirect: 'follow',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8'
-    },
-    body: JSON.stringify({
-      action: action,
-      payload: payload,
-      password: state.password
-    })
-  })
+  const formData = new URLSearchParams();
+  formData.set('action', action);
+  formData.set('password', state.password || '');
+  if (typeof payload !== 'undefined') {
+    formData.set('payload', JSON.stringify(payload));
+  }
+
+  const usePost = action === 'importBankRows' || formData.toString().length > 1800;
+  const request = usePost
+    ? fetch(apiUrl, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+        },
+        body: formData.toString(),
+        cache: 'no-store'
+      })
+    : (function() {
+        const url = new URL(apiUrl);
+        formData.forEach(function(value, key) {
+          url.searchParams.set(key, value);
+        });
+        return fetch(url.toString(), { cache: 'no-store' });
+      })();
+
+  return request
     .then(function(response) {
       console.log('fetch response received, status=', response.status);
-      return response.text();
+      return response.json();
     })
-    .then(function(text) {
-      console.log('response text received, length=', text.length, 'first 200 chars:', text.substring(0, 200));
-      let parsed;
-      try {
-        parsed = JSON.parse(text);
-      } catch (error) {
-        console.error('JSON parse error:', error, 'text was:', text);
-        throw new Error('Réponse API invalide');
+    .then(function(parsed) {
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Reponse API invalide');
       }
 
       console.log('JSON parsed, success=', parsed.success);
@@ -255,6 +266,7 @@ function callAppsScriptApi_(action, payload) {
 }
 
 function saveApiUrl_(url) {
+  if (hasNativeAppsScriptRuntime) return;
   TRESOR_API_URL = url.trim();
   localStorage.setItem('tresor_api_url', TRESOR_API_URL);
   const setup = document.getElementById('login-setup');
@@ -264,6 +276,7 @@ function saveApiUrl_(url) {
 }
 
 function toggleConfigSection_() {
+  if (hasNativeAppsScriptRuntime) return;
   const setup = document.getElementById('login-setup');
   if (setup) {
     const isHidden = setup.style.display === 'none';
@@ -273,7 +286,8 @@ function toggleConfigSection_() {
 
 async function autoLogin_() {
   const pwd = sessionStorage.getItem('tresor_password');
-  if (!pwd || !TRESOR_API_URL) return;
+  if (!pwd) return;
+  if (!hasNativeAppsScriptRuntime && !TRESOR_API_URL) return;
 
   state.password = pwd;
   const loginBtn = document.getElementById('login-btn');
@@ -319,7 +333,7 @@ function loginSubmit() {
 
   console.log('loginSubmit called, TRESOR_API_URL=', TRESOR_API_URL, 'pwd=', pwd ? '***' : '');
 
-  if (!TRESOR_API_URL) {
+  if (!hasNativeAppsScriptRuntime && !TRESOR_API_URL) {
     showLoginError('Configurez l\'URL Google Apps Script');
     console.error('API URL not configured');
     return;
@@ -1598,8 +1612,14 @@ autoLogin_();
 // Pré-remplir et afficher la section config
 const apiInput = document.getElementById('api-url-input');
 const setup = document.getElementById('login-setup');
+const configToggleBtn = document.getElementById('config-toggle-btn');
 if (apiInput) apiInput.value = TRESOR_API_URL;
-if (setup) setup.style.display = TRESOR_API_URL ? 'none' : '';
+if (hasNativeAppsScriptRuntime) {
+  if (setup) setup.style.display = 'none';
+  if (configToggleBtn) configToggleBtn.style.display = 'none';
+} else if (setup) {
+  setup.style.display = TRESOR_API_URL ? 'none' : '';
+}
 </script>
 </body>
 </html>
