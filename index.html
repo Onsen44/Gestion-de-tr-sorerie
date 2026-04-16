@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestion de tresorerie ONSEN</title>
+<title>Gestion de trésorerie ONSEN</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -27,6 +27,13 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .nav{display:flex;flex-direction:column;gap:8px}
 .nav button{background:transparent;border:none;color:#d9e7ff;text-align:left;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
 .nav button.active,.nav button:hover{background:#eef4ff;color:#18396f}
+.nav-group{display:flex;flex-direction:column;gap:6px}
+.nav-parent{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.nav-parent span:first-child{min-width:0}
+.nav-chevron{font-size:12px;opacity:.7}
+.nav-subgroup{display:flex;flex-direction:column;gap:5px;margin-left:14px;padding-left:10px;border-left:1px solid rgba(217,231,255,.28)}
+.nav button.nav-sub{font-size:13px;font-weight:700;padding:9px 12px;color:#c9dcf8}
+.nav button.nav-sub.active,.nav button.nav-sub:hover{background:rgba(238,244,255,.95);color:#18396f}
 .main{padding:24px}
 .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .title h1{margin:0;font-size:31px;letter-spacing:-0.04em}
@@ -173,8 +180,8 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 
 <div class="app hidden">
   <aside class="sidebar">
-    <div class="brand">ONSEN TRESORERIE</div>
-    <div class="brand-sub">Tresorerie actuelle, imports bancaires, previsionnel, rapprochement bancaire et factures a regler.</div>
+    <div class="brand">ONSEN TRÉSORERIE</div>
+    <div class="brand-sub">Trésorerie actuelle, imports bancaires, prévisionnel, rapprochement bancaire et factures à régler.</div>
     <div class="nav" id="nav"></div>
   </aside>
   <main class="main">
@@ -193,7 +200,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
         </div>
         <div class="title" style="flex:1;">
           <h1 id="pageTitle">Accueil</h1>
-          <p id="pageSubtitle">Vue immediate de la tresorerie actuelle, par entite et par compte bancaire.</p>
+          <p id="pageSubtitle">Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.</p>
         </div>
       </div>
       <div class="actions">
@@ -511,6 +518,7 @@ const state = {
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
   tresorerieView: 'mouvements',
+  rapprochementView: 'a_verifier',
   annualSelectedYear: new Date().getFullYear(),
   previsionView: 'forecast',
   annualPilotageCache: {},
@@ -535,14 +543,26 @@ const state = {
 };
 
 const pageMeta = {
-  'Accueil': 'Vue immediate de la tresorerie actuelle, par entite et par compte bancaire.',
-  'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions recentes et onglet A classer.',
-  'Graphiques': 'Courbes de tresorerie, previsionnel vs realise et comparaison avec la periode precedente.',
-  'Previsionnel': 'Previsions par categorie ou sous-categorie, frequences et comparaison des periodes.',
-  'Scenarios': 'Simulations separees du reel pour tester une hausse, une baisse ou un montant cible.',
-  'Rapprochement bancaire': 'Factures a regler, indexation Drive, factures a verifier et cas de rapprochement.',
-  'Parametres': 'Comptes, categories, regles, Drive et etat OCR.'
+  'Accueil': 'Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.',
+  'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions récentes et onglet À classer.',
+  'Graphiques': 'Courbes de trésorerie, prévisionnel vs réalisé et comparaison avec la période précédente.',
+  'Previsionnel': 'Prévisions par catégorie ou sous-catégorie, fréquences et comparaison des périodes.',
+  'Scenarios': 'Simulations séparées du réel pour tester une hausse, une baisse ou un montant cible.',
+  'Rapprochement bancaire': 'Rapprochements validés, à vérifier, transactions sans facture et factures à régler.',
+  'Parametres': 'Comptes, catégories, règles, Drive et état OCR.'
 };
+
+const rapprochementNavItems = [
+  ['a_verifier', 'À vérifier'],
+  ['valides', 'Validés'],
+  ['transactions_sans_facture', 'Transactions sans facture'],
+  ['factures_a_regler', 'Factures à régler']
+];
+
+const tresorerieNavItems = [
+  ['mouvements', 'Mouvements'],
+  ['a_classer', 'Mouvements à classer']
+];
 
 function init() {
   console.log('init() called');
@@ -586,12 +606,82 @@ function renderNav() {
   const nav = document.getElementById('nav');
   nav.innerHTML = '';
   state.bootstrap.menu.forEach(function(page) {
+    if (page === 'Gestion de tresorerie') {
+      const group = document.createElement('div');
+      const isOpen = page === state.currentPage;
+      group.className = 'nav-group';
+
+      const parent = document.createElement('button');
+      parent.className = 'nav-parent' + (isOpen ? ' active' : '');
+      parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
+      parent.onclick = function() {
+        switchTresorerieView(state.tresorerieView || 'mouvements');
+      };
+      group.appendChild(parent);
+
+      if (isOpen) {
+        const subnav = document.createElement('div');
+        subnav.className = 'nav-subgroup';
+        tresorerieNavItems.forEach(function(item) {
+          const child = document.createElement('button');
+          child.textContent = item[1];
+          child.className = 'nav-sub' + (state.tresorerieView === item[0] ? ' active' : '');
+          child.onclick = function() { switchTresorerieView(item[0]); };
+          subnav.appendChild(child);
+        });
+        group.appendChild(subnav);
+      }
+
+      nav.appendChild(group);
+      return;
+    }
+
+    if (page === 'Rapprochement bancaire') {
+      const group = document.createElement('div');
+      const isOpen = page === state.currentPage;
+      group.className = 'nav-group';
+
+      const parent = document.createElement('button');
+      parent.className = 'nav-parent' + (isOpen ? ' active' : '');
+      parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
+      parent.onclick = function() {
+        switchRapprochementView(state.rapprochementView || 'a_verifier');
+      };
+      group.appendChild(parent);
+
+      if (isOpen) {
+        const subnav = document.createElement('div');
+        subnav.className = 'nav-subgroup';
+        rapprochementNavItems.forEach(function(item) {
+          const child = document.createElement('button');
+          child.textContent = item[1];
+          child.className = 'nav-sub' + (state.rapprochementView === item[0] ? ' active' : '');
+          child.onclick = function() { switchRapprochementView(item[0]); };
+          subnav.appendChild(child);
+        });
+        group.appendChild(subnav);
+      }
+
+      nav.appendChild(group);
+      return;
+    }
+
     const button = document.createElement('button');
-    button.textContent = page;
+    button.textContent = displayPageName(page);
     button.className = page === state.currentPage ? 'active' : '';
     button.onclick = function() { showPage(page); };
     nav.appendChild(button);
   });
+}
+
+function displayPageName(page) {
+  const labels = {
+    'Gestion de tresorerie': 'Gestion de trésorerie',
+    'Previsionnel': 'Prévisionnel',
+    'Scenarios': 'Scénarios',
+    'Parametres': 'Paramètres'
+  };
+  return labels[page] || page;
 }
 
 function showPage(page) {
@@ -599,7 +689,7 @@ function showPage(page) {
   Object.keys(pageMeta).forEach(function(name) {
     document.getElementById('page-' + name).classList.toggle('hidden', name !== page);
   });
-  document.getElementById('pageTitle').textContent = page;
+  document.getElementById('pageTitle').textContent = displayPageName(page);
   document.getElementById('pageSubtitle').textContent = pageMeta[page];
   renderNav();
 }
@@ -669,6 +759,7 @@ function updateStateWithData_(data) {
   if (data.periodAnalytics) state.bootstrap.periodAnalytics = data.periodAnalytics;
   if (data.graphData) state.bootstrap.graphData = data.graphData;
   if (data.facturesToPay) state.bootstrap.facturesToPay = data.facturesToPay;
+  if (data.importHistory) state.bootstrap.importHistory = data.importHistory;
   if (data.counts) state.bootstrap.counts = data.counts;
 }
 
@@ -681,10 +772,19 @@ function refreshData() {
 }
 
 function switchTresorerieView(view) {
-  state.tresorerieView = view === 'a_classer' ? 'a_classer' : 'mouvements';
-  if (state.currentPage === 'Gestion de tresorerie') {
-    renderTresorerie();
-  }
+  const allowed = tresorerieNavItems.map(function(item) { return item[0]; });
+  state.tresorerieView = allowed.indexOf(view) !== -1 ? view : 'mouvements';
+  renderTresorerie();
+  showPage('Gestion de tresorerie');
+  attachEventListeners();
+}
+
+function switchRapprochementView(view) {
+  const allowed = rapprochementNavItems.map(function(item) { return item[0]; });
+  state.rapprochementView = allowed.indexOf(view) !== -1 ? view : 'a_verifier';
+  renderRapprochement();
+  showPage('Rapprochement bancaire');
+  attachEventListeners();
 }
 
 function renderAll() {
@@ -721,6 +821,20 @@ function attachEventListeners() {
       e.preventDefault();
       const invoiceId = this.getAttribute('data-invoice-id');
       saveInvoicePayment(invoiceId);
+    };
+  });
+
+  document.querySelectorAll('.validateRapprochementBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      validateRapprochement(this.getAttribute('data-rapprochement-id'));
+    };
+  });
+
+  document.querySelectorAll('.rollbackImportBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      rollbackImport(this.getAttribute('data-import-id'));
     };
   });
 
@@ -1020,7 +1134,7 @@ function renderPeriodAnalytics(periodAnalytics) {
 
 function renderTransactionsWithoutInvoice(rows) {
   if (!rows || !rows.length) return '<div class="empty">Aucune transaction sans facture visible pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entite</th><th>Compte</th><th>Libelle</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entité</th><th>Compte</th><th>Libellé</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Date)}</td>
       <td>${esc(row.Entite)}</td>
@@ -1345,13 +1459,17 @@ function renderTresorerie() {
   const comptes = state.bootstrap.config.comptes || [];
   const movementRows = state.bootstrap.recentMovements || [];
   const aClasser = state.bootstrap.aClasser || [];
+  const importHistory = state.bootstrap.importHistory || [];
   const annualData = getAnnualPilotageData_();
   const realised = annualData && annualData.realised ? annualData.realised : null;
-  const activeView = state.tresorerieView === 'a_classer' ? 'a_classer' : 'mouvements';
+  const allowedViews = tresorerieNavItems.map(function(item) { return item[0]; });
+  const activeView = allowedViews.indexOf(state.tresorerieView) !== -1 ? state.tresorerieView : 'mouvements';
+  state.tresorerieView = activeView;
+  const activeViewLabel = (tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1];
   const mainTitle = activeView === 'a_classer' ? 'Transactions a classer' : 'Derniers mouvements';
   const mainSubtitle = activeView === 'a_classer'
-    ? 'Acces direct aux transactions en attente de classement, sans scroller dans toute la page.'
-    : 'Vue rapide sur les derniers mouvements bancaires importes et classes.';
+    ? 'Accès direct aux transactions en attente de classement, sans scroller dans toute la page.'
+    : 'Vue rapide sur les derniers mouvements bancaires importés et classés.';
   const mainContent = activeView === 'a_classer' ? renderAClasserTable(aClasser) : `<div class="table-wrap">${renderMovementsTable(movementRows)}</div>`;
 
   document.getElementById('page-Gestion de tresorerie').innerHTML = `
@@ -1368,14 +1486,10 @@ function renderTresorerie() {
       </div>
 
       <div class="card panel-wide">
-        <div class="subtabs">
-          <button class="subtab-btn ${activeView === 'mouvements' ? 'active' : ''}" onclick="switchTresorerieView('mouvements')">Mouvements</button>
-          <button class="subtab-btn ${activeView === 'a_classer' ? 'active' : ''}" onclick="switchTresorerieView('a_classer')">Mouvements a classer${aClasser.length ? ' (' + aClasser.length + ')' : ''}</button>
-        </div>
         <div class="section-title">
           <div>
             <h3>${mainTitle}</h3>
-            <p>${mainSubtitle}</p>
+            <p>Section active: <strong>${esc(activeViewLabel)}</strong>. ${mainSubtitle}</p>
           </div>
         </div>
         ${mainContent}
@@ -1387,6 +1501,16 @@ function renderTresorerie() {
           <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
           <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
         </div>
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Historique des imports bancaires</h3>
+            <p>Si un fichier a été importé par erreur, le bouton annule ses mouvements, classements et rapprochements liés.</p>
+          </div>
+        </div>
+        ${renderImportHistory(importHistory)}
       </div>
 
       <div class="card panel-full">
@@ -1643,9 +1767,13 @@ function renderFacturesToPay(rows) {
   }).join('')}</tbody></table></div>`;
 }
 
-function renderRapprochementTable(rows) {
-  if (!rows.length) return '<div class="empty">Aucun rapprochement enregistre pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Transaction</th><th>Facture</th><th>Ecart</th><th>Score</th><th>Statut</th><th>Commentaire</th></tr></thead><tbody>${rows.map(function(row) {
+function renderRapprochementTable(rows, options) {
+  options = options || {};
+  if (!rows.length) return '<div class="empty">Aucun rapprochement enregistré pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Transaction</th><th>Facture</th><th>Écart</th><th>Score</th><th>Statut</th><th>Commentaire</th>${options.canValidate ? '<th>Action</th>' : ''}</tr></thead><tbody>${rows.map(function(row) {
+    const action = options.canValidate
+      ? `<td><button class="btn secondary validateRapprochementBtn" data-rapprochement-id="${esc(row.Rapprochement_id)}">Valider</button></td>`
+      : '';
     return `<tr>
       <td>${esc(row.Entite)}</td>
       <td>${esc(row.Transaction_uid)}</td>
@@ -1654,13 +1782,14 @@ function renderRapprochementTable(rows) {
       <td>${esc(row.Score_confiance)}</td>
       <td>${esc(row.Statut)}</td>
       <td>${esc(row.Commentaire || '')}</td>
+      ${action}
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
 
 function renderFacturesToVerify(rows) {
-  if (!rows.length) return '<div class="empty">Aucune facture a verifier pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Nom fichier</th><th>Probleme</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucune facture à vérifier pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Nom fichier</th><th>Problème</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Entite)}</td>
       <td>${esc(row.Nom_fichier)}</td>
@@ -1670,44 +1799,81 @@ function renderFacturesToVerify(rows) {
   }).join('')}</tbody></table></div>`;
 }
 
+function renderImportHistory(rows) {
+  if (!rows.length) return '<div class="empty">Aucun import bancaire enregistré.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entité</th><th>Compte</th><th>Fichier</th><th>Lignes</th><th>Nouvelles</th><th>Doublons</th><th>Statut</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+    const importId = esc(row.Import_id || '');
+    const status = String(row.Statut || '').trim();
+    const canRollback = importId && status !== 'ANNULE';
+    return `<tr>
+      <td>${esc(row.Date_import)}</td>
+      <td>${esc(row.Entite)}</td>
+      <td>${esc(row.Compte_id)}</td>
+      <td>${esc(row.Nom_fichier)}</td>
+      <td>${esc(row.Nombre_lignes)}</td>
+      <td>${esc(row.Nouvelles_lignes)}</td>
+      <td>${esc(row.Doublons)}</td>
+      <td>${esc(row.Statut)}</td>
+      <td>${canRollback ? `<button class="btn secondary rollbackImportBtn" data-import-id="${importId}">Annuler cet import</button>` : '<span class="empty">Déjà annulé</span>'}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
 function renderRapprochement() {
   const factures = state.bootstrap.facturesToPay || [];
   const rapprochements = state.bootstrap.recentRapprochements || [];
   const facturesToVerify = state.bootstrap.facturesToVerify || [];
   const transactionsWithoutInvoice = state.bootstrap.transactionsWithoutInvoice || [];
+  const validStatuses = ['AUTO_RAPPROCHE', 'RAPPROCHE', 'VALIDE'];
+  const rapprochementsValides = rapprochements.filter(function(row) {
+    return validStatuses.indexOf(String(row.Statut || '').trim()) !== -1;
+  });
+  const rapprochementsAVerifier = rapprochements.filter(function(row) {
+    return String(row.Statut || '').trim() === 'A_VERIFIER';
+  });
+  const allowedViews = rapprochementNavItems.map(function(item) { return item[0]; });
+  const view = allowedViews.indexOf(state.rapprochementView) !== -1 ? state.rapprochementView : 'a_verifier';
+  state.rapprochementView = view;
+  const viewLabel = (rapprochementNavItems.find(function(item) { return item[0] === view; }) || rapprochementNavItems[0])[1];
+  const activePanel = view === 'valides'
+    ? `<div class="card panel-full"><h3>Rapprochements validés</h3>${renderRapprochementTable(rapprochementsValides)}</div>`
+    : view === 'transactions_sans_facture'
+      ? `<div class="card panel-full"><h3>Transactions sans facture</h3>${renderTransactionsWithoutInvoice(transactionsWithoutInvoice)}</div>`
+      : view === 'factures_a_regler'
+        ? `<div class="card panel-full"><h3>Factures à régler</h3>${renderFacturesToPay(factures)}</div>`
+        : `<div class="card panel-full"><h3>Rapprochements à vérifier</h3>${renderRapprochementTable(rapprochementsAVerifier, { canValidate: true })}</div>`;
   document.getElementById('page-Rapprochement bancaire').innerHTML = `
     <div class="grid">
-      <div class="card panel-wide">
-        <h3>Factures a regler</h3>
-        ${renderFacturesToPay(factures)}
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Contrôle du rapprochement bancaire</h3>
+            <p>Section active: <strong>${esc(viewLabel)}</strong>. Le choix de vue se fait maintenant depuis le menu à gauche.</p>
+          </div>
+        </div>
       </div>
       <div class="card panel-side">
         <h3>Compteurs</h3>
         <div class="list">
-          <div class="row"><div>Factures<small>Indexees dans le sheet</small></div><div>${state.bootstrap.counts.Factures || 0}</div></div>
-          <div class="row"><div>Factures a verifier<small>Lecture ou classement incertain</small></div><div>${state.bootstrap.counts.Factures_A_Verifier || 0}</div></div>
-          <div class="row"><div>Rapprochements<small>Liens enregistres</small></div><div>${state.bootstrap.counts.Rapprochements || 0}</div></div>
+          <div class="row"><div>Rapprochements à vérifier<small>Correspondances probables à confirmer</small></div><div>${rapprochementsAVerifier.length}</div></div>
+          <div class="row"><div>Rapprochements validés<small>Liens confirmés</small></div><div>${rapprochementsValides.length}</div></div>
+          <div class="row"><div>Transactions sans facture<small>Sorties bancaires non justifiées</small></div><div>${transactionsWithoutInvoice.length}</div></div>
+          <div class="row"><div>Factures à régler<small>Factures sans transaction liée</small></div><div>${factures.length}</div></div>
         </div>
       </div>
-      <div class="card panel-full">
-        <h3>Rapprochements automatiques et a verifier</h3>
-        ${renderRapprochementTable(rapprochements)}
-      </div>
-      <div class="card panel-full">
-        <h3>Factures a verifier</h3>
+      <div class="card panel-wide">
+        <h3>Factures à vérifier côté lecture</h3>
+        <p class="empty" style="margin-top:0">Contrôle technique OCR/nom de fichier, séparé du rapprochement bancaire.</p>
         ${renderFacturesToVerify(facturesToVerify)}
       </div>
-      <div class="card panel-full">
-        <h3>Transactions sans facture</h3>
-        ${renderTransactionsWithoutInvoice(transactionsWithoutInvoice)}
-      </div>
+      ${activePanel}
       <div class="card panel-full">
         <h3>Logique de rapprochement</h3>
         <table class="table"><thead><tr><th>Statut</th><th>Description</th></tr></thead><tbody>
-          <tr><td>RAPPROCHE / AUTO_RAPPROCHE</td><td>Transaction bancaire reliee a une facture avec score fort.</td></tr>
-          <tr><td>A_VERIFIER</td><td>Correspondance plausible mais pas assez fiable pour etre validee sans controle.</td></tr>
-          <tr><td>Transaction sans facture</td><td>Sortie ou entree bancaire sans document rattache.</td></tr>
-          <tr><td>Facture sans paiement</td><td>Facture presente dans Drive / Sheet sans transaction correspondante.</td></tr>
+          <tr><td>RAPPROCHE / AUTO_RAPPROCHE</td><td>Transaction bancaire reliée à une facture avec score fort ou validation humaine.</td></tr>
+          <tr><td>A_VERIFIER</td><td>Correspondance plausible mais pas assez fiable pour être validée sans contrôle.</td></tr>
+          <tr><td>Transaction sans facture</td><td>Sortie bancaire sans justificatif rattaché.</td></tr>
+          <tr><td>Facture à régler</td><td>Facture présente dans Drive / Sheet sans transaction correspondante.</td></tr>
         </tbody></table>
       </div>
     </div>`;
@@ -1940,6 +2106,7 @@ function submitImport() {
       state.bootstrap.graphData = result.graphData;
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
+      state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
       loadAnnualPilotageData_(true).then(function() {
         renderAll();
         showPage('Gestion de tresorerie');
@@ -1985,6 +2152,7 @@ function saveClassification(transactionUid) {
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
       state.bootstrap.dashboard = result.dashboard;
+      state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
       state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
       state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
       state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
@@ -2026,6 +2194,7 @@ function saveInvoicePayment(factureId) {
       state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
       state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
       state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
       renderAll();
       showPage('Rapprochement bancaire');
     })
@@ -2033,6 +2202,45 @@ function saveInvoicePayment(factureId) {
       showToast(error.message || error, 'error');
     })
     .updateInvoicePaymentStatus({ factureId: factureId, statutPaiement: status, datePaiement: date, modePaiement: mode, transactionUid: '' });
+}
+
+function applyRefreshPayload_(result) {
+  state.dataCache = {};
+  state.cacheTimestamp = {};
+  state.annualPilotageCache = {};
+  updateStateWithData_(result || {});
+}
+
+function validateRapprochement(rapprochementId) {
+  if (!rapprochementId) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      applyRefreshPayload_(result);
+      renderAll();
+      showPage('Rapprochement bancaire');
+      showToast('Rapprochement validé.', 'success');
+    })
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
+    .validateRapprochement({ rapprochementId: rapprochementId });
+}
+
+function rollbackImport(importId) {
+  if (!importId) return;
+  if (!confirm('Annuler cet import bancaire ? Les mouvements, classements et rapprochements liés seront retirés.')) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      applyRefreshPayload_(result);
+      renderAll();
+      showPage('Gestion de tresorerie');
+      const rollback = result.rollback || {};
+      showToast(`Import annulé. ${rollback.movementsDeleted || 0} mouvement(s) supprimé(s).`, 'success');
+    })
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
+    .rollbackImport({ importId: importId });
 }
 
 function runInvoiceOcr() {
@@ -2049,6 +2257,7 @@ function runInvoiceOcr() {
       state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
       state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
       state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
       state.bootstrap.ocrReady = result.ocrReady;
       state.bootstrap.ocrConfig = result.ocrConfig;
       renderAll();
