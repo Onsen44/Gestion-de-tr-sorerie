@@ -77,14 +77,70 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .footer-note{font-size:12px;color:var(--muted)}
 .success{color:var(--ok);font-weight:700}
 .error{color:var(--danger);font-weight:700}
+.toast-stack{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10000;max-width:360px}
+.toast{background:#fff;border:1px solid var(--line);border-left:5px solid var(--brand);border-radius:14px;padding:14px 16px;box-shadow:0 14px 34px rgba(16,32,51,.14);font-size:14px;line-height:1.5}
+.toast.success{border-left-color:var(--ok);color:var(--text)}
+.toast.error{border-left-color:var(--danger);color:var(--text)}
+.toast.warn{border-left-color:var(--warn);color:var(--text)}
+.hero-card{grid-column:span 12;background:linear-gradient(135deg,#10284d 0%,#173d7a 52%,#315b9a 100%);color:#fff;border:none}
+.hero-card h3{font-size:26px;margin:0 0 8px}
+.hero-card p{margin:0;color:rgba(255,255,255,.82);line-height:1.6}
+.hero-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+.hero-metric{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px}
+.hero-metric .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.74)}
+.hero-metric .value{font-size:28px;font-weight:800;margin-top:8px}
+.hero-metric .hint{font-size:12px;color:rgba(255,255,255,.74);margin-top:6px}
+.section-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+.section-title p{margin:4px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.priority-list{display:flex;flex-direction:column;gap:10px}
+.priority-item{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #eef2f7;border-radius:14px;background:#f9fbfd}
+.priority-item strong{display:block;font-size:14px}
+.priority-item small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}
+.priority-item .amount{font-weight:800;white-space:nowrap}
+.status-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800}
+.status-chip.ok{background:#e7f6ed;color:var(--ok)}
+.status-chip.warn{background:#fff4df;color:var(--warn)}
+.status-chip.danger{background:#fdecec;color:var(--danger)}
+.mini-kpi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mini-kpi{border:1px solid #eef2f7;border-radius:14px;padding:14px;background:#f9fbfd}
+.mini-kpi .label{font-size:12px;color:var(--muted)}
+.mini-kpi .value{font-size:24px;font-weight:800;margin-top:6px}
+.mini-kpi .hint{font-size:12px;color:var(--muted);margin-top:4px}
+.subtabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.subtab-btn{border:none;border-radius:999px;padding:10px 14px;font-weight:800;cursor:pointer;background:#eaf0fb;color:var(--brand)}
+.subtab-btn.active{background:var(--brand);color:#fff}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar .field-inline{display:flex;flex-direction:column;gap:6px}
+.toolbar label{font-size:12px;color:var(--muted);font-weight:700}
+.toolbar select{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+.annual-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;align-items:end;min-height:320px;margin-top:10px}
+.annual-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.annual-bars{height:220px;display:flex;align-items:flex-end;gap:6px}
+.annual-bar{width:16px;border-radius:10px 10px 4px 4px;min-height:8px}
+.annual-bar.enc{background:linear-gradient(180deg,#85d4a0,#0f9d58)}
+.annual-bar.dec{background:linear-gradient(180deg,#f0a3a3,#c62828)}
+.annual-line-wrap{height:44px;display:flex;align-items:flex-end;justify-content:center}
+.annual-line-dot{width:12px;height:12px;border-radius:50%;background:#173d7a;border:2px solid #fff;box-shadow:0 2px 8px rgba(23,61,122,.25)}
+.annual-label{font-size:11px;color:var(--muted);text-align:center}
+.pivot-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
+.pivot-table{width:100%;border-collapse:collapse;min-width:1100px}
+.pivot-table th,.pivot-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:right;font-size:13px;vertical-align:middle;white-space:nowrap}
+.pivot-table th:first-child,.pivot-table td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+.pivot-table thead th{position:sticky;top:0;background:#f7f9fc;z-index:2}
+.pivot-table .level-0 td:first-child{font-weight:800}
+.pivot-table .level-1 td:first-child{padding-left:20px;font-weight:700}
+.pivot-table .level-2 td:first-child{padding-left:38px;color:var(--muted)}
+.pivot-table .section-row td{background:#f9fbfd}
 @media (max-width:1120px){
   .app{grid-template-columns:1fr}
   .sidebar{border-right:none;border-bottom:1px solid #26446f}
   .kpi,.panel-wide,.panel-side,.panel-full{grid-column:span 12}
   .form-grid{grid-template-columns:1fr 1fr}
+  .hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:720px){
   .form-grid{grid-template-columns:1fr}
+  .hero-metrics,.mini-kpi-grid{grid-template-columns:1fr}
 }
 #login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,#eef3fb 0%,#f8fafc 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
 #login-container{background:#fff;border-radius:18px;padding:40px;box-shadow:0 10px 40px rgba(16,32,51,.15);max-width:400px;width:100%;text-align:center}
@@ -117,7 +173,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 
 <div class="app hidden">
   <aside class="sidebar">
-    <div class="brand">ONSEN Cash</div>
+    <div class="brand">ONSEN TRESORERIE</div>
     <div class="brand-sub">Tresorerie actuelle, imports bancaires, previsionnel, rapprochement bancaire et factures a regler.</div>
     <div class="nav" id="nav"></div>
   </aside>
@@ -158,6 +214,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
     <section id="page-Parametres" class="hidden"></section>
   </main>
 </div>
+<div id="toast-stack" class="toast-stack"></div>
 
 <script>
 let TRESOR_API_URL = localStorage.getItem('tresor_api_url') || '';
@@ -205,6 +262,64 @@ function getBackendUrl_() {
 
 function normalizeBackendUrl_(url) {
   return String(url || '').trim().replace(/\?$/, '');
+}
+
+function annualPilotageCacheKey_() {
+  return [state.selectedEntite || 'TOUTES', state.annualSelectedYear || new Date().getFullYear()].join('|');
+}
+
+function getAnnualPilotageData_() {
+  return state.annualPilotageCache[annualPilotageCacheKey_()] || null;
+}
+
+function loadAnnualPilotageData_(forceRefresh) {
+  const cacheKey = annualPilotageCacheKey_();
+  if (!forceRefresh && state.annualPilotageCache[cacheKey]) {
+    return Promise.resolve(state.annualPilotageCache[cacheKey]);
+  }
+  return new Promise(function(resolve, reject) {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        state.annualPilotageCache[cacheKey] = data;
+        resolve(data);
+      })
+      .withFailureHandler(reject)
+      .getAnnualPilotageData({
+        entite: state.selectedEntite,
+        year: state.annualSelectedYear
+      });
+  });
+}
+
+function changeAnnualYear(value) {
+  state.annualSelectedYear = Number(value || new Date().getFullYear());
+  loadAnnualPilotageData_(true)
+    .then(function() { renderAll(); })
+    .catch(function(error) { showToast(error.message || error, 'error'); });
+}
+
+function changePrevisionView(view) {
+  state.previsionView = ['forecast', 'actual', 'variance'].indexOf(view) !== -1 ? view : 'forecast';
+  if (state.currentPage === 'Previsionnel') {
+    renderPrevisionnel();
+  }
+}
+
+function showToast(message, type) {
+  const stack = document.getElementById('toast-stack');
+  if (!stack || !message) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (type || 'success');
+  toast.textContent = String(message);
+  stack.appendChild(toast);
+  window.setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(6px)';
+    toast.style.transition = 'opacity .2s ease, transform .2s ease';
+  }, 3200);
+  window.setTimeout(function() {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 3500);
 }
 
 function callAppsScriptApi_(action, payload) {
@@ -395,6 +510,10 @@ const state = {
   bootstrap: null,
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
+  tresorerieView: 'mouvements',
+  annualSelectedYear: new Date().getFullYear(),
+  previsionView: 'forecast',
+  annualPilotageCache: {},
   backendUrl: '',
   password: '',
   dataCache: {},
@@ -433,7 +552,7 @@ function init() {
       state.bootstrap = data;
       if (!data || !data.menu) {
         console.error('ERROR: data.menu is missing!', data);
-        alert('Erreur: données bootstrap manquantes');
+        showToast('Erreur: donnees bootstrap manquantes', 'error');
         return;
       }
       try {
@@ -441,19 +560,24 @@ function init() {
         console.log('renderNav() succeeded');
       } catch (e) {
         console.error('ERROR in renderNav():', e);
-        alert('Erreur renderNav: ' + e.message);
+        showToast('Erreur renderNav: ' + e.message, 'error');
       }
       try {
         renderAll();
         console.log('renderAll() succeeded');
       } catch (e) {
         console.error('ERROR in renderAll():', e);
-        alert('Erreur renderAll: ' + e.message);
+        showToast('Erreur renderAll: ' + e.message, 'error');
       }
+      loadAnnualPilotageData_(false).then(function() {
+        renderAll();
+      }).catch(function(error) {
+        showToast(error.message || error, 'error');
+      });
     })
     .withFailureHandler(function(error) {
       console.error('getAppBootstrap FAILED:', error);
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .getAppBootstrap();
 }
@@ -498,7 +622,11 @@ function changeEntite() {
     // Utiliser le cache
     const cachedData = state.dataCache[newEntite];
     updateStateWithData_(cachedData);
-    renderAll();
+    loadAnnualPilotageData_(false).then(function() {
+      renderAll();
+    }).catch(function(error) {
+      showToast(error.message || error, 'error');
+    });
     return;
   }
 
@@ -513,10 +641,14 @@ function changeEntite() {
       updateStateWithData_(data);
 
       // Actualiser l'affichage
-      renderAll();
+      loadAnnualPilotageData_(true).then(function() {
+        renderAll();
+      }).catch(function(error) {
+        showToast(error.message || error, 'error');
+      });
     })
     .withFailureHandler(function(error) {
-      alert('Erreur lors du chargement de l\'entité: ' + error.message);
+      showToast('Erreur lors du chargement de l\'entite: ' + error.message, 'error');
     })
     .getDataForEntite(newEntite);
 }
@@ -544,7 +676,15 @@ function refreshData() {
   // Vider tout le cache et recharger
   state.dataCache = {};
   state.cacheTimestamp = {};
+  state.annualPilotageCache = {};
   init();
+}
+
+function switchTresorerieView(view) {
+  state.tresorerieView = view === 'a_classer' ? 'a_classer' : 'mouvements';
+  if (state.currentPage === 'Gestion de tresorerie') {
+    renderTresorerie();
+  }
 }
 
 function renderAll() {
@@ -622,7 +762,7 @@ async function exportWorkbook() {
     XLSX.writeFile(workbook, 'gestion_tresorerie_export.xlsx');
   } catch (error) {
     console.error('exportWorkbook failed:', error);
-    alert('Export impossible: ' + (error && error.message ? error.message : error));
+    showToast('Export impossible: ' + (error && error.message ? error.message : error), 'error');
   }
 }
 
@@ -645,10 +785,10 @@ function saveCompte() {
       state.bootstrap.counts = result.counts;
       renderAll();
       showPage('Parametres');
-      alert('Compte enregistre.');
+      showToast('Compte enregistre.', 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .upsertCompte(payload);
 }
@@ -668,10 +808,10 @@ function saveCategorie() {
       state.bootstrap.counts = result.counts;
       renderAll();
       showPage('Parametres');
-      alert('Categorie enregistree.');
+      showToast('Categorie enregistree.', 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .upsertCategorie(payload);
 }
@@ -692,21 +832,26 @@ function savePrevision() {
     Active: document.getElementById('prev-active').value,
     Commentaire: document.getElementById('prev-commentaire').value
   };
-  google.script.run
-      .withSuccessHandler(function(result) {
-        state.dataCache = {};
-        state.cacheTimestamp = {};
-        state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
-        state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
-        state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
-        state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
-        state.bootstrap.counts = result.counts || state.bootstrap.counts;
-        renderAll();
-        showPage('Previsionnel');
-        alert('Prevision enregistree.');
-      })
+    google.script.run
+        .withSuccessHandler(function(result) {
+          state.dataCache = {};
+          state.cacheTimestamp = {};
+          state.annualPilotageCache = {};
+          state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+          state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+          state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+          state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+          state.bootstrap.counts = result.counts || state.bootstrap.counts;
+          loadAnnualPilotageData_(true).then(function() {
+            renderAll();
+            showPage('Previsionnel');
+            showToast('Prevision enregistree.', 'success');
+          }).catch(function(error) {
+            showToast(error.message || error, 'error');
+          });
+        })
       .withFailureHandler(function(error) {
-        alert(error.message || error);
+        showToast(error.message || error, 'error');
       })
     .upsertPrevision(payload);
 }
@@ -726,18 +871,19 @@ function saveScenario() {
     Commentaire: document.getElementById('scenario-commentaire').value
   };
   google.script.run
-    .withSuccessHandler(function(result) {
-      state.dataCache = {};
-      state.cacheTimestamp = {};
-      state.bootstrap.recentScenarios = result.recentScenarios || state.bootstrap.recentScenarios;
-      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
-      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      .withSuccessHandler(function(result) {
+        state.dataCache = {};
+        state.cacheTimestamp = {};
+        state.annualPilotageCache = {};
+        state.bootstrap.recentScenarios = result.recentScenarios || state.bootstrap.recentScenarios;
+        state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+        state.bootstrap.counts = result.counts || state.bootstrap.counts;
       renderAll();
       showPage('Scenarios');
-      alert('Scenario enregistre.');
+      showToast('Scenario enregistre.', 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .upsertScenario(payload);
 }
@@ -755,10 +901,10 @@ function saveAlertSettings() {
       state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
       renderAll();
       showPage('Parametres');
-      alert('Seuils d alerte enregistres.');
+      showToast('Seuils d alerte enregistres.', 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .setAlertSettings(payload);
 }
@@ -769,7 +915,7 @@ function enableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       render();
-      alert(result.message || 'Synchronisation automatique activee.');
+      showToast(result.message || 'Synchronisation automatique activee.', 'success');
     })
     .withFailureHandler(handleError)
     .installAutomaticSyncTrigger();
@@ -780,7 +926,7 @@ function disableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       render();
-      alert(result.message || 'Synchronisation automatique desactivee.');
+      showToast(result.message || 'Synchronisation automatique desactivee.', 'success');
     })
     .withFailureHandler(handleError)
     .removeAutomaticSyncTriggers();
@@ -793,10 +939,10 @@ function saveDriveRoot(entite) {
       state.bootstrap.config.driveRoots = result.driveConfig || state.bootstrap.config.driveRoots;
       renderAll();
       showPage('Parametres');
-      alert('Dossier Drive enregistre.');
+      showToast('Dossier Drive enregistre.', 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .setDriveRoot({ entite: entite, folderId: input ? input.value : '' });
 }
@@ -909,49 +1055,304 @@ function renderSimpleList(items, emptyText, subtitle) {
   }).join('');
 }
 
+function parseUiDate_(value) {
+  if (!value) return null;
+  if (value instanceof Date && !isNaN(value.getTime())) return value;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+  const fr = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if (fr) {
+    const year = fr[3].length === 2 ? Number('20' + fr[3]) : Number(fr[3]);
+    return new Date(year, Number(fr[2]) - 1, Number(fr[1]));
+  }
+  const parsed = new Date(raw);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function startOfToday_() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function diffDaysFromToday_(value) {
+  const date = parseUiDate_(value);
+  if (!date) return null;
+  const today = startOfToday_();
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
+function buildPilotageSnapshot_() {
+  const dashboard = state.bootstrap.dashboard || {};
+  const forecast = state.bootstrap.forecastSummary || {};
+  const factures = state.bootstrap.facturesToPay || [];
+  const alerts = state.bootstrap.alerts || [];
+  const urgentInvoices = factures.filter(function(row) {
+    const diff = diffDaysFromToday_(row.Date_echeance);
+    return diff !== null && diff >= 0 && diff <= 7;
+  });
+  const due30 = factures.filter(function(row) {
+    const diff = diffDaysFromToday_(row.Date_echeance);
+    return diff !== null && diff >= 0 && diff <= 30;
+  });
+  const due7Amount = urgentInvoices.reduce(function(total, row) { return total + Number(row.Montant_TTC || 0); }, 0);
+  const due30Amount = due30.reduce(function(total, row) { return total + Number(row.Montant_TTC || 0); }, 0);
+  const currentCash = Number(dashboard.tresorerieActuelle || 0);
+  const monthNet = Number(dashboard.encaissements || 0) - Number(dashboard.decaissements || 0);
+  const forecastGap = Number((forecast.totals || {}).actual || 0) - Number((forecast.totals || {}).forecast || 0);
+
+  return {
+    currentCash: currentCash,
+    monthNet: monthNet,
+    urgentInvoices: urgentInvoices,
+    due30: due30,
+    due7Amount: due7Amount,
+    due30Amount: due30Amount,
+    cashAfter7: currentCash - due7Amount,
+    cashAfter30: currentCash - due30Amount,
+    alertsCount: alerts.length,
+    forecastGap: forecastGap
+  };
+}
+
+function renderPriorityList_(items, emptyText) {
+  if (!items || !items.length) return `<div class="empty">${emptyText}</div>`;
+  return `<div class="priority-list">${items.map(function(item) {
+    return `<div class="priority-item">
+      <div>
+        <strong>${esc(item.title)}</strong>
+        <small>${esc(item.detail || '')}</small>
+      </div>
+      <div style="text-align:right">
+        ${item.badge ? `<div><span class="status-chip ${esc(item.badgeLevel || 'ok')}">${esc(item.badge)}</span></div>` : ''}
+        ${item.amount ? `<div class="amount" style="margin-top:${item.badge ? '8px' : '0'}">${esc(item.amount)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function buildActionItems_() {
+  const aClasser = (state.bootstrap.aClasser || []).length;
+  const facturesToVerify = (state.bootstrap.facturesToVerify || []).length;
+  const txWithoutInvoice = (state.bootstrap.transactionsWithoutInvoice || []).length;
+  const urgentInvoices = buildPilotageSnapshot_().urgentInvoices.length;
+  return [
+    { title: 'Transactions a classer', detail: 'Operations qui attendent une categorie fiable.', badge: String(aClasser), badgeLevel: aClasser ? 'warn' : 'ok' },
+    { title: 'Factures a verifier', detail: 'Documents a controler ou lecture OCR incertaine.', badge: String(facturesToVerify), badgeLevel: facturesToVerify ? 'warn' : 'ok' },
+    { title: 'Transactions sans facture', detail: 'Decaissements encore non rapproches.', badge: String(txWithoutInvoice), badgeLevel: txWithoutInvoice ? 'danger' : 'ok' },
+    { title: 'Factures echeance 7 jours', detail: 'Paiements a arbitrer rapidement.', badge: String(urgentInvoices), badgeLevel: urgentInvoices ? 'danger' : 'ok' }
+  ];
+}
+
+function buildUrgentInvoiceItems_() {
+  return (buildPilotageSnapshot_().urgentInvoices || [])
+    .sort(function(a, b) { return diffDaysFromToday_(a.Date_echeance) - diffDaysFromToday_(b.Date_echeance); })
+    .slice(0, 5)
+    .map(function(row) {
+      const diff = diffDaysFromToday_(row.Date_echeance);
+      const badge = diff === 0 ? 'Aujourd hui' : (diff < 0 ? 'En retard' : diff + ' j');
+      const badgeLevel = diff <= 1 ? 'danger' : 'warn';
+      return {
+        title: [row.Entite, row.Fournisseur || row.Nom_fichier || 'Facture'].filter(Boolean).join(' - '),
+        detail: 'Echeance ' + (row.Date_echeance || 'non renseignee'),
+        badge: badge,
+        badgeLevel: badgeLevel,
+        amount: euro(row.Montant_TTC)
+      };
+    });
+}
+
+function buildVarianceItems_() {
+  const lines = ((state.bootstrap.forecastSummary || {}).lines || []).slice(0, 5);
+  return lines.map(function(row) {
+    const amount = Number(row.variance || 0);
+    return {
+      title: [row.entite, row.categorie, row.sousCategorie].filter(Boolean).join(' / '),
+      detail: 'Realise ' + euro(row.actual) + ' vs prevu ' + euro(row.forecast),
+      badge: amount > 0 ? 'Sur-consommation' : 'Sous-consommation',
+      badgeLevel: amount > 0 ? 'danger' : 'ok',
+      amount: euro(amount)
+    };
+  });
+}
+
+function renderAnnualToolbar_(options) {
+  const annualData = getAnnualPilotageData_() || {};
+  const years = (annualData.availableYears || [state.annualSelectedYear]).map(function(year) {
+    return Number(year);
+  }).filter(function(year, index, array) {
+    return !isNaN(year) && array.indexOf(year) === index;
+  }).sort(function(a, b) {
+    return b - a;
+  });
+  return `<div class="toolbar">
+    <div class="field-inline">
+      <label>Annee</label>
+      <select onchange="changeAnnualYear(this.value)">${years.map(function(year) {
+        return `<option value="${year}"${Number(year) === Number(state.annualSelectedYear) ? ' selected' : ''}>${year}</option>`;
+      }).join('')}</select>
+    </div>
+    ${options && options.viewButtons ? `<div class="subtabs" style="margin:18px 0 0 0">${options.viewButtons}</div>` : ''}
+  </div>`;
+}
+
+function renderAnnualComboChart_(points, mode) {
+  if (!points || !points.length) return '<div class="empty">Aucune donnee annuelle disponible pour cette selection.</div>';
+  const maxValue = Math.max.apply(null, points.map(function(point) {
+    const values = mode === 'forecast'
+      ? [Math.abs(point.forecastEncaissements || 0), Math.abs(point.forecastDecaissements || 0), Math.abs(point.forecastClosingCash || 0)]
+      : [Math.abs(point.encaissements || 0), Math.abs(point.decaissements || 0), Math.abs(point.closingCash || 0)];
+    return Math.max.apply(null, values);
+  }).concat([1]));
+
+  return `<div class="annual-chart">${points.map(function(point) {
+    const enc = mode === 'forecast' ? (point.forecastEncaissements || 0) : (point.encaissements || 0);
+    const dec = mode === 'forecast' ? (point.forecastDecaissements || 0) : (point.decaissements || 0);
+    const lineValue = mode === 'forecast' ? (point.forecastClosingCash || 0) : (point.closingCash || 0);
+    const encHeight = Math.max(8, Math.round((Math.abs(enc) / maxValue) * 180));
+    const decHeight = Math.max(8, Math.round((Math.abs(dec) / maxValue) * 180));
+    const lineOffset = Math.max(0, Math.min(32, Math.round((Math.abs(lineValue) / maxValue) * 32)));
+    return `<div class="annual-col">
+      <div class="annual-line-wrap" title="${esc(point.label)} - Tresorerie: ${euro(lineValue)}" style="padding-bottom:${lineOffset}px">
+        <div class="annual-line-dot"></div>
+      </div>
+      <div class="annual-bars">
+        <div class="annual-bar enc" title="${esc(point.label)} - Encaissements: ${euro(enc)}" style="height:${encHeight}px"></div>
+        <div class="annual-bar dec" title="${esc(point.label)} - Decaissements: ${euro(dec)}" style="height:${decHeight}px"></div>
+      </div>
+      <div class="annual-label">${esc(point.label)}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderVarianceChart_(points) {
+  if (!points || !points.length) return '<div class="empty">Aucun ecart annuel disponible pour cette selection.</div>';
+  const maxValue = Math.max.apply(null, points.map(function(point) {
+    return Math.abs(point.varianceNet || 0);
+  }).concat([1]));
+  return `<div class="annual-chart">${points.map(function(point) {
+    const variance = point.varianceNet || 0;
+    const height = Math.max(8, Math.round((Math.abs(variance) / maxValue) * 200));
+    const color = variance >= 0 ? 'linear-gradient(180deg,#85d4a0,#0f9d58)' : 'linear-gradient(180deg,#f0a3a3,#c62828)';
+    return `<div class="annual-col">
+      <div class="annual-line-wrap"></div>
+      <div class="annual-bars">
+        <div class="annual-bar" title="${esc(point.label)} - Ecart: ${euro(variance)}" style="width:28px;height:${height}px;background:${color}"></div>
+      </div>
+      <div class="annual-label">${esc(point.label)}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderAnnualPivotTable_(rows) {
+  if (!rows || !rows.length) return '<div class="empty">Aucune ligne annuelle disponible pour cette selection.</div>';
+  const monthHeaders = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `<div class="pivot-wrap"><table class="pivot-table"><thead><tr><th>Element</th>${monthHeaders.map(function(month) {
+    return `<th>${month}</th>`;
+  }).join('')}<th>Total</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr class="level-${row.level || 0} ${row.kind === 'section' ? 'section-row' : ''}">
+      <td>${esc(row.label)}</td>
+      ${(row.monthly || []).map(function(value) { return `<td>${euro(value)}</td>`; }).join('')}
+      <td>${euro(row.total)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
 function renderAccueil() {
   const d = state.bootstrap.dashboard;
+  const annualData = getAnnualPilotageData_();
+  const realised = annualData && annualData.realised ? annualData.realised : null;
   document.getElementById('page-Accueil').innerHTML = `
     <div class="grid">
-      <div class="card kpi"><div class="label">Tresorerie actuelle</div><div class="value">${euro(d.tresorerieActuelle)}</div><div class="hint">Consolide actuel</div></div>
-      <div class="card kpi"><div class="label">Encaissements</div><div class="value">${euro(d.encaissements)}</div><div class="hint">Cumul des entrees</div></div>
-      <div class="card kpi"><div class="label">Decaissements</div><div class="value">${euro(d.decaissements)}</div><div class="hint">Cumul des sorties</div></div>
-      <div class="card kpi"><div class="label">Transactions</div><div class="value">${state.bootstrap.counts.Mouvements || 0}</div><div class="hint">Lignes dans le sheet</div></div>
+      <div class="card hero-card">
+        <h3>Situation actuelle</h3>
+        <p>Resume de tresorerie pour l entite selectionnee, ou vision consolidee si TOUTES LES ENTITES est active.</p>
+        <div class="hero-metrics">
+          <div class="hero-metric">
+            <div class="label">Tresorerie actuelle</div>
+            <div class="value">${euro(d.tresorerieActuelle)}</div>
+            <div class="hint">Situation courante de tresorerie</div>
+          </div>
+          <div class="hero-metric">
+            <div class="label">Encaissements</div>
+            <div class="value">${euro(d.encaissements)}</div>
+            <div class="hint">Flux positifs de l entite choisie</div>
+          </div>
+          <div class="hero-metric">
+            <div class="label">Decaissements</div>
+            <div class="value">${euro(d.decaissements)}</div>
+            <div class="hint">Flux negatifs de l entite choisie</div>
+          </div>
+          <div class="hero-metric">
+            <div class="label">Comptes visibles</div>
+            <div class="value">${(d.comptes || []).length}</div>
+            <div class="hint">Comptes bancaires dans le filtre courant</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Evolution annuelle de tresorerie</h3>
+            <p>Le graphe suit l entite selectionnee. En vue TOUTES, il montre le consolide.</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_()}
+        ${renderAnnualComboChart_(realised ? realised.chart : [], 'realised')}
+      </div>
 
       <div class="card panel-wide">
-        <h3>Tresorerie par entite</h3>
+        <div class="section-title">
+          <div>
+            <h3>Tresorerie par entite</h3>
+            <p>Lecture consolidee pour savoir quelle structure porte le cash ou la tension.</p>
+          </div>
+        </div>
         <div class="list">${renderSimpleList(d.entites, 'Aucune entite alimentee pour le moment.', 'Solde de tresorerie calcule')}</div>
       </div>
-        <div class="card panel-side">
-          <h3>Alertes principales</h3>
-          <div class="list">${renderAlerts(state.bootstrap.alerts || [])}</div>
+      <div class="card panel-side">
+        <div class="section-title">
+          <div>
+            <h3>Comptes de l entite</h3>
+            <p>Lecture directe des comptes bancaires relies a la selection courante.</p>
+          </div>
         </div>
-
-      <div class="card panel-wide">
-        <h3>Tresorerie par compte bancaire</h3>
         <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimente.', 'Dernier solde connu ou net cumule')}</div>
       </div>
-      <div class="card panel-side">
-        <h3>Base reliee</h3>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Base reliee</h3>
+            <p>Le socle technique du suivi de tresorerie.</p>
+          </div>
+        </div>
         <div class="list">
           <div class="row"><div>Google Sheet<small>Structure centrale du projet</small></div><div><span class="badge ok">Actif</span></div></div>
           <div class="row"><div>ID du sheet<small>${esc(state.bootstrap.spreadsheetId)}</small></div><div></div></div>
-            <div class="row"><div>Onglets synchronises<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
-          </div>
-          <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le sheet</a></div>
+          <div class="row"><div>Onglets synchronises<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
         </div>
-        <div class="card panel-full">
-          <h3>Lecture des periodes</h3>
-          <div class="list">${renderPeriodAnalytics(state.bootstrap.periodAnalytics)}</div>
-        </div>
-      </div>`;
-  }
+        <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le sheet</a></div>
+      </div>
+    </div>`;
+}
 
 function renderTresorerie() {
   const entites = state.bootstrap.config.entites || [];
   const comptes = state.bootstrap.config.comptes || [];
   const movementRows = state.bootstrap.recentMovements || [];
   const aClasser = state.bootstrap.aClasser || [];
+  const annualData = getAnnualPilotageData_();
+  const realised = annualData && annualData.realised ? annualData.realised : null;
+  const activeView = state.tresorerieView === 'a_classer' ? 'a_classer' : 'mouvements';
+  const mainTitle = activeView === 'a_classer' ? 'Transactions a classer' : 'Derniers mouvements';
+  const mainSubtitle = activeView === 'a_classer'
+    ? 'Acces direct aux transactions en attente de classement, sans scroller dans toute la page.'
+    : 'Vue rapide sur les derniers mouvements bancaires importes et classes.';
+  const mainContent = activeView === 'a_classer' ? renderAClasserTable(aClasser) : `<div class="table-wrap">${renderMovementsTable(movementRows)}</div>`;
 
   document.getElementById('page-Gestion de tresorerie').innerHTML = `
     <div class="grid">
@@ -967,8 +1368,17 @@ function renderTresorerie() {
       </div>
 
       <div class="card panel-wide">
-        <h3>Derniers mouvements</h3>
-        <div class="table-wrap">${renderMovementsTable(movementRows)}</div>
+        <div class="subtabs">
+          <button class="subtab-btn ${activeView === 'mouvements' ? 'active' : ''}" onclick="switchTresorerieView('mouvements')">Mouvements</button>
+          <button class="subtab-btn ${activeView === 'a_classer' ? 'active' : ''}" onclick="switchTresorerieView('a_classer')">Mouvements a classer${aClasser.length ? ' (' + aClasser.length + ')' : ''}</button>
+        </div>
+        <div class="section-title">
+          <div>
+            <h3>${mainTitle}</h3>
+            <p>${mainSubtitle}</p>
+          </div>
+        </div>
+        ${mainContent}
       </div>
       <div class="card panel-side">
         <h3>Etat des imports</h3>
@@ -980,8 +1390,24 @@ function renderTresorerie() {
       </div>
 
       <div class="card panel-full">
-        <h3>Transactions a classer</h3>
-        ${renderAClasserTable(aClasser)}
+        <div class="section-title">
+          <div>
+            <h3>Pilotage annuel des mouvements</h3>
+            <p>Vue annuelle du realise par categorie et sous-categorie, avec graphe d evolution pour l entite choisie ou le consolide.</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_()}
+        ${renderAnnualComboChart_(realised ? realised.chart : [], 'realised')}
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Tableau annuel du realise</h3>
+            <p>Montants mensuels des mouvements reels, groupes par encaissements, decaissements, categories et sous-categories.</p>
+          </div>
+        </div>
+        ${renderAnnualPivotTable_(realised ? realised.rows : [])}
       </div>
     </div>`;
 }
@@ -1071,6 +1497,20 @@ function renderPrevisionnel() {
   const comptes = (state.bootstrap.config || {}).comptes || [];
   const categories = Object.keys(((state.bootstrap.config || {}).categoryMap) || {});
   const recentPrevisions = state.bootstrap.recentPrevisions || [];
+  const annualData = getAnnualPilotageData_();
+  const forecast = annualData && annualData.forecast ? annualData.forecast : null;
+  const previsionRows = state.previsionView === 'actual'
+    ? (forecast ? forecast.realisedRows : [])
+    : state.previsionView === 'variance'
+      ? (forecast ? forecast.varianceRows : [])
+      : (forecast ? forecast.forecastRows : []);
+  const previsionButtons = [
+    { id: 'forecast', label: 'Prevu' },
+    { id: 'actual', label: 'Realise' },
+    { id: 'variance', label: 'Ecart' }
+  ].map(function(item) {
+    return `<button class="subtab-btn ${state.previsionView === item.id ? 'active' : ''}" onclick="changePrevisionView('${item.id}')">${item.label}</button>`;
+  }).join('');
   document.getElementById('page-Previsionnel').innerHTML = `
     <div class="grid">
       <div class="card kpi"><div class="label">Prevu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total previsionnel du mois</div></div>
@@ -1100,7 +1540,28 @@ function renderPrevisionnel() {
       </div>
 
       <div class="card panel-full">
-        <h3>Previsionnel vs realise</h3>
+        <div class="section-title">
+          <div>
+            <h3>Graphiques annuels du previsionnel</h3>
+            <p>Lecture annuelle du prevu, du realise et des ecarts, toujours filtree par entite ou consolidee selon la selection.</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_({ viewButtons: previsionButtons })}
+        ${state.previsionView === 'variance' ? renderVarianceChart_(forecast ? forecast.chart : []) : renderAnnualComboChart_(state.previsionView === 'forecast' ? (forecast ? forecast.chart : []) : ((annualData && annualData.realised) ? annualData.realised.chart : []), state.previsionView === 'forecast' ? 'forecast' : 'realised')}
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prevu' : state.previsionView === 'actual' ? 'du realise' : 'des ecarts'}</h3>
+            <p>Structure annuelle par tresorerie, encaissements, decaissements, categories et sous-categories.</p>
+          </div>
+        </div>
+        ${renderAnnualPivotTable_(previsionRows)}
+      </div>
+
+      <div class="card panel-full">
+        <h3>Previsionnel vs realise du mois</h3>
         ${renderForecastTable(summary)}
       </div>
 
@@ -1451,19 +1912,20 @@ function submitImport() {
     if (el) state.mapping[key] = el.value;
   });
   if (!state.mapping.date || !state.mapping.libelle) {
-    alert('Le mapping Date et Libelle est obligatoire.');
+    showToast('Le mapping Date et Libelle est obligatoire.', 'warn');
     return;
   }
   if (!state.mapping.montant && !state.mapping.debit && !state.mapping.credit) {
-    alert('Renseigne soit Montant, soit Debit et Credit.');
+    showToast('Renseigne soit Montant, soit Debit et Credit.', 'warn');
     return;
   }
 
   google.script.run
     .withSuccessHandler(function(result) {
-      alert(`Import termine. ${result.inserted} nouvelles lignes, ${result.duplicates} doublons, ${result.toClassify} a classer.`);
+      showToast(`Import termine. ${result.inserted} nouvelles lignes, ${result.duplicates} doublons, ${result.toClassify} a classer.`, 'success');
       state.dataCache = {};
       state.cacheTimestamp = {};
+      state.annualPilotageCache = {};
       state.bootstrap.dashboard = result.dashboard;
       state.bootstrap.aClasser = result.aClasser;
       state.bootstrap.recentMovements = result.recentMovements;
@@ -1478,11 +1940,15 @@ function submitImport() {
       state.bootstrap.graphData = result.graphData;
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
-      renderAll();
-      showPage('Gestion de tresorerie');
+      loadAnnualPilotageData_(true).then(function() {
+        renderAll();
+        showPage('Gestion de tresorerie');
+      }).catch(function(error) {
+        showToast(error.message || error, 'error');
+      });
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .importBankRows({
       entite: entite,
@@ -1508,27 +1974,34 @@ function saveClassification(transactionUid) {
   const sousCategorie = document.getElementById('sub-' + transactionUid).value;
   const createRule = document.getElementById('rule-' + transactionUid).checked;
   const ruleValue = document.getElementById('ruleValue-' + transactionUid).value;
-  google.script.run
-    .withSuccessHandler(function(result) {
-      state.bootstrap.aClasser = result.aClasser;
-      state.bootstrap.recentMovements = result.recentMovements;
-      state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+    google.script.run
+      .withSuccessHandler(function(result) {
+        state.dataCache = {};
+        state.cacheTimestamp = {};
+        state.annualPilotageCache = {};
+        state.bootstrap.aClasser = result.aClasser;
+        state.bootstrap.recentMovements = result.recentMovements;
+        state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
       state.bootstrap.dashboard = result.dashboard;
       state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
       state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
       state.bootstrap.transactionsWithoutInvoice = result.transactionsWithoutInvoice || state.bootstrap.transactionsWithoutInvoice;
-      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
-      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
-      state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
-      state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
-      state.bootstrap.graphData = result.graphData;
-      renderAll();
-      showPage('Gestion de tresorerie');
-    })
+        state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+        state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+        state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
+        state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
+        state.bootstrap.graphData = result.graphData;
+        loadAnnualPilotageData_(true).then(function() {
+          renderAll();
+          showPage('Gestion de tresorerie');
+        }).catch(function(error) {
+          showToast(error.message || error, 'error');
+        });
+      })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .classifyTransaction({
       transactionUid: transactionUid,
@@ -1557,7 +2030,7 @@ function saveInvoicePayment(factureId) {
       showPage('Rapprochement bancaire');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .updateInvoicePaymentStatus({ factureId: factureId, statutPaiement: status, datePaiement: date, modePaiement: mode, transactionUid: '' });
 }
@@ -1580,10 +2053,10 @@ function runInvoiceOcr() {
       state.bootstrap.ocrConfig = result.ocrConfig;
       renderAll();
       showPage('Rapprochement bancaire');
-      alert(`OCR termine. ${result.ok} factures lues, ${result.failed} en echec.`);
+      showToast(`OCR termine. ${result.ok} factures lues, ${result.failed} en echec.`, 'success');
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .runInvoiceOcr({ limit: limit });
 }
@@ -1591,22 +2064,22 @@ function runInvoiceOcr() {
 function syncDriveInvoices() {
   google.script.run
     .withSuccessHandler(function(result) {
-      alert(`Indexation Drive terminee. ${result.inserted} factures ajoutees, ${result.toVerify} a verifier.`);
+      showToast(`Indexation Drive terminee. ${result.inserted} factures ajoutees, ${result.toVerify} a verifier.`, 'success');
       refreshData();
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .syncDriveInvoices({});
 }
 function installWorkbook() {
   google.script.run
     .withSuccessHandler(function(result) {
-      alert(result.message);
+      showToast(result.message, 'success');
       refreshData();
     })
     .withFailureHandler(function(error) {
-      alert(error.message || error);
+      showToast(error.message || error, 'error');
     })
     .installOrUpdateWorkbook();
 }
