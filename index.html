@@ -561,7 +561,8 @@ const rapprochementNavItems = [
 
 const tresorerieNavItems = [
   ['mouvements', 'Mouvements'],
-  ['a_classer', 'Mouvements à classer']
+  ['a_classer', 'Mouvements à classer'],
+  ['imports', 'Historique des imports bancaires']
 ];
 
 function init() {
@@ -851,6 +852,57 @@ function euro(value) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
 }
 
+function formatImportHistoryDate(value) {
+  if (!value) return '';
+  let date = null;
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    date = value;
+  } else if (typeof value === 'number') {
+    date = new Date(value);
+  } else {
+    const raw = String(value || '').trim();
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) date = parsed;
+  }
+  if (!date) return String(value || '');
+  const pad = function(number) { return String(number).padStart(2, '0'); };
+  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + pad(date.getFullYear() % 100) +
+    ' à ' + pad(date.getHours()) + 'h' + pad(date.getMinutes());
+}
+
+function frLabel(value) {
+  const labels = {
+    Securite: 'Sécurité',
+    Electricite: 'Électricité',
+    Decaissement: 'Décaissement',
+    Regles: 'Règles',
+    Categories: 'Catégories',
+    Categorie: 'Catégorie',
+    Sous_categorie: 'Sous-catégorie',
+    Frequence: 'Fréquence',
+    Entite: 'Entité',
+    Parametres: 'Paramètres',
+    Previsionnel: 'Prévisionnel',
+    Scenarios: 'Scénarios',
+    Tresorerie: 'Trésorerie',
+    A_classer: 'À classer',
+    Non_classe: 'Non classé',
+    A_definir: 'À définir',
+    'A definir': 'À définir',
+    'Non classe': 'Non classé',
+    Variable: 'Variable',
+    Mensuelle: 'Mensuelle',
+    Trimestrielle: 'Trimestrielle',
+    Semestrielle: 'Semestrielle',
+    Annuelle: 'Annuelle',
+    Ponctuelle: 'Ponctuelle',
+    societe: 'société',
+    groupe: 'groupe'
+  };
+  const raw = String(value == null ? '' : value);
+  return labels[raw] || labels[raw.replace(/\s+/g, '_')] || raw;
+}
+
 function esc(value) {
   return String(value == null ? '' : value)
     .replace(/&/g, '&amp;')
@@ -922,13 +974,83 @@ function saveCategorie() {
       state.bootstrap.counts = result.counts;
       renderAll();
       showPage('Parametres');
-      showToast('Categorie enregistree.', 'success');
+      showToast('Catégorie enregistrée.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
     })
     .upsertCategorie(payload);
 }
+
+function saveRegle() {
+  const payload = {
+    Regle_id: document.getElementById('param-regle-id').value,
+    Active: document.getElementById('param-regle-active').value,
+    Entite: document.getElementById('param-regle-entite').value,
+    Compte_id: document.getElementById('param-regle-compte').value,
+    Champ_source: 'Libelle_normalise',
+    Operateur: 'contains',
+    Valeur: document.getElementById('param-regle-valeur').value,
+    Categorie: document.getElementById('param-regle-categorie').value,
+    Sous_categorie: document.getElementById('param-regle-sous').value,
+    Sens: document.getElementById('param-regle-sens').value,
+    Priorite: document.getElementById('param-regle-priorite').value,
+    Frequence: document.getElementById('param-regle-frequence').value,
+    Commentaire: document.getElementById('param-regle-commentaire').value
+  };
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.config = result.config;
+      state.bootstrap.counts = result.counts;
+      renderAll();
+      showPage('Parametres');
+      showToast('Règle enregistrée.', 'success');
+    })
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
+    .upsertRegle(payload);
+}
+
+function editCategorie(index) {
+  const row = (state.bootstrap.config.categories || [])[Number(index)];
+  if (!row) return;
+  document.getElementById('param-cat-categorie').value = row.Categorie || '';
+  document.getElementById('param-cat-sous').value = row.Sous_categorie || '';
+  document.getElementById('param-cat-flux').value = row.Type_flux || 'Decaissement';
+  document.getElementById('param-cat-frequence').value = row.Frequence || 'Mensuelle';
+  document.getElementById('param-cat-active').value = row.Active || 'Oui';
+  document.getElementById('param-cat-commentaire').value = row.Commentaire || '';
+}
+
+function editRegle(index) {
+  const row = (state.bootstrap.config.regles || [])[Number(index)];
+  if (!row) return;
+  document.getElementById('param-regle-id').value = row.Regle_id || '';
+  document.getElementById('param-regle-active').value = row.Active || 'Oui';
+  document.getElementById('param-regle-entite').value = row.Entite || '';
+  document.getElementById('param-regle-compte').value = row.Compte_id || '';
+  document.getElementById('param-regle-valeur').value = row.Valeur || '';
+  document.getElementById('param-regle-categorie').value = row.Categorie || '';
+  updateParamRegleSousCategories();
+  document.getElementById('param-regle-sous').value = row.Sous_categorie || '';
+  document.getElementById('param-regle-sens').value = row.Sens || '';
+  document.getElementById('param-regle-priorite').value = row.Priorite || 100;
+  document.getElementById('param-regle-frequence').value = row.Frequence || 'Variable';
+  document.getElementById('param-regle-commentaire').value = row.Commentaire || '';
+}
+
+function updateParamRegleSousCategories() {
+  const categoryMap = state.bootstrap.config.categoryMap || {};
+  const category = document.getElementById('param-regle-categorie').value;
+  const target = document.getElementById('param-regle-sous');
+  if (!target) return;
+  const options = categoryMap[category] || [];
+  target.innerHTML = '<option value="">Aucune</option>' + options.map(function(value) {
+    return `<option value="${esc(value)}">${esc(frLabel(value))}</option>`;
+  }).join('');
+}
+
 function savePrevision() {
   const payload = {
     Prevision_id: document.getElementById('prev-id').value,
@@ -1460,57 +1582,40 @@ function renderTresorerie() {
   const movementRows = state.bootstrap.recentMovements || [];
   const aClasser = state.bootstrap.aClasser || [];
   const importHistory = state.bootstrap.importHistory || [];
+  const importEntite = state.selectedEntite && state.selectedEntite !== 'TOUTES' ? state.selectedEntite : (entites[0] || '');
   const annualData = getAnnualPilotageData_();
   const realised = annualData && annualData.realised ? annualData.realised : null;
   const allowedViews = tresorerieNavItems.map(function(item) { return item[0]; });
   const activeView = allowedViews.indexOf(state.tresorerieView) !== -1 ? state.tresorerieView : 'mouvements';
   state.tresorerieView = activeView;
   const activeViewLabel = (tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1];
-  const mainTitle = activeView === 'a_classer' ? 'Transactions a classer' : 'Derniers mouvements';
+  const mainTitle = activeView === 'a_classer'
+    ? 'Transactions a classer'
+    : activeView === 'imports'
+      ? 'Historique des imports bancaires'
+      : 'Derniers mouvements';
   const mainSubtitle = activeView === 'a_classer'
-    ? 'Accès direct aux transactions en attente de classement, sans scroller dans toute la page.'
-    : 'Vue rapide sur les derniers mouvements bancaires importés et classés.';
-  const mainContent = activeView === 'a_classer' ? renderAClasserTable(aClasser) : `<div class="table-wrap">${renderMovementsTable(movementRows)}</div>`;
+    ? 'Acces direct aux transactions en attente de classement, sans scroller dans toute la page.'
+    : activeView === 'imports'
+      ? 'Si un fichier a ete importe par erreur, le bouton annule ses mouvements, classements et rapprochements lies.'
+      : 'Vue rapide sur les derniers mouvements bancaires importes et classes.';
+  const mainContent = activeView === 'a_classer'
+    ? renderAClasserTable(aClasser)
+    : activeView === 'imports'
+      ? renderImportHistory(importHistory)
+      : `<div class="table-wrap">${renderMovementsTable(movementRows)}</div>`;
 
   document.getElementById('page-Gestion de tresorerie').innerHTML = `
     <div class="grid">
       <div class="card panel-full">
         <h3>Import bancaire</h3>
         <div class="form-grid">
-          <div class="field"><label>Entite</label><select id="importEntite">${entites.map(e => `<option value="${esc(e)}"${state.selectedEntite === e ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
-          <div class="field"><label>Compte bancaire</label><select id="importCompte">${comptes.filter(c => state.selectedEntite === 'TOUTES' || c.Entite === state.selectedEntite).map(c => `<option value="${esc(c.Compte_id)}"${state.selectedEntite === c.Entite ? ' selected' : ''}>${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`).join('')}</select></div>
+          <div class="field"><label>Société</label><select id="importEntite" onchange="updateImportEntiteSelection()">${entites.map(e => `<option value="${esc(e)}"${importEntite === e ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="importCompte" onchange="updateImportCompteSelection()">${renderImportCompteOptions_(importEntite)}</select></div>
           <div class="field"><label>Fichier bancaire</label><input type="file" id="bankFile" accept=".xlsx,.xls,.csv" onchange="handleBankFile(event)"></div>
           <div class="field"><label>Nom source</label><input type="text" id="sourceName" value="import_banque"></div>
         </div>
         <div id="mappingArea" class="hidden" style="margin-top:16px"></div>
-      </div>
-
-      <div class="card panel-wide">
-        <div class="section-title">
-          <div>
-            <h3>${mainTitle}</h3>
-            <p>Section active: <strong>${esc(activeViewLabel)}</strong>. ${mainSubtitle}</p>
-          </div>
-        </div>
-        ${mainContent}
-      </div>
-      <div class="card panel-side">
-        <h3>Etat des imports</h3>
-        <div class="list">
-          <div class="row"><div>A classer<small>Transactions non reconnues</small></div><div>${state.bootstrap.counts.Transactions_A_Classer || 0}</div></div>
-          <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
-          <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
-        </div>
-      </div>
-
-      <div class="card panel-full">
-        <div class="section-title">
-          <div>
-            <h3>Historique des imports bancaires</h3>
-            <p>Si un fichier a été importé par erreur, le bouton annule ses mouvements, classements et rapprochements liés.</p>
-          </div>
-        </div>
-        ${renderImportHistory(importHistory)}
       </div>
 
       <div class="card panel-full">
@@ -1532,6 +1637,25 @@ function renderTresorerie() {
           </div>
         </div>
         ${renderAnnualPivotTable_(realised ? realised.rows : [])}
+      </div>
+
+      <div class="card panel-side">
+        <h3>Etat des imports</h3>
+        <div class="list">
+          <div class="row"><div>A classer<small>Transactions non reconnues</small></div><div>${state.bootstrap.counts.Transactions_A_Classer || 0}</div></div>
+          <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
+          <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
+        </div>
+      </div>
+
+      <div class="card panel-wide">
+        <div class="section-title">
+          <div>
+            <h3>${mainTitle}</h3>
+            <p>Section active: <strong>${esc(activeViewLabel)}</strong>. ${mainSubtitle}</p>
+          </div>
+        </div>
+        ${mainContent}
       </div>
     </div>`;
 }
@@ -1806,7 +1930,7 @@ function renderImportHistory(rows) {
     const status = String(row.Statut || '').trim();
     const canRollback = importId && status !== 'ANNULE';
     return `<tr>
-      <td>${esc(row.Date_import)}</td>
+      <td>${esc(formatImportHistoryDate(row.Date_import))}</td>
       <td>${esc(row.Entite)}</td>
       <td>${esc(row.Compte_id)}</td>
       <td>${esc(row.Nom_fichier)}</td>
@@ -1886,11 +2010,21 @@ function renderParametres() {
   const settings = state.bootstrap.settings || {};
   const automaticSync = state.bootstrap.automaticSync || { enabled: false, frequency: 'Desactive' };
   const driveRoots = state.bootstrap.driveConfig || [];
+  const categoryNames = Object.keys(state.bootstrap.config.categoryMap || {});
+  const categoryOptions = categoryNames.map(function(category) {
+    return `<option value="${esc(category)}">${esc(frLabel(category))}</option>`;
+  }).join('');
+  const entiteOptions = (state.bootstrap.config.entites || []).map(function(entite) {
+    return `<option value="${esc(entite)}">${esc(entite)}</option>`;
+  }).join('');
+  const compteOptions = (state.bootstrap.config.comptes || []).map(function(compte) {
+    return `<option value="${esc(compte.Compte_id)}">${esc(compte.Entite)} - ${esc(compte.Nom_compte || compte.Compte_id)}</option>`;
+  }).join('');
   document.getElementById('page-Parametres').innerHTML = `
     <div class="grid">
       <div class="card panel-wide">
         <h3>Comptes bancaires</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Compte_id</th><th>Entite</th><th>Nom</th><th>Banque</th><th>RIB / IBAN</th><th>Actif</th></tr></thead><tbody>${comptes.map(function(row) {
+        <div class="table-wrap"><table class="table"><thead><tr><th>Compte_id</th><th>Entité</th><th>Nom</th><th>Banque</th><th>RIB / IBAN</th><th>Actif</th></tr></thead><tbody>${comptes.map(function(row) {
           return `<tr><td>${esc(row.Compte_id)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Nom_compte)}</td><td>${esc(row.Banque)}</td><td>${esc(row.RIB_IBAN)}</td><td>${esc(row.Actif)}</td></tr>`;
         }).join('')}</tbody></table></div>
       </div>
@@ -1901,33 +2035,34 @@ function renderParametres() {
         }).join('')}</div>
       </div>
       <div class="card panel-wide">
-        <h3>Categories de gestion</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Categorie</th><th>Sous-categorie</th><th>Flux</th><th>Frequence</th></tr></thead><tbody>${categories.map(function(row) {
-          return `<tr><td>${esc(row.Categorie)}</td><td>${esc(row.Sous_categorie)}</td><td>${esc(row.Type_flux)}</td><td>${esc(row.Frequence)}</td></tr>`;
+        <h3>Catégories de gestion</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Catégorie</th><th>Sous-catégorie</th><th>Flux</th><th>Fréquence</th><th>Action</th></tr></thead><tbody>${categories.map(function(row, index) {
+          return `<tr><td>${esc(frLabel(row.Categorie))}</td><td>${esc(frLabel(row.Sous_categorie))}</td><td>${esc(frLabel(row.Type_flux))}</td><td>${esc(frLabel(row.Frequence))}</td><td><button class="btn secondary" onclick="editCategorie(${index})">Modifier</button></td></tr>`;
         }).join('')}</tbody></table></div>
       </div>
         <div class="card panel-side">
           <h3>Drive et OCR</h3>
           <div class="list">
             ${driveRoots.map(function(row) {
-              return `<div class="row"><div>${esc(row.entite)}<small>Dossier factures racine</small></div><div><span class="badge ok">Lie</span></div></div>`;
+              return `<div class="row"><div>${esc(row.entite)}<small>Dossier factures racine</small></div><div><span class="badge ok">Lié</span></div></div>`;
             }).join('')}
-            <div class="row"><div>OCR facture<small>OCR.space (gratuit)</small></div><div><span class="badge ok">Pret</span></div></div>
+            <div class="row"><div>OCR facture<small>OCR.space (gratuit)</small></div><div><span class="badge ok">Prêt</span></div></div>
           </div>
         <div class="form-grid" style="margin-top:12px">
-          <div class="field"><label>Limite OCR</label><input id="ocr-limit" type="number" min="1" value="10"></div>
+          <div class="field"><label>Factures par passage automatique</label><input id="ocr-limit" type="number" min="1" value="25"></div>
         </div>
+        <p class="empty" style="margin:8px 0 0">Le traitement automatique lit ce nombre de factures par société à chaque passage, puis rapproche leurs paiements avec les débits de la même société.</p>
         <div class="actions-row">
-            <button class="btn primary" onclick="runInvoiceOcr()">Lancer OCR maintenant</button>
+            <button class="btn primary" onclick="runInvoiceOcr()">Lancer un passage maintenant</button>
           </div>
         </div>
         <div class="card panel-full">
-          <h3>Seuils d alerte</h3>
+          <h3>Seuils d’alerte</h3>
           <div class="form-grid">
             <div class="field"><label>Solde faible</label><input id="setting-low-balance" type="number" step="0.01" value="${esc(settings.alertLowBalance)}"></div>
-            <div class="field"><label>Solde negatif</label><input id="setting-negative-balance" type="number" step="0.01" value="${esc(settings.alertNegativeBalance)}"></div>
-            <div class="field"><label>Ecart montant</label><input id="setting-variance-amount" type="number" step="0.01" value="${esc(settings.alertVarianceAmount)}"></div>
-            <div class="field"><label>Ecart pourcentage</label><input id="setting-variance-percent" type="number" step="0.01" value="${esc(settings.alertVariancePercent)}"></div>
+            <div class="field"><label>Solde négatif</label><input id="setting-negative-balance" type="number" step="0.01" value="${esc(settings.alertNegativeBalance)}"></div>
+            <div class="field"><label>Écart montant</label><input id="setting-variance-amount" type="number" step="0.01" value="${esc(settings.alertVarianceAmount)}"></div>
+            <div class="field"><label>Écart pourcentage</label><input id="setting-variance-percent" type="number" step="0.01" value="${esc(settings.alertVariancePercent)}"></div>
           </div>
           <div class="actions-row"><button class="btn secondary" onclick="saveAlertSettings()">Enregistrer seuils</button></div>
         </div>
@@ -1946,35 +2081,53 @@ function renderParametres() {
           <h3>Ajouter / modifier un compte</h3>
         <div class="form-grid">
           <div class="field"><label>Compte_id</label><input id="param-compte-id" placeholder="OSLO-002"></div>
-          <div class="field"><label>Entite</label><input id="param-compte-entite" placeholder="OSLO SHOP"></div>
+          <div class="field"><label>Entité</label><input id="param-compte-entite" placeholder="OSLO SHOP"></div>
           <div class="field"><label>Nom compte</label><input id="param-compte-nom" placeholder="Compte secondaire"></div>
           <div class="field"><label>Banque</label><input id="param-compte-banque" placeholder="BNP"></div>
           <div class="field"><label>RIB / IBAN</label><input id="param-compte-rib" placeholder="FR..."></div>
           <div class="field"><label>Devise</label><input id="param-compte-devise" value="EUR"></div>
           <div class="field"><label>Actif</label><select id="param-compte-actif"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Type entite</label><select id="param-compte-type"><option value="societe">societe</option><option value="groupe">groupe</option></select></div>
+          <div class="field"><label>Type d’entité</label><select id="param-compte-type"><option value="societe">société</option><option value="groupe">groupe</option></select></div>
         </div>
         <div class="actions-row"><button class="btn secondary" onclick="saveCompte()">Enregistrer compte</button></div>
       </div>
       <div class="card panel-full">
-        <h3>Ajouter / modifier une categorie</h3>
+          <h3>Ajouter / modifier une catégorie</h3>
         <div class="form-grid">
-          <div class="field"><label>Categorie</label><input id="param-cat-categorie" placeholder="Electricite"></div>
-          <div class="field"><label>Sous-categorie</label><input id="param-cat-sous" placeholder="EDF"></div>
-          <div class="field"><label>Type flux</label><select id="param-cat-flux"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option><option value="Neutre">Neutre</option></select></div>
-          <div class="field"><label>Frequence</label><input id="param-cat-frequence" placeholder="Mensuelle"></div>
+          <div class="field"><label>Catégorie</label><input id="param-cat-categorie" placeholder="Électricité"></div>
+          <div class="field"><label>Sous-catégorie</label><input id="param-cat-sous" placeholder="EDF"></div>
+          <div class="field"><label>Type de flux</label><select id="param-cat-flux"><option value="Decaissement">Décaissement</option><option value="Encaissement">Encaissement</option><option value="Neutre">Neutre</option></select></div>
+          <div class="field"><label>Fréquence</label><select id="param-cat-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
           <div class="field"><label>Active</label><select id="param-cat-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Commentaire</label><input id="param-cat-commentaire" placeholder="Sous-categorie = fournisseur"></div>
+          <div class="field"><label>Commentaire</label><input id="param-cat-commentaire" placeholder="Sous-catégorie = fournisseur"></div>
         </div>
-        <div class="actions-row"><button class="btn secondary" onclick="saveCategorie()">Enregistrer categorie</button></div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveCategorie()">Enregistrer la catégorie</button></div>
       </div>
       <div class="card panel-full">
-        <h3>Regles actives</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Valeur</th><th>Categorie</th><th>Sous-categorie</th></tr></thead><tbody>${regles.length ? regles.slice(0, 20).map(function(row) {
-          return `<tr><td>${esc(row.Valeur)}</td><td>${esc(row.Categorie)}</td><td>${esc(row.Sous_categorie)}</td></tr>`;
-        }).join('') : '<tr><td colspan="3" class="empty">Les regles apparaitront au fur et a mesure de l apprentissage.</td></tr>'}</tbody></table></div>
+        <h3>Règles actives</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Valeur</th><th>Catégorie</th><th>Sous-catégorie</th><th>Flux</th><th>Fréquence</th><th>Priorité</th><th>Action</th></tr></thead><tbody>${regles.length ? regles.slice(0, 50).map(function(row, index) {
+          return `<tr><td>${esc(row.Valeur)}</td><td>${esc(frLabel(row.Categorie))}</td><td>${esc(frLabel(row.Sous_categorie))}</td><td>${esc(frLabel(row.Sens || '-'))}</td><td>${esc(frLabel(row.Frequence || '-'))}</td><td>${esc(row.Priorite || '')}</td><td><button class="btn secondary" onclick="editRegle(${index})">Modifier</button></td></tr>`;
+        }).join('') : '<tr><td colspan="7" class="empty">Les règles apparaîtront au fur et à mesure de l’apprentissage.</td></tr>'}</tbody></table></div>
+      </div>
+      <div class="card panel-full">
+        <h3>Ajouter / modifier une règle</h3>
+        <div class="form-grid">
+          <div class="field"><label>ID de règle</label><input id="param-regle-id" placeholder="Automatique si vide"></div>
+          <div class="field"><label>Active</label><select id="param-regle-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
+          <div class="field"><label>Société</label><select id="param-regle-entite"><option value="">Toutes</option>${entiteOptions}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="param-regle-compte"><option value="">Tous</option>${compteOptions}</select></div>
+          <div class="field"><label>Mot-clé du libellé</label><input id="param-regle-valeur" placeholder="EDF, VERISURE, LOYER..."></div>
+          <div class="field"><label>Catégorie</label><select id="param-regle-categorie" onchange="updateParamRegleSousCategories()">${categoryOptions}</select></div>
+          <div class="field"><label>Sous-catégorie</label><select id="param-regle-sous"><option value="">Aucune</option></select></div>
+          <div class="field"><label>Flux</label><select id="param-regle-sens"><option value="">Automatique</option><option value="Encaissement">Encaissement</option><option value="Decaissement">Décaissement</option></select></div>
+          <div class="field"><label>Priorité</label><input id="param-regle-priorite" type="number" min="1" max="100" value="100"></div>
+          <div class="field"><label>Fréquence</label><select id="param-regle-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
+          <div class="field"><label>Commentaire</label><input id="param-regle-commentaire" placeholder="Commentaire interne"></div>
+        </div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveRegle()">Enregistrer la règle</button></div>
       </div>
     </div>`;
+  updateParamRegleSousCategories();
 }
 
 function handleBankFile(event) {
@@ -1983,28 +2136,178 @@ function handleBankFile(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const data = e.target.result;
-    let rows = [];
-    let headers = [];
-    if (file.name.toLowerCase().endsWith('.csv')) {
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    } else {
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    }
+    const workbook = XLSX.read(data, { type: 'binary' });
+    const parsed = extractBankRowsFromWorkbook_(workbook);
+    const rows = parsed.rows;
+    let headers = parsed.headers;
     headers = rows.length ? Object.keys(rows[0]) : [];
     state.importRows = rows;
     state.importHeaders = headers;
+    state.importDetection = parsed;
+    state.importRib = detectRibFromWorkbook_(workbook);
+    state.importFileName = file.name;
+    state.importCompteManuallySelected = false;
     autoDetectMapping(headers);
+    updateImportCompteOptions(true);
     renderMappingArea(file.name);
+    if (!rows.length) {
+      showToast('Aucune ligne detectee. Verifie que le fichier contient un tableau avec une colonne date, libelle et montant/debit/credit.', 'warn');
+    }
   };
   reader.readAsBinaryString(file);
 }
 
+function updateImportEntiteSelection() {
+  state.importCompteManuallySelected = false;
+  updateImportCompteOptions(true);
+}
+
+function updateImportCompteSelection() {
+  state.importCompteManuallySelected = true;
+  if (state.importFileName && state.importRows && state.importRows.length) {
+    renderMappingArea(state.importFileName);
+  }
+}
+
+function updateImportCompteOptions(forceRibMatch) {
+  const entiteSelect = document.getElementById('importEntite');
+  const compteSelect = document.getElementById('importCompte');
+  if (!entiteSelect || !compteSelect) return;
+  const selectedCompteId = forceRibMatch || !state.importCompteManuallySelected ? '' : compteSelect.value;
+  compteSelect.innerHTML = renderImportCompteOptions_(entiteSelect.value, selectedCompteId, state.importRib || '');
+  if (state.importFileName && state.importRows && state.importRows.length) {
+    renderMappingArea(state.importFileName);
+  }
+}
+
+function renderImportCompteOptions_(entite, selectedCompteId, rib) {
+  const comptes = (state.bootstrap.config.comptes || []).filter(function(compte) {
+    return String(compte.Entite || '').trim() === String(entite || '').trim();
+  });
+  if (!comptes.length) {
+    return '<option value="">Aucun compte configure pour cette societe</option>';
+  }
+
+  const ribKey = normalizeRib_(rib || '');
+  let selected = selectedCompteId || '';
+  if (ribKey && !selected) {
+    const ribMatch = comptes.find(function(compte) {
+      return normalizeRib_(compte.RIB_IBAN || '') === ribKey;
+    });
+    if (ribMatch) selected = ribMatch.Compte_id || selected;
+  }
+  if (!selected && comptes.length === 1) selected = comptes[0].Compte_id || '';
+
+  return comptes.map(function(compte) {
+    const compteId = String(compte.Compte_id || '').trim();
+    const label = [compte.Banque, compte.Nom_compte, compte.RIB_IBAN].filter(Boolean).join(' - ') || compteId;
+    return `<option value="${esc(compteId)}"${selected === compteId ? ' selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+}
+
+function detectRibFromWorkbook_(workbook) {
+  const ribPattern = /\b(?:R\.?\s*I\.?\s*B\.?|IBAN)\s*:?\s*([A-Z]{2}\d{2}[A-Z0-9\s]{8,34}|\d{5}\s+\d{5}\s+\d{8,12})/i;
+  let detected = '';
+  (workbook.SheetNames || []).some(function(sheetName) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) return false;
+    const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+    return matrix.slice(0, 80).some(function(row) {
+      const text = (row || []).map(function(cell) { return String(cell || '').trim(); }).join(' ');
+      const match = text.match(ribPattern);
+      if (match && match[1]) {
+        detected = match[1].trim();
+        return true;
+      }
+      return false;
+    });
+  });
+  return detected;
+}
+
+function normalizeRib_(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function extractBankRowsFromWorkbook_(workbook) {
+  let best = { rows: [], headers: [], score: -1, sheetName: '', headerRow: 0 };
+  (workbook.SheetNames || []).forEach(function(sheetName) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) return;
+    const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: true });
+    const candidate = extractBankRowsFromMatrix_(matrix);
+    candidate.sheetName = sheetName;
+    if (candidate.score > best.score || (candidate.score === best.score && candidate.rows.length > best.rows.length)) {
+      best = candidate;
+    }
+  });
+  return best;
+}
+
+function extractBankRowsFromMatrix_(matrix) {
+  const rows = matrix || [];
+  let bestHeaderIndex = -1;
+  let bestScore = -1;
+  rows.slice(0, 50).forEach(function(row, index) {
+    const headers = row.map(function(cell) { return String(cell || '').trim(); });
+    const normalized = headers.map(normalizeImportHeader_);
+    if (!normalized.some(Boolean)) return;
+    const hasDate = normalized.some(function(value) { return value === 'date' || value.indexOf('date ') === 0 || value.indexOf(' date') !== -1; });
+    const hasValueDate = normalized.some(function(value) { return value === 'valeur' || value.indexOf('date valeur') !== -1; });
+    const hasLabel = normalized.some(function(value) { return /libelle|description|motif|designation|intitule|operation/.test(value); });
+    const hasDebit = normalized.some(function(value) { return /debit|retrait|sortie/.test(value); });
+    const hasCredit = normalized.some(function(value) { return /credit|versement|entree/.test(value); });
+    const hasSignedAmount = normalized.some(function(value) { return /montant signe|montant|amount/.test(value); });
+    const hasBalance = normalized.some(function(value) { return /solde|balance/.test(value); });
+    let score = 0;
+    if (hasDate) score += 4;
+    if (hasValueDate) score += 1;
+    if (hasLabel) score += 5;
+    if (hasDebit) score += 3;
+    if (hasCredit) score += 3;
+    if (hasSignedAmount) score += 4;
+    if (hasBalance) score += 1;
+    if (hasDate && hasLabel && (hasSignedAmount || hasDebit || hasCredit)) score += 10;
+    score += normalized.filter(Boolean).length >= 3 ? 1 : 0;
+    if (score > bestScore) {
+      bestScore = score;
+      bestHeaderIndex = index;
+    }
+  });
+
+  if (bestHeaderIndex === -1 || bestScore < 4) {
+    return { rows: [], headers: [], score: bestScore, headerRow: 0 };
+  }
+
+  const headers = rows[bestHeaderIndex].map(function(cell, index) {
+    const value = String(cell || '').trim();
+    return value || ('Colonne ' + (index + 1));
+  });
+  const dataRows = rows.slice(bestHeaderIndex + 1).map(function(row) {
+    const obj = {};
+    headers.forEach(function(header, index) {
+      obj[header] = row[index] !== undefined ? row[index] : '';
+    });
+    return obj;
+  }).filter(function(row) {
+    return Object.keys(row).some(function(key) { return String(row[key] || '').trim() !== ''; });
+  });
+
+  return { rows: dataRows, headers: headers, score: bestScore, headerRow: bestHeaderIndex + 1 };
+}
+
+function normalizeImportHeader_(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function autoDetectMapping(headers) {
-  const lower = headers.map(function(h) { return { raw: h, value: String(h).toLowerCase() }; });
+  const lower = headers.map(function(h) { return { raw: h, value: normalizeImportHeader_(h) }; });
   function findMatch(patterns) {
     for (let i = 0; i < lower.length; i++) {
       for (let j = 0; j < patterns.length; j++) {
@@ -2014,50 +2317,82 @@ function autoDetectMapping(headers) {
     return '';
   }
   state.mapping = {
-    date: findMatch(['date operation', 'date', 'booking date']),
-    dateValeur: findMatch(['valeur', 'date valeur', 'value date']),
-    libelle: findMatch(['libelle', 'description', 'label', 'motif']),
-    debit: findMatch(['debit']),
-    credit: findMatch(['credit']),
-    montant: findMatch(['montant', 'amount']),
+    date: findMatch(['date operation', 'date comptable', 'date operationnelle', 'date', 'booking date']),
+    dateValeur: findMatch(['date valeur', 'valeur', 'value date']),
+    libelle: findMatch(['libelle', 'description', 'label', 'motif', 'designation', 'intitule', 'operation']),
+    debit: findMatch(['debit', 'retrait', 'sortie']),
+    credit: findMatch(['credit', 'versement', 'entree']),
+    montant: findMatch(['montant signe', 'montant', 'amount']),
     solde: findMatch(['solde', 'balance']),
-    reference: findMatch(['reference', 'ref']),
-    modeReglement: findMatch(['mode_reglement', 'mode reglement', 'payment'])
+    reference: findMatch(['reference', 'ref', 'piece', 'numero']),
+    modeReglement: findMatch(['mode reglement', 'payment', 'type operation', 'type'])
   };
 }
 
 function renderMappingArea(fileName) {
   const headers = state.importHeaders;
+  const detection = state.importDetection || {};
+  const compteId = document.getElementById('importCompte') ? document.getElementById('importCompte').value : '';
+  const canImport = !!(compteId && state.mapping.date && state.mapping.libelle && (state.mapping.montant || state.mapping.debit || state.mapping.credit));
+  const mappingSummary = [
+    ['Date', state.mapping.date],
+    ['Libellé', state.mapping.libelle],
+    ['Débit', state.mapping.debit],
+    ['Crédit', state.mapping.credit],
+    ['Montant signé', state.mapping.montant],
+    ['Solde', state.mapping.solde]
+  ].filter(function(item) { return item[1]; });
+  const detectionMessage = canImport
+    ? `J ai trouvé automatiquement les transactions dans l onglet <strong>${esc(detection.sheetName || 'détecté')}</strong>${detection.headerRow ? ', ligne ' + esc(detection.headerRow) : ''}. Aucun réglage à remplir.`
+    : 'Je n ai pas reconnu automatiquement toutes les informations obligatoires. Le fichier doit contenir Date, Libellé et Montant ou Débit/Crédit, et un compte bancaire doit être choisi.';
+  const ribMessage = state.importRib
+    ? `<br>RIB détecté dans le fichier: <strong>${esc(state.importRib)}</strong>. Il sert seulement à sélectionner le compte dans la société choisie si ce RIB est connu.`
+    : '';
+  const manualMapping = `
+    <details ${canImport ? '' : 'open'} style="margin-top:12px">
+      <summary style="cursor:pointer;font-weight:800;color:#18396f">${canImport ? 'Afficher les réglages avancés' : 'Choisir les colonnes manuellement'}</summary>
+      <div class="form-grid" style="margin-top:12px">
+        ${renderMappingSelect('Date opération', 'date', headers)}
+        ${renderMappingSelect('Date valeur', 'dateValeur', headers)}
+        ${renderMappingSelect('Libellé', 'libelle', headers)}
+        ${renderMappingSelect('Référence bancaire', 'reference', headers)}
+        ${renderMappingSelect('Débit', 'debit', headers)}
+        ${renderMappingSelect('Crédit', 'credit', headers)}
+        ${renderMappingSelect('Montant signé', 'montant', headers)}
+        ${renderMappingSelect('Solde', 'solde', headers)}
+        ${renderMappingSelect('Mode règlement', 'modeReglement', headers)}
+      </div>
+    </details>`;
   const area = document.getElementById('mappingArea');
   area.classList.remove('hidden');
   area.innerHTML = `
-    <div class="note">Fichier charge: <strong>${esc(fileName)}</strong>. Verifie le mapping avant l import. Les doublons seront controles dans Apps Script.</div>
-    <div class="form-grid" style="margin-top:12px">
-      ${renderMappingSelect('Date operation', 'date', headers)}
-      ${renderMappingSelect('Date valeur', 'dateValeur', headers)}
-      ${renderMappingSelect('Libelle', 'libelle', headers)}
-      ${renderMappingSelect('Reference bancaire', 'reference', headers)}
-      ${renderMappingSelect('Debit', 'debit', headers)}
-      ${renderMappingSelect('Credit', 'credit', headers)}
-      ${renderMappingSelect('Montant signe', 'montant', headers)}
-      ${renderMappingSelect('Solde', 'solde', headers)}
-      ${renderMappingSelect('Mode reglement', 'modeReglement', headers)}
+    <div class="note">Fichier chargé: <strong>${esc(fileName)}</strong>. ${detectionMessage}${ribMessage}</div>
+    <div class="note" style="margin-top:10px;background:${canImport ? '#edfdf4' : '#fff7e9'};border-color:${canImport ? '#b8ebca' : '#f5d9a6'};color:${canImport ? '#166534' : '#8a5a00'}">
+      <strong>${state.importRows.length} transaction(s) détectée(s).</strong>
+      ${mappingSummary.length ? '<br>Colonnes utilisées: ' + mappingSummary.map(function(item) { return esc(item[0]) + ' = <strong>' + esc(item[1]) + '</strong>'; }).join(' · ') : ''}
     </div>
+    ${canImport ? '' : manualMapping}
     <div class="actions-row">
-      <button class="btn primary" onclick="submitImport()">Importer les mouvements</button>
-      <span class="footer-note">${state.importRows.length} lignes detectees.</span>
+      <button class="btn primary" onclick="submitImport()" ${canImport ? '' : 'disabled'}>Importer ces transactions</button>
+      <span class="footer-note">${canImport ? 'Le site utilisera la société choisie, le compte sélectionné, Date, Libellé et les montants Débit/Crédit.' : 'Information obligatoire manquante.'}</span>
     </div>
+    ${canImport ? `<div class="actions-row"><button class="btn ghost" onclick="document.getElementById('advancedMappingArea').classList.toggle('hidden')">Afficher les réglages avancés</button></div><div id="advancedMappingArea" class="hidden">${manualMapping}</div>` : ''}
     <div class="import-preview" style="margin-top:12px">${renderImportPreview()}</div>`;
 }
 
 function renderMappingSelect(label, key, headers) {
-  return `<div class="field"><label>${label}</label><select id="map-${key}" onchange="state.mapping.${key}=this.value">` +
+  return `<div class="field"><label>${label}</label><select id="map-${key}" onchange="updateImportMapping('${key}', this.value)">` +
     `<option value="">Non mappe</option>` +
     headers.map(function(header) {
       const selected = state.mapping[key] === header ? 'selected' : '';
       return `<option value="${esc(header)}" ${selected}>${esc(header)}</option>`;
     }).join('') +
     `</select></div>`;
+}
+
+function updateImportMapping(key, value) {
+  state.mapping[key] = value;
+  if (state.importFileName) renderMappingArea(state.importFileName);
 }
 
 function renderImportPreview() {
@@ -2245,7 +2580,7 @@ function rollbackImport(importId) {
 
 function runInvoiceOcr() {
   const limitElement = document.getElementById('ocr-limit');
-  const limit = limitElement ? Number(limitElement.value || 10) : 10;
+  const limit = limitElement ? Number(limitElement.value || 25) : 25;
   google.script.run
     .withSuccessHandler(function(result) {
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
@@ -2262,7 +2597,7 @@ function runInvoiceOcr() {
       state.bootstrap.ocrConfig = result.ocrConfig;
       renderAll();
       showPage('Rapprochement bancaire');
-      showToast(`OCR termine. ${result.ok} factures lues, ${result.failed} en echec.`, 'success');
+      showToast(`Passage OCR terminé. ${result.ok} facture(s) lue(s), ${result.failed} en échec.`, 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
