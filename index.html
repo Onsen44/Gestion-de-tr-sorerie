@@ -137,6 +137,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .pivot-table .level-0 td:first-child{font-weight:800}
 .pivot-table .level-1 td:first-child{padding-left:20px;font-weight:700}
 .pivot-table .level-2 td:first-child{padding-left:38px;color:var(--muted)}
+.pivot-table .level-3 td:first-child{padding-left:56px;color:var(--muted);font-style:italic}
 .pivot-table .section-row td{background:#f9fbfd}
 @media (max-width:1120px){
   .app{grid-template-columns:1fr}
@@ -301,7 +302,7 @@ function loadAnnualPilotageData_(forceRefresh) {
 function changeAnnualYear(value) {
   state.annualSelectedYear = Number(value || new Date().getFullYear());
   loadAnnualPilotageData_(true)
-    .then(function() { renderAll(); })
+    .then(function() { renderCurrentPage(); attachEventListeners(); })
     .catch(function(error) { showToast(error.message || error, 'error'); });
 }
 
@@ -520,6 +521,18 @@ const state = {
   tresorerieView: 'mouvements',
   rapprochementView: 'a_verifier',
   annualSelectedYear: new Date().getFullYear(),
+  movementYear: new Date().getFullYear(),
+  movementMonth: new Date().getMonth() + 1,
+  movementFilters: {
+    categorie: '',
+    sousCategorie: '',
+    site: '',
+    compteId: '',
+    status: ''
+  },
+  movementCacheKey: '',
+  movementLoadTimer: null,
+  movementRenderLimit: 500,
   previsionView: 'forecast',
   annualPilotageCache: {},
   backendUrl: '',
@@ -529,6 +542,7 @@ const state = {
   cacheExpireMs: 5 * 60 * 1000, // 5 minutes
   importRows: [],
   importHeaders: [],
+  importInProgress: false,
   mapping: {
     date: '',
     dateValeur: '',
@@ -538,6 +552,7 @@ const state = {
     montant: '',
     solde: '',
     reference: '',
+    site: '',
     modeReglement: ''
   }
 };
@@ -584,14 +599,14 @@ function init() {
         showToast('Erreur renderNav: ' + e.message, 'error');
       }
       try {
-        renderAll();
-        console.log('renderAll() succeeded');
+        renderCurrentPage();
+        console.log('renderCurrentPage() succeeded');
       } catch (e) {
-        console.error('ERROR in renderAll():', e);
-        showToast('Erreur renderAll: ' + e.message, 'error');
+        console.error('ERROR in renderCurrentPage():', e);
+        showToast('Erreur affichage: ' + e.message, 'error');
       }
       loadAnnualPilotageData_(false).then(function() {
-        renderAll();
+        renderCurrentPage();
       }).catch(function(error) {
         showToast(error.message || error, 'error');
       });
@@ -687,12 +702,30 @@ function displayPageName(page) {
 
 function showPage(page) {
   state.currentPage = page;
+  renderCurrentPage();
   Object.keys(pageMeta).forEach(function(name) {
     document.getElementById('page-' + name).classList.toggle('hidden', name !== page);
   });
   document.getElementById('pageTitle').textContent = displayPageName(page);
   document.getElementById('pageSubtitle').textContent = pageMeta[page];
   renderNav();
+  attachEventListeners();
+  if (pageNeedsAnnualData_(page) && !getAnnualPilotageData_()) {
+    loadAnnualPilotageData_(false).then(function() {
+      renderCurrentPage();
+      attachEventListeners();
+    }).catch(function(error) {
+      showToast(error.message || error, 'error');
+    });
+  }
+  if (page === 'Gestion de tresorerie' && state.tresorerieView === 'mouvements' && !hasCurrentMonthlyMovements_()) {
+    loadMovementsForMonth_().then(function() {
+      renderTresorerie();
+      attachEventListeners();
+    }).catch(function(error) {
+      showToast(error.message || error, 'error');
+    });
+  }
 }
 
 function changeEntite() {
@@ -705,6 +738,7 @@ function changeEntite() {
 
   // Changer l'entité
   state.selectedEntite = newEntite;
+  state.movementCacheKey = '';
 
   // Vérifier si les données sont en cache et non expirées
   const now = Date.now();
@@ -713,8 +747,9 @@ function changeEntite() {
     // Utiliser le cache
     const cachedData = state.dataCache[newEntite];
     updateStateWithData_(cachedData);
-    loadAnnualPilotageData_(false).then(function() {
-      renderAll();
+    loadAnnualIfNeeded_(false).then(function() {
+      renderCurrentPage();
+      showPage(state.currentPage);
     }).catch(function(error) {
       showToast(error.message || error, 'error');
     });
@@ -732,8 +767,10 @@ function changeEntite() {
       updateStateWithData_(data);
 
       // Actualiser l'affichage
-      loadAnnualPilotageData_(true).then(function() {
-        renderAll();
+      state.movementCacheKey = '';
+      loadAnnualIfNeeded_(true).then(function() {
+        renderCurrentPage();
+        showPage(state.currentPage);
       }).catch(function(error) {
         showToast(error.message || error, 'error');
       });
@@ -749,6 +786,7 @@ function updateStateWithData_(data) {
   if (data.dashboard) state.bootstrap.dashboard = data.dashboard;
   if (data.aClasser) state.bootstrap.aClasser = data.aClasser;
   if (data.recentMovements) state.bootstrap.recentMovements = data.recentMovements;
+  if (data.monthlyMovements) state.bootstrap.monthlyMovements = data.monthlyMovements;
   if (data.recentPrevisions) state.bootstrap.recentPrevisions = data.recentPrevisions;
   if (data.recentScenarios) state.bootstrap.recentScenarios = data.recentScenarios;
   if (data.recentRapprochements) state.bootstrap.recentRapprochements = data.recentRapprochements;
@@ -775,17 +813,94 @@ function refreshData() {
 function switchTresorerieView(view) {
   const allowed = tresorerieNavItems.map(function(item) { return item[0]; });
   state.tresorerieView = allowed.indexOf(view) !== -1 ? view : 'mouvements';
-  renderTresorerie();
   showPage('Gestion de tresorerie');
+}
+
+function currentMovementCacheKey_() {
+  const filters = state.movementFilters || {};
+  return [
+    state.selectedEntite || 'TOUTES',
+    state.movementYear,
+    state.movementMonth,
+    filters.categorie || '',
+    filters.sousCategorie || '',
+    filters.site || '',
+    filters.compteId || '',
+    filters.status || ''
+  ].join('|');
+}
+
+function hasCurrentMonthlyMovements_() {
+  return !!(state.bootstrap && state.bootstrap.monthlyMovements && state.movementCacheKey === currentMovementCacheKey_());
+}
+
+function loadMovementsForMonth_() {
+  if (!state.bootstrap) return Promise.resolve();
+  const cacheKey = currentMovementCacheKey_();
+  if (state.bootstrap.monthlyMovements && state.movementCacheKey === cacheKey) {
+    return Promise.resolve(state.bootstrap.monthlyMovements);
+  }
+  return new Promise(function(resolve, reject) {
+    google.script.run
+      .withSuccessHandler(function(result) {
+        state.bootstrap.monthlyMovements = result;
+        state.movementCacheKey = cacheKey;
+        state.movementRenderLimit = 500;
+        resolve(result);
+      })
+      .withFailureHandler(reject)
+      .getMovementsForMonth({
+        entite: state.selectedEntite || 'TOUTES',
+        year: state.movementYear,
+        month: state.movementMonth,
+        categorie: state.movementFilters.categorie,
+        sousCategorie: state.movementFilters.sousCategorie,
+        site: state.movementFilters.site,
+        compteId: state.movementFilters.compteId,
+        status: state.movementFilters.status
+      });
+  });
+}
+
+function updateMovementFilter(key, value) {
+  if (key === 'year') state.movementYear = Number(value || new Date().getFullYear());
+  else if (key === 'month') state.movementMonth = Number(value || (new Date().getMonth() + 1));
+  else {
+    state.movementFilters[key] = value || '';
+    if (key === 'categorie') state.movementFilters.sousCategorie = '';
+  }
+  state.movementRenderLimit = 500;
+  if (state.movementLoadTimer) window.clearTimeout(state.movementLoadTimer);
+  state.movementLoadTimer = window.setTimeout(function() {
+    loadMovementsForMonth_()
+      .then(function() {
+        renderTresorerie();
+        attachEventListeners();
+      })
+      .catch(function(error) {
+        showToast(error.message || error, 'error');
+      });
+  }, 150);
+}
+
+function showMoreMovements() {
+  state.movementRenderLimit += 500;
+  renderTresorerie();
   attachEventListeners();
 }
 
 function switchRapprochementView(view) {
   const allowed = rapprochementNavItems.map(function(item) { return item[0]; });
   state.rapprochementView = allowed.indexOf(view) !== -1 ? view : 'a_verifier';
-  renderRapprochement();
   showPage('Rapprochement bancaire');
-  attachEventListeners();
+}
+
+function pageNeedsAnnualData_(page) {
+  return ['Accueil', 'Gestion de tresorerie', 'Graphiques', 'Previsionnel'].indexOf(page || state.currentPage) !== -1;
+}
+
+function loadAnnualIfNeeded_(forceRefresh) {
+  return pageNeedsAnnualData_(state.currentPage) ? loadAnnualPilotageData_(forceRefresh) : Promise.resolve(getAnnualPilotageData_());
 }
 
 function renderAll() {
@@ -798,6 +913,17 @@ function renderAll() {
   renderParametres();
   showPage(state.currentPage);
   attachEventListeners();
+}
+
+function renderCurrentPage() {
+  if (!state.bootstrap) return;
+  if (state.currentPage === 'Accueil') renderAccueil();
+  else if (state.currentPage === 'Gestion de tresorerie') renderTresorerie();
+  else if (state.currentPage === 'Graphiques') renderGraphiques();
+  else if (state.currentPage === 'Previsionnel') renderPrevisionnel();
+  else if (state.currentPage === 'Scenarios') renderScenarios();
+  else if (state.currentPage === 'Rapprochement bancaire') renderRapprochement();
+  else if (state.currentPage === 'Parametres') renderParametres();
 }
 
 function attachEventListeners() {
@@ -849,7 +975,27 @@ function attachEventListeners() {
 }
 
 function euro(value) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
+  if (value === '' || value === null || value === undefined) return '';
+  const normalized = typeof value === 'number' ? value : Number(String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/€/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(isNaN(normalized) ? 0 : normalized);
+}
+
+function parseExcelDate_(value) {
+  if (value === '' || value === null || value === undefined) return null;
+  if (value instanceof Date && !isNaN(value.getTime())) return value;
+  if (typeof value === 'number' && value > 20000 && value < 60000) {
+    const epoch = new Date(Date.UTC(1899, 11, 30));
+    return new Date(epoch.getTime() + value * 86400000);
+  }
+  const parsed = parseUiDate_(value);
+  return parsed && !isNaN(parsed.getTime()) ? parsed : null;
+}
+
+function formatUiDate_(value) {
+  const date = parseExcelDate_(value);
+  if (!date) return String(value || '');
+  const pad = function(number) { return String(number).padStart(2, '0'); };
+  return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + date.getFullYear();
 }
 
 function formatImportHistoryDate(value) {
@@ -949,7 +1095,7 @@ function saveCompte() {
     .withSuccessHandler(function(result) {
       state.bootstrap.config = result.config;
       state.bootstrap.counts = result.counts;
-      renderAll();
+      renderCurrentPage();
       showPage('Parametres');
       showToast('Compte enregistre.', 'success');
     })
@@ -972,7 +1118,7 @@ function saveCategorie() {
     .withSuccessHandler(function(result) {
       state.bootstrap.config = result.config;
       state.bootstrap.counts = result.counts;
-      renderAll();
+      renderCurrentPage();
       showPage('Parametres');
       showToast('Catégorie enregistrée.', 'success');
     })
@@ -1002,7 +1148,7 @@ function saveRegle() {
     .withSuccessHandler(function(result) {
       state.bootstrap.config = result.config;
       state.bootstrap.counts = result.counts;
-      renderAll();
+      renderCurrentPage();
       showPage('Parametres');
       showToast('Règle enregistrée.', 'success');
     })
@@ -1079,7 +1225,7 @@ function savePrevision() {
           state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
           state.bootstrap.counts = result.counts || state.bootstrap.counts;
           loadAnnualPilotageData_(true).then(function() {
-            renderAll();
+            renderCurrentPage();
             showPage('Previsionnel');
             showToast('Prevision enregistree.', 'success');
           }).catch(function(error) {
@@ -1114,7 +1260,7 @@ function saveScenario() {
         state.bootstrap.recentScenarios = result.recentScenarios || state.bootstrap.recentScenarios;
         state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
         state.bootstrap.counts = result.counts || state.bootstrap.counts;
-      renderAll();
+      renderCurrentPage();
       showPage('Scenarios');
       showToast('Scenario enregistre.', 'success');
     })
@@ -1135,7 +1281,7 @@ function saveAlertSettings() {
     .withSuccessHandler(function(result) {
       state.bootstrap.settings = result.settings;
       state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
-      renderAll();
+      renderCurrentPage();
       showPage('Parametres');
       showToast('Seuils d alerte enregistres.', 'success');
     })
@@ -1150,10 +1296,12 @@ function enableAutomaticSync() {
   google.script.run
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
-      render();
+      showPage('Parametres');
       showToast(result.message || 'Synchronisation automatique activee.', 'success');
     })
-    .withFailureHandler(handleError)
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
     .installAutomaticSyncTrigger();
 }
 
@@ -1161,10 +1309,12 @@ function disableAutomaticSync() {
   google.script.run
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
-      render();
+      showPage('Parametres');
       showToast(result.message || 'Synchronisation automatique desactivee.', 'success');
     })
-    .withFailureHandler(handleError)
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
     .removeAutomaticSyncTriggers();
 }
 function saveDriveRoot(entite) {
@@ -1173,7 +1323,7 @@ function saveDriveRoot(entite) {
     .withSuccessHandler(function(result) {
       state.bootstrap.driveConfig = result.driveConfig || state.bootstrap.driveConfig;
       state.bootstrap.config.driveRoots = result.driveConfig || state.bootstrap.config.driveRoots;
-      renderAll();
+      renderCurrentPage();
       showPage('Parametres');
       showToast('Dossier Drive enregistre.', 'success');
     })
@@ -1579,9 +1729,20 @@ function renderAccueil() {
 function renderTresorerie() {
   const entites = state.bootstrap.config.entites || [];
   const comptes = state.bootstrap.config.comptes || [];
-  const movementRows = state.bootstrap.recentMovements || [];
+  const monthlyMovements = hasCurrentMonthlyMovements_() ? state.bootstrap.monthlyMovements : { rows: [], total: 0 };
+  const movementRows = monthlyMovements.rows || [];
   const aClasser = state.bootstrap.aClasser || [];
   const importHistory = state.bootstrap.importHistory || [];
+  const categories = state.bootstrap.config.categories || [];
+  const categoryNames = Array.from(new Set(categories.map(function(row) { return row.Categorie || ''; }).filter(Boolean))).sort();
+  const selectedCategory = state.movementFilters.categorie || '';
+  const subCategoryNames = Array.from(new Set(categories.filter(function(row) {
+    return !selectedCategory || row.Categorie === selectedCategory;
+  }).map(function(row) { return row.Sous_categorie || ''; }).filter(Boolean))).sort();
+  const sites = state.bootstrap.config.sites || [];
+  const filteredComptes = comptes.filter(function(compte) {
+    return !state.selectedEntite || state.selectedEntite === 'TOUTES' || String(compte.Entite || '').trim() === state.selectedEntite;
+  });
   const importEntite = state.selectedEntite && state.selectedEntite !== 'TOUTES' ? state.selectedEntite : (entites[0] || '');
   const annualData = getAnnualPilotageData_();
   const realised = annualData && annualData.realised ? annualData.realised : null;
@@ -1593,17 +1754,22 @@ function renderTresorerie() {
     ? 'Transactions a classer'
     : activeView === 'imports'
       ? 'Historique des imports bancaires'
-      : 'Derniers mouvements';
+      : 'Mouvements du mois';
   const mainSubtitle = activeView === 'a_classer'
     ? 'Acces direct aux transactions en attente de classement, sans scroller dans toute la page.'
     : activeView === 'imports'
       ? 'Si un fichier a ete importe par erreur, le bouton annule ses mouvements, classements et rapprochements lies.'
-      : 'Vue rapide sur les derniers mouvements bancaires importes et classes.';
+      : 'Journal complet des mouvements pour le mois, la societe et les filtres choisis.';
   const mainContent = activeView === 'a_classer'
     ? renderAClasserTable(aClasser)
     : activeView === 'imports'
       ? renderImportHistory(importHistory)
-      : `<div class="table-wrap">${renderMovementsTable(movementRows)}</div>`;
+      : renderMovementsJournal_(movementRows, monthlyMovements.total || movementRows.length, {
+          categories: categoryNames,
+          subCategories: subCategoryNames,
+          sites: sites,
+          comptes: filteredComptes
+        });
 
   document.getElementById('page-Gestion de tresorerie').innerHTML = `
     <div class="grid">
@@ -1642,7 +1808,7 @@ function renderTresorerie() {
       <div class="card panel-side">
         <h3>Etat des imports</h3>
         <div class="list">
-          <div class="row"><div>A classer<small>Transactions non reconnues</small></div><div>${state.bootstrap.counts.Transactions_A_Classer || 0}</div></div>
+          <div class="row"><div>A classer<small>Transactions non reconnues visibles</small></div><div>${aClasser.length}</div></div>
           <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
           <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
         </div>
@@ -1660,10 +1826,69 @@ function renderTresorerie() {
     </div>`;
 }
 
+function renderMovementsJournal_(rows, total, options) {
+  options = options || {};
+  const visibleRows = (rows || []).slice(0, state.movementRenderLimit);
+  const monthOptions = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre']
+    .map(function(label, index) {
+      const value = index + 1;
+      return `<option value="${value}"${Number(state.movementMonth) === value ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [];
+  for (let year = currentYear - 3; year <= currentYear + 1; year++) {
+    yearOptions.push(`<option value="${year}"${Number(state.movementYear) === year ? ' selected' : ''}>${year}</option>`);
+  }
+  const selectOptions = function(values, selected) {
+    return '<option value="">Tous</option>' + (values || []).map(function(value) {
+      return `<option value="${esc(value)}"${String(selected || '') === String(value || '') ? ' selected' : ''}>${esc(value)}</option>`;
+    }).join('');
+  };
+  const compteOptions = '<option value="">Tous</option>' + (options.comptes || []).map(function(compte) {
+    const value = compte.Compte_id || '';
+    const label = [compte.Nom_compte, compte.Banque].filter(Boolean).join(' - ') || value;
+    return `<option value="${esc(value)}"${state.movementFilters.compteId === value ? ' selected' : ''}>${esc(label)}</option>`;
+  }).join('');
+  return `
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>Mois</label><select onchange="updateMovementFilter('month', this.value)">${monthOptions}</select></div>
+      <div class="field"><label>Annee</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
+      <div class="field"><label>Compte</label><select onchange="updateMovementFilter('compteId', this.value)">${compteOptions}</select></div>
+      <div class="field"><label>Categorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
+      <div class="field"><label>Sous-categorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
+      <div class="field"><label>Site / magasin</label><select onchange="updateMovementFilter('site', this.value)">${selectOptions(options.sites, state.movementFilters.site)}</select></div>
+      <div class="field"><label>Statut</label><select onchange="updateMovementFilter('status', this.value)">
+        <option value="">Tous</option>
+        <option value="A_CLASSER"${state.movementFilters.status === 'A_CLASSER' ? ' selected' : ''}>A classer</option>
+        <option value="CLASSE"${state.movementFilters.status === 'CLASSE' ? ' selected' : ''}>Classe</option>
+      </select></div>
+    </div>
+    <div class="note" style="margin-bottom:12px"><strong>${total || rows.length}</strong> mouvement(s) charges pour le mois selectionne. ${visibleRows.length} affiche(s) a l ecran pour garder la page fluide.</div>
+    ${renderMovementAnomalies_(rows)}
+    <div class="table-wrap">${renderMovementsTable(visibleRows)}</div>
+    ${visibleRows.length < (rows || []).length ? `<div class="actions-row"><button class="btn secondary" onclick="showMoreMovements()">Afficher 500 mouvements de plus</button></div>` : ''}`;
+}
+
+function renderMovementAnomalies_(rows) {
+  const anomalies = (rows || []).filter(function(row) {
+    return !String(row.Categorie || '').trim() ||
+      !String(row.Sous_categorie || '').trim() ||
+      !String(row.Site || '').trim();
+  });
+  if (!anomalies.length) return '';
+  const missingCategory = anomalies.filter(function(row) { return !String(row.Categorie || '').trim(); }).length;
+  const missingSub = anomalies.filter(function(row) { return !String(row.Sous_categorie || '').trim(); }).length;
+  const missingSite = anomalies.filter(function(row) { return !String(row.Site || '').trim(); }).length;
+  return `<div class="note" style="margin-bottom:12px;background:#fff7e9;border-color:#f5d9a6;color:#8a5a00">
+    Controle: ${anomalies.length} mouvement(s) du mois doivent etre verifies.
+    Categorie manquante: ${missingCategory}. Sous-categorie manquante: ${missingSub}. Site manquant: ${missingSite}.
+  </div>`;
+}
+
 function renderMovementsTable(rows) {
   if (!rows.length) return '<div class="empty">Aucun mouvement pour le moment.</div>';
-  return `<table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Categorie</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
-    return `<tr><td>${esc(row.Date)}</td><td>${esc(row.Libelle)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Compte)}</td><td>${esc(row.Categorie || '-')} / ${esc(row.Sous_categorie || '-')}</td><td>${euro(row.Montant)}</td><td>${esc(row.Statut_classement || '-')}</td></tr>`;
+  return `<table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Site</th><th>Categorie</th><th>Sous-categorie</th><th>Encaissement</th><th>Decaissement</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr><td>${esc(formatUiDate_(row.Date))}</td><td>${esc(row.Libelle)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Compte)}</td><td>${esc(row.Site || '-')}</td><td>${esc(row.Categorie || '-')}</td><td>${esc(row.Sous_categorie || '-')}</td><td>${euro(row.Encaissement)}</td><td>${euro(row.Decaissement)}</td><td>${euro(row.Montant)}</td><td>${esc(row.Statut_classement || '-')}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
@@ -1671,22 +1896,23 @@ function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const categories = Object.keys(categoryMap);
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
-    const catOptions = categories.map(function(cat) {
-      return `<option value="${esc(cat)}">${esc(cat)}</option>`;
-    }).join('');
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Site / magasin</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const firstCategory = row.Categorie_proposee || categories[0] || '';
+    const catOptions = categories.map(function(cat) {
+      return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(cat)}</option>`;
+    }).join('');
     const subOptions = (categoryMap[firstCategory] || []).map(function(sub) {
       return `<option value="${esc(sub)}">${esc(sub)}</option>`;
     }).join('');
     return `<tr>
-      <td>${esc(row.Date)}</td>
+      <td>${esc(formatUiDate_(row.Date))}</td>
       <td>${esc(row.Libelle)}</td>
       <td>${esc(row.Entite)}</td>
       <td>${esc(row.Compte)}</td>
       <td>${euro(row.Montant)}</td>
       <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select></td>
       <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">A definir</option>'}</select></td>
+      <td><input class="inline-input" id="site-${esc(row.Transaction_uid)}" value="${esc(row.Site || '')}" placeholder="Ex: Poire"></td>
       <td>
         <div class="flex">
           <input type="checkbox" id="rule-${esc(row.Transaction_uid)}">
@@ -2325,6 +2551,7 @@ function autoDetectMapping(headers) {
     montant: findMatch(['montant signe', 'montant', 'amount']),
     solde: findMatch(['solde', 'balance']),
     reference: findMatch(['reference', 'ref', 'piece', 'numero']),
+    site: findMatch(['site', 'magasin', 'ville', 'boutique']),
     modeReglement: findMatch(['mode reglement', 'payment', 'type operation', 'type'])
   };
 }
@@ -2340,7 +2567,8 @@ function renderMappingArea(fileName) {
     ['Débit', state.mapping.debit],
     ['Crédit', state.mapping.credit],
     ['Montant signé', state.mapping.montant],
-    ['Solde', state.mapping.solde]
+    ['Solde', state.mapping.solde],
+    ['Site', state.mapping.site]
   ].filter(function(item) { return item[1]; });
   const detectionMessage = canImport
     ? `J ai trouvé automatiquement les transactions dans l onglet <strong>${esc(detection.sheetName || 'détecté')}</strong>${detection.headerRow ? ', ligne ' + esc(detection.headerRow) : ''}. Aucun réglage à remplir.`
@@ -2360,6 +2588,7 @@ function renderMappingArea(fileName) {
         ${renderMappingSelect('Crédit', 'credit', headers)}
         ${renderMappingSelect('Montant signé', 'montant', headers)}
         ${renderMappingSelect('Solde', 'solde', headers)}
+        ${renderMappingSelect('Site / magasin', 'site', headers)}
         ${renderMappingSelect('Mode règlement', 'modeReglement', headers)}
       </div>
     </details>`;
@@ -2373,7 +2602,7 @@ function renderMappingArea(fileName) {
     </div>
     ${canImport ? '' : manualMapping}
     <div class="actions-row">
-      <button class="btn primary" onclick="submitImport()" ${canImport ? '' : 'disabled'}>Importer ces transactions</button>
+      <button class="btn primary" onclick="submitImport()" ${canImport && !state.importInProgress ? '' : 'disabled'}>${state.importInProgress ? 'Import en cours...' : 'Importer ces transactions'}</button>
       <span class="footer-note">${canImport ? 'Le site utilisera la société choisie, le compte sélectionné, Date, Libellé et les montants Débit/Crédit.' : 'Information obligatoire manquante.'}</span>
     </div>
     ${canImport ? `<div class="actions-row"><button class="btn ghost" onclick="document.getElementById('advancedMappingArea').classList.toggle('hidden')">Afficher les réglages avancés</button></div><div id="advancedMappingArea" class="hidden">${manualMapping}</div>` : ''}
@@ -2399,8 +2628,15 @@ function renderImportPreview() {
   if (!state.importRows.length) return '<div class="empty" style="padding:14px">Aucune ligne a previsualiser.</div>';
   const previewHeaders = state.importHeaders.slice(0, 8);
   const previewRows = state.importRows.slice(0, 8);
+  const mappedDateHeaders = [state.mapping.date, state.mapping.dateValeur].filter(Boolean);
+  const mappedMoneyHeaders = [state.mapping.debit, state.mapping.credit, state.mapping.montant, state.mapping.solde].filter(Boolean);
+  const formatPreviewValue = function(header, value) {
+    if (mappedDateHeaders.indexOf(header) !== -1) return formatUiDate_(value);
+    if (mappedMoneyHeaders.indexOf(header) !== -1 && value !== '') return euro(value);
+    return value;
+  };
   return `<table class="table"><thead><tr>${previewHeaders.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${previewRows.map(function(row) {
-    return `<tr>${previewHeaders.map(function(h) { return `<td>${esc(row[h])}</td>`; }).join('')}</tr>`;
+    return `<tr>${previewHeaders.map(function(h) { return `<td>${esc(formatPreviewValue(h, row[h]))}</td>`; }).join('')}</tr>`;
   }).join('')}</tbody></table>`;
 }
 
@@ -2408,7 +2644,7 @@ function submitImport() {
   const entite = document.getElementById('importEntite').value;
   const compteId = document.getElementById('importCompte').value;
   const sourceName = document.getElementById('sourceName').value || 'import_banque';
-  ['date','dateValeur','libelle','reference','debit','credit','montant','solde','modeReglement'].forEach(function(key) {
+  ['date','dateValeur','libelle','reference','debit','credit','montant','solde','site','modeReglement'].forEach(function(key) {
     const el = document.getElementById('map-' + key);
     if (el) state.mapping[key] = el.value;
   });
@@ -2421,8 +2657,12 @@ function submitImport() {
     return;
   }
 
+  state.importInProgress = true;
+  renderMappingArea(state.importFileName || sourceName);
+
   google.script.run
     .withSuccessHandler(function(result) {
+      state.importInProgress = false;
       showToast(`Import termine. ${result.inserted} nouvelles lignes, ${result.duplicates} doublons, ${result.toClassify} a classer.`, 'success');
       state.dataCache = {};
       state.cacheTimestamp = {};
@@ -2430,6 +2670,7 @@ function submitImport() {
       state.bootstrap.dashboard = result.dashboard;
       state.bootstrap.aClasser = result.aClasser;
       state.bootstrap.recentMovements = result.recentMovements;
+      state.bootstrap.monthlyMovements = result.monthlyMovements || state.bootstrap.monthlyMovements;
       state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
       state.bootstrap.recentRapprochements = result.recentRapprochements || state.bootstrap.recentRapprochements;
       state.bootstrap.facturesToVerify = result.facturesToVerify || state.bootstrap.facturesToVerify;
@@ -2442,14 +2683,16 @@ function submitImport() {
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
       state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
+      state.movementCacheKey = '';
       loadAnnualPilotageData_(true).then(function() {
-        renderAll();
         showPage('Gestion de tresorerie');
       }).catch(function(error) {
         showToast(error.message || error, 'error');
       });
     })
     .withFailureHandler(function(error) {
+      state.importInProgress = false;
+      if (state.importFileName) renderMappingArea(state.importFileName);
       showToast(error.message || error, 'error');
     })
     .importBankRows({
@@ -2474,6 +2717,8 @@ function updateSousCategories(transactionUid) {
 function saveClassification(transactionUid) {
   const categorie = document.getElementById('cat-' + transactionUid).value;
   const sousCategorie = document.getElementById('sub-' + transactionUid).value;
+  const siteEl = document.getElementById('site-' + transactionUid);
+  const site = siteEl ? siteEl.value : '';
   const createRule = document.getElementById('rule-' + transactionUid).checked;
   const ruleValue = document.getElementById('ruleValue-' + transactionUid).value;
     google.script.run
@@ -2483,6 +2728,7 @@ function saveClassification(transactionUid) {
         state.annualPilotageCache = {};
         state.bootstrap.aClasser = result.aClasser;
         state.bootstrap.recentMovements = result.recentMovements;
+        state.bootstrap.monthlyMovements = result.monthlyMovements || state.bootstrap.monthlyMovements;
         state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
       state.bootstrap.counts = result.counts;
       state.bootstrap.facturesToPay = result.facturesToPay || state.bootstrap.facturesToPay;
@@ -2496,8 +2742,8 @@ function saveClassification(transactionUid) {
         state.bootstrap.scenarioSummary = result.scenarioSummary || state.bootstrap.scenarioSummary;
         state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
         state.bootstrap.graphData = result.graphData;
+        state.movementCacheKey = '';
         loadAnnualPilotageData_(true).then(function() {
-          renderAll();
           showPage('Gestion de tresorerie');
         }).catch(function(error) {
           showToast(error.message || error, 'error');
@@ -2510,6 +2756,7 @@ function saveClassification(transactionUid) {
       transactionUid: transactionUid,
       categorie: categorie,
       sousCategorie: sousCategorie,
+      site: site,
       createRule: createRule,
       ruleValue: ruleValue
     });
@@ -2530,7 +2777,7 @@ function saveInvoicePayment(factureId) {
       state.bootstrap.periodAnalytics = result.periodAnalytics || state.bootstrap.periodAnalytics;
       state.bootstrap.counts = result.counts || state.bootstrap.counts;
       state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
-      renderAll();
+      renderCurrentPage();
       showPage('Rapprochement bancaire');
     })
     .withFailureHandler(function(error) {
@@ -2551,7 +2798,6 @@ function validateRapprochement(rapprochementId) {
   google.script.run
     .withSuccessHandler(function(result) {
       applyRefreshPayload_(result);
-      renderAll();
       showPage('Rapprochement bancaire');
       showToast('Rapprochement validé.', 'success');
     })
@@ -2567,7 +2813,7 @@ function rollbackImport(importId) {
   google.script.run
     .withSuccessHandler(function(result) {
       applyRefreshPayload_(result);
-      renderAll();
+      state.movementCacheKey = '';
       showPage('Gestion de tresorerie');
       const rollback = result.rollback || {};
       showToast(`Import annulé. ${rollback.movementsDeleted || 0} mouvement(s) supprimé(s).`, 'success');
@@ -2595,7 +2841,6 @@ function runInvoiceOcr() {
       state.bootstrap.importHistory = result.importHistory || state.bootstrap.importHistory;
       state.bootstrap.ocrReady = result.ocrReady;
       state.bootstrap.ocrConfig = result.ocrConfig;
-      renderAll();
       showPage('Rapprochement bancaire');
       showToast(`Passage OCR terminé. ${result.ok} facture(s) lue(s), ${result.failed} en échec.`, 'success');
     })
