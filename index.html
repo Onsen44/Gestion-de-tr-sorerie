@@ -21,11 +21,11 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eef3fb 0%,#f8fafc 100%);color:var(--text)}
 .app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
-.sidebar{background:#10284d;color:#fff;padding:22px 18px;border-right:1px solid #26446f}
+.sidebar{background:#10284d;color:#fff;padding:22px 18px;border-right:1px solid #26446f;position:relative;z-index:20}
 .brand{font-size:25px;font-weight:800;letter-spacing:-0.04em;margin-bottom:6px}
 .brand-sub{font-size:12px;opacity:.72;margin-bottom:24px;line-height:1.5}
-.nav{display:flex;flex-direction:column;gap:8px}
-.nav button{background:transparent;border:none;color:#d9e7ff;text-align:left;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer}
+.nav{display:flex;flex-direction:column;gap:8px;position:relative;z-index:21}
+.nav button{background:transparent;border:none;color:#d9e7ff;text-align:left;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;position:relative;z-index:22}
 .nav button.active,.nav button:hover{background:#eef4ff;color:#18396f}
 .nav-group{display:flex;flex-direction:column;gap:6px}
 .nav-parent{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
@@ -34,7 +34,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .nav-subgroup{display:flex;flex-direction:column;gap:5px;margin-left:14px;padding-left:10px;border-left:1px solid rgba(217,231,255,.28)}
 .nav button.nav-sub{font-size:13px;font-weight:700;padding:9px 12px;color:#c9dcf8}
 .nav button.nav-sub.active,.nav button.nav-sub:hover{background:rgba(238,244,255,.95);color:#18396f}
-.main{padding:24px}
+.main{padding:24px;position:relative;z-index:1;overflow-x:hidden}
 .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .title h1{margin:0;font-size:31px;letter-spacing:-0.04em}
 .title p{margin:6px 0 0;color:var(--muted);max-width:720px;line-height:1.5}
@@ -638,10 +638,11 @@ function renderNav() {
       group.className = 'nav-group';
 
       const parent = document.createElement('button');
+      parent.type = 'button';
       parent.className = 'nav-parent' + (isOpen ? ' active' : '');
       parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
       parent.onclick = function() {
-        switchTresorerieView(state.tresorerieView || 'mouvements');
+        showPage(page);
       };
       group.appendChild(parent);
 
@@ -650,6 +651,7 @@ function renderNav() {
         subnav.className = 'nav-subgroup';
         tresorerieNavItems.forEach(function(item) {
           const child = document.createElement('button');
+          child.type = 'button';
           child.textContent = item[1];
           child.className = 'nav-sub' + (state.tresorerieView === item[0] ? ' active' : '');
           child.onclick = function() { switchTresorerieView(item[0]); };
@@ -668,10 +670,11 @@ function renderNav() {
       group.className = 'nav-group';
 
       const parent = document.createElement('button');
+      parent.type = 'button';
       parent.className = 'nav-parent' + (isOpen ? ' active' : '');
       parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
       parent.onclick = function() {
-        switchRapprochementView(state.rapprochementView || 'a_verifier');
+        showPage(page);
       };
       group.appendChild(parent);
 
@@ -680,6 +683,7 @@ function renderNav() {
         subnav.className = 'nav-subgroup';
         rapprochementNavItems.forEach(function(item) {
           const child = document.createElement('button');
+          child.type = 'button';
           child.textContent = item[1];
           child.className = 'nav-sub' + (state.rapprochementView === item[0] ? ' active' : '');
           child.onclick = function() { switchRapprochementView(item[0]); };
@@ -693,6 +697,7 @@ function renderNav() {
     }
 
     const button = document.createElement('button');
+    button.type = 'button';
     button.textContent = displayPageName(page);
     button.className = page === state.currentPage ? 'active' : '';
     button.onclick = function() { showPage(page); };
@@ -712,30 +717,61 @@ function displayPageName(page) {
 
 function showPage(page) {
   state.currentPage = page;
-  renderCurrentPage();
   Object.keys(pageMeta).forEach(function(name) {
     document.getElementById('page-' + name).classList.toggle('hidden', name !== page);
   });
   document.getElementById('pageTitle').textContent = displayPageName(page);
   document.getElementById('pageSubtitle').textContent = pageMeta[page];
   renderNav();
-  attachEventListeners();
+  renderCurrentPageSafely_(page);
+}
+
+function renderCurrentPageSafely_(page) {
+  try {
+    renderCurrentPage();
+    attachEventListeners();
+  } catch (error) {
+    console.error('renderCurrentPage failed for page', page, error);
+    renderPageErrorState_(page, error);
+  }
+
   if (pageNeedsAnnualData_(page) && !getAnnualPilotageData_()) {
     loadAnnualPilotageData_(false).then(function() {
-      renderCurrentPage();
-      attachEventListeners();
+      try {
+        renderCurrentPage();
+        attachEventListeners();
+      } catch (error) {
+        console.error('render after annual data load failed for page', page, error);
+        renderPageErrorState_(page, error);
+      }
     }).catch(function(error) {
+      renderPageErrorState_(page, error);
       showToast(error.message || error, 'error');
     });
+    return;
   }
+
   if (page === 'Gestion de tresorerie' && state.tresorerieView === 'mouvements' && !hasCurrentMonthlyMovements_()) {
     loadMovementsForMonth_().then(function() {
-      renderTresorerie();
-      attachEventListeners();
+      try {
+        renderTresorerie();
+        attachEventListeners();
+      } catch (error) {
+        console.error('renderTresorerie after movements load failed', error);
+        renderPageErrorState_(page, error);
+      }
     }).catch(function(error) {
+      renderPageErrorState_(page, error);
       showToast(error.message || error, 'error');
     });
   }
+}
+
+function renderPageErrorState_(page, error) {
+  const target = document.getElementById('page-' + page);
+  if (!target) return;
+  const message = error && error.message ? error.message : String(error || 'Erreur inconnue');
+  target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} n a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">Detail technique: ${esc(message)}</div></div>`;
 }
 
 function changeEntite() {
