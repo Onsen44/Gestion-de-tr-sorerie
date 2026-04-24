@@ -129,6 +129,16 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .annual-line-wrap{height:44px;display:flex;align-items:flex-end;justify-content:center}
 .annual-line-dot{width:12px;height:12px;border-radius:50%;background:#173d7a;border:2px solid #fff;box-shadow:0 2px 8px rgba(23,61,122,.25)}
 .annual-label{font-size:11px;color:var(--muted);text-align:center}
+.annual-line-chart{margin-top:10px;border:1px solid #eef2f7;border-radius:16px;background:linear-gradient(180deg,#fcfdff 0%,#f6f9fd 100%);padding:14px}
+.annual-line-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.annual-line-legend span{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:700}
+.annual-line-legend i{display:inline-block;width:18px;height:3px;border-radius:999px}
+.annual-line-svg{display:block;width:100%;height:auto}
+.annual-line-grid{stroke:#dfe7f1;stroke-width:1}
+.annual-line-axis{stroke:#c8d5e6;stroke-width:1.2}
+.annual-line-label{font-size:11px;fill:var(--muted)}
+.annual-line-series{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.annual-line-point{stroke:#fff;stroke-width:2}
 .pivot-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
 .pivot-table{width:100%;border-collapse:collapse;min-width:1100px}
 .pivot-table th,.pivot-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:right;font-size:13px;vertical-align:middle;white-space:nowrap}
@@ -1584,52 +1594,126 @@ function renderAnnualToolbar_(options) {
   </div>`;
 }
 
+function renderInteractiveLineChart_(points, seriesDefs, options) {
+  if (!points || !points.length) return `<div class="empty">${esc((options && options.emptyText) || 'Aucune donnee disponible.')}</div>`;
+  const width = (options && options.width) || 960;
+  const height = (options && options.height) || 320;
+  const padding = Object.assign({ top: 18, right: 18, bottom: 40, left: 52 }, (options && options.padding) || {});
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const normalizedPoints = points.map(function(point) {
+    const values = {};
+    seriesDefs.forEach(function(def) {
+      values[def.key] = toNumber_(point[def.key] || 0);
+    });
+    return {
+      label: point.label || '',
+      values: values
+    };
+  });
+  const allValues = [];
+  normalizedPoints.forEach(function(point) {
+    seriesDefs.forEach(function(def) {
+      allValues.push(point.values[def.key]);
+    });
+  });
+  const maxValue = Math.max.apply(null, allValues.concat([1]));
+  const minValue = Math.min.apply(null, allValues.concat([0]));
+  const valueRange = Math.max(1, maxValue - minValue);
+  const stepX = normalizedPoints.length > 1 ? chartWidth / (normalizedPoints.length - 1) : chartWidth / 2;
+  const hoverStep = normalizedPoints.length > 0 ? chartWidth / normalizedPoints.length : chartWidth;
+
+  function getX(index) {
+    return padding.left + (normalizedPoints.length > 1 ? index * stepX : chartWidth / 2);
+  }
+
+  function getY(value) {
+    const ratio = (value - minValue) / valueRange;
+    return padding.top + chartHeight - (ratio * chartHeight);
+  }
+
+  function buildPath(key) {
+    return normalizedPoints.map(function(point, index) {
+      const prefix = index === 0 ? 'M' : 'L';
+      return prefix + getX(index).toFixed(1) + ' ' + getY(point.values[key]).toFixed(1);
+    }).join(' ');
+  }
+
+  const tickValues = [0, 0.25, 0.5, 0.75, 1].map(function(ratio) {
+    return minValue + (valueRange * ratio);
+  });
+
+  return `<div class="annual-line-chart">
+    <div class="annual-line-legend">${seriesDefs.map(function(def) {
+      return `<span><i style="background:${def.color}"></i>${esc(def.label)}</span>`;
+    }).join('')}</div>
+    <svg class="annual-line-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc((options && options.ariaLabel) || 'Graphique en courbes interactif')}">
+      ${tickValues.map(function(value) {
+        const y = getY(value);
+        return `<g>
+          <line class="annual-line-grid" x1="${padding.left}" y1="${y.toFixed(1)}" x2="${(width - padding.right).toFixed(1)}" y2="${y.toFixed(1)}"></line>
+          <text class="annual-line-label" x="${(padding.left - 10)}" y="${(y + 4).toFixed(1)}" text-anchor="end">${esc(euro(value))}</text>
+        </g>`;
+      }).join('')}
+      <line class="annual-line-axis" x1="${padding.left}" y1="${(padding.top + chartHeight).toFixed(1)}" x2="${(width - padding.right).toFixed(1)}" y2="${(padding.top + chartHeight).toFixed(1)}"></line>
+      ${seriesDefs.map(function(def) {
+        return `<path class="annual-line-series" d="${buildPath(def.key)}" stroke="${def.color}"></path>`;
+      }).join('')}
+      ${normalizedPoints.map(function(point, index) {
+        const x = getX(index);
+        const hoverX = padding.left + (index * hoverStep);
+        const hoverWidth = Math.max(18, hoverStep);
+        const tooltipLines = [point.label].concat(seriesDefs.map(function(def) {
+          return `${def.label}: ${euro(point.values[def.key])}`;
+        }));
+        return `<g>
+          <rect x="${hoverX.toFixed(1)}" y="${padding.top}" width="${hoverWidth.toFixed(1)}" height="${chartHeight.toFixed(1)}" fill="transparent">
+            <title>${esc(tooltipLines.join(' | '))}</title>
+          </rect>
+          <line class="annual-line-grid" x1="${x.toFixed(1)}" y1="${padding.top}" x2="${x.toFixed(1)}" y2="${(padding.top + chartHeight).toFixed(1)}" style="opacity:.18"></line>
+          ${seriesDefs.map(function(def) {
+            const y = getY(point.values[def.key]);
+            return `<circle class="annual-line-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="${def.color}"></circle>`;
+          }).join('')}
+          <text class="annual-line-label" x="${x.toFixed(1)}" y="${(height - 12).toFixed(1)}" text-anchor="middle">${esc(point.label)}</text>
+        </g>`;
+      }).join('')}
+    </svg>
+  </div>`;
+}
+
 function renderAnnualComboChart_(points, mode) {
   if (!points || !points.length) return '<div class="empty">Aucune donnee annuelle disponible pour cette selection.</div>';
-  const maxValue = Math.max.apply(null, points.map(function(point) {
-    const values = mode === 'forecast'
-      ? [Math.abs(point.forecastEncaissements || 0), Math.abs(point.forecastDecaissements || 0), Math.abs(point.forecastClosingCash || 0)]
-      : [Math.abs(point.encaissements || 0), Math.abs(point.decaissements || 0), Math.abs(point.closingCash || 0)];
-    return Math.max.apply(null, values);
-  }).concat([1]));
-
-  return `<div class="annual-chart">${points.map(function(point) {
-    const enc = mode === 'forecast' ? (point.forecastEncaissements || 0) : (point.encaissements || 0);
-    const dec = mode === 'forecast' ? (point.forecastDecaissements || 0) : (point.decaissements || 0);
-    const lineValue = mode === 'forecast' ? (point.forecastClosingCash || 0) : (point.closingCash || 0);
-    const encHeight = Math.max(8, Math.round((Math.abs(enc) / maxValue) * 180));
-    const decHeight = Math.max(8, Math.round((Math.abs(dec) / maxValue) * 180));
-    const lineOffset = Math.max(0, Math.min(32, Math.round((Math.abs(lineValue) / maxValue) * 32)));
-    return `<div class="annual-col">
-      <div class="annual-line-wrap" title="${esc(point.label)} - Tresorerie: ${euro(lineValue)}" style="padding-bottom:${lineOffset}px">
-        <div class="annual-line-dot"></div>
-      </div>
-      <div class="annual-bars">
-        <div class="annual-bar enc" title="${esc(point.label)} - Encaissements: ${euro(enc)}" style="height:${encHeight}px"></div>
-        <div class="annual-bar dec" title="${esc(point.label)} - Decaissements: ${euro(dec)}" style="height:${decHeight}px"></div>
-      </div>
-      <div class="annual-label">${esc(point.label)}</div>
-    </div>`;
-  }).join('')}</div>`;
+  const chartPoints = points.map(function(point) {
+    return {
+      label: point.label,
+      encaissements: mode === 'forecast' ? (point.forecastEncaissements || 0) : (point.encaissements || 0),
+      decaissements: mode === 'forecast' ? (point.forecastDecaissements || 0) : (point.decaissements || 0),
+      tresorerie: mode === 'forecast' ? (point.forecastClosingCash || 0) : (point.closingCash || 0)
+    };
+  });
+  return renderInteractiveLineChart_(chartPoints, [
+    { key: 'tresorerie', label: 'Tresorerie', color: '#173d7a' },
+    { key: 'encaissements', label: 'Encaissements', color: '#0f9d58' },
+    { key: 'decaissements', label: 'Decaissements', color: '#c62828' }
+  ], {
+    ariaLabel: 'Courbes annuelles interactives avec montants exacts au survol'
+  });
 }
 
 function renderVarianceChart_(points) {
   if (!points || !points.length) return '<div class="empty">Aucun ecart annuel disponible pour cette selection.</div>';
-  const maxValue = Math.max.apply(null, points.map(function(point) {
-    return Math.abs(point.varianceNet || 0);
-  }).concat([1]));
-  return `<div class="annual-chart">${points.map(function(point) {
-    const variance = point.varianceNet || 0;
-    const height = Math.max(8, Math.round((Math.abs(variance) / maxValue) * 200));
-    const color = variance >= 0 ? 'linear-gradient(180deg,#85d4a0,#0f9d58)' : 'linear-gradient(180deg,#f0a3a3,#c62828)';
-    return `<div class="annual-col">
-      <div class="annual-line-wrap"></div>
-      <div class="annual-bars">
-        <div class="annual-bar" title="${esc(point.label)} - Ecart: ${euro(variance)}" style="width:28px;height:${height}px;background:${color}"></div>
-      </div>
-      <div class="annual-label">${esc(point.label)}</div>
-    </div>`;
-  }).join('')}</div>`;
+  const chartPoints = points.map(function(point) {
+    return {
+      label: point.label,
+      ecart: point.varianceNet || 0
+    };
+  });
+  return renderInteractiveLineChart_(chartPoints, [
+    { key: 'ecart', label: 'Ecart', color: '#d97706' }
+  ], {
+    ariaLabel: 'Courbe des ecarts avec montants exacts au survol'
+  });
 }
 
 function renderAnnualPivotTable_(rows) {
@@ -1761,7 +1845,7 @@ function renderTresorerie() {
       ? 'Si un fichier a ete importe par erreur, le bouton annule ses mouvements, classements et rapprochements lies.'
       : 'Journal complet des mouvements pour le mois, la societe et les filtres choisis.';
   const mainContent = activeView === 'a_classer'
-    ? renderAClasserTable(aClasser)
+    ? renderReapplyRulesAction_() + renderAClasserTable(aClasser)
     : activeView === 'imports'
       ? renderImportHistory(importHistory)
       : renderMovementsJournal_(movementRows, monthlyMovements.total || movementRows.length, {
@@ -1892,6 +1976,10 @@ function renderMovementsTable(rows) {
   }).join('')}</tbody></table>`;
 }
 
+function renderReapplyRulesAction_() {
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
+}
+
 function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
@@ -1929,19 +2017,26 @@ function renderGraphiques() {
   const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, currentMonth:'', previousMonth:'' };
   const periodAnalytics = state.bootstrap.periodAnalytics || {};
   const comparisonValues = [
-    { label: 'Prevu', value: Math.abs((summary.totals || {}).forecast || 0), raw: (summary.totals || {}).forecast || 0, color: 'linear-gradient(180deg,#8db6ff,#3669be)' },
-    { label: 'Realise', value: Math.abs((summary.totals || {}).actual || 0), raw: (summary.totals || {}).actual || 0, color: 'linear-gradient(180deg,#68b887,#0f9d58)' },
-    { label: 'Mois precedent', value: Math.abs((summary.totals || {}).previous || 0), raw: (summary.totals || {}).previous || 0, color: 'linear-gradient(180deg,#f2b36d,#d97706)' }
+    { label: 'Prevu', montant: (summary.totals || {}).forecast || 0 },
+    { label: 'Realise', montant: (summary.totals || {}).actual || 0 },
+    { label: 'Mois precedent', montant: (summary.totals || {}).previous || 0 }
   ];
+  const netPoints = points.map(function(point) {
+    return {
+      label: point.label,
+      net: point.net || 0
+    };
+  });
   document.getElementById('page-Graphiques').innerHTML = `
     <div class="grid">
       <div class="card panel-wide">
         <h3>Evolution mensuelle nette</h3>
-        <div class="chart">${points.length ? points.map(function(point) {
-          const height = Math.max(24, Math.min(240, Math.round(Math.abs(point.net) / 500)));
-          const color = point.net >= 0 ? 'linear-gradient(180deg,#68b887,#0f9d58)' : 'linear-gradient(180deg,#ef8d8d,#c62828)';
-          return `<div class="bar"><div style="height:${height}px;background:${color}"></div><span>${esc(point.label)}</span></div>`;
-        }).join('') : '<div class="empty">Les graphiques se rempliront apres import des mouvements.</div>'}</div>
+        ${renderInteractiveLineChart_(netPoints, [
+          { key: 'net', label: 'Net mensuel', color: '#3669be' }
+        ], {
+          emptyText: 'Les graphiques se rempliront apres import des mouvements.',
+          ariaLabel: 'Courbe du net mensuel avec montants exacts au survol'
+        })}
       </div>
       <div class="card panel-side">
         <h3>Lectures actives</h3>
@@ -1953,10 +2048,11 @@ function renderGraphiques() {
       </div>
       <div class="card panel-full">
         <h3>Comparaison ${esc(summary.currentMonth || '')}</h3>
-        <div class="chart">${comparisonValues.map(function(point) {
-          const height = Math.max(24, Math.min(240, Math.round(point.value / 500)));
-          return `<div class="bar"><div style="height:${height}px;background:${point.color}"></div><span>${esc(point.label)}<br>${euro(point.raw)}</span></div>`;
-        }).join('')}</div>
+        ${renderInteractiveLineChart_(comparisonValues, [
+          { key: 'montant', label: 'Montant', color: '#d97706' }
+        ], {
+          ariaLabel: 'Courbe de comparaison avec montants exacts au survol'
+        })}
       </div>
       <div class="card panel-full">
         <h3>Comparaisons par periode</h3>
@@ -2759,6 +2855,29 @@ function saveClassification(transactionUid) {
       site: site,
       createRule: createRule,
       ruleValue: ruleValue
+    });
+}
+
+function applyRulesToHistory() {
+  if (!confirm('Appliquer les règles aux mouvements déjà importés non classés ou incomplets ? Les montants, débits, crédits et sens bancaires ne seront pas modifiés.')) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      applyRefreshPayload_(result);
+      state.movementCacheKey = '';
+      const info = result.reclassification || {};
+      loadAnnualPilotageData_(true).then(function() {
+        showPage('Gestion de tresorerie');
+        showToast((info.message || 'Règles appliquées.') + ' Scannés: ' + (info.scanned || 0) + ', ignorés: ' + (info.skipped || 0) + '.', 'success');
+      }).catch(function(error) {
+        showToast(error.message || error, 'error');
+      });
+    })
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
+    .reapplyClassificationRules({
+      entite: state.selectedEntite || 'TOUTES',
+      onlyIncomplete: true
     });
 }
 
