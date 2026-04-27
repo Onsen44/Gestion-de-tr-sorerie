@@ -165,6 +165,12 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .annual-line-label{font-size:11px;fill:var(--muted)}
 .annual-line-series{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .annual-line-point{stroke:#fff;stroke-width:2}
+.annual-line-hit-target{fill:transparent;cursor:pointer}
+.annual-line-tooltip{position:fixed;z-index:10020;pointer-events:none;min-width:160px;max-width:280px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 14px 34px rgba(16,32,51,.18);color:var(--text);opacity:0;transform:translateY(4px);transition:opacity .12s ease,transform .12s ease}
+.annual-line-tooltip.visible{opacity:1;transform:translateY(0)}
+.annual-line-tooltip-period{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.annual-line-tooltip-series{font-size:13px;font-weight:800}
+.annual-line-tooltip-value{font-size:16px;font-weight:800;margin-top:2px}
 .pivot-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
 .pivot-table{width:100%;border-collapse:collapse;min-width:1100px}
 .pivot-table th,.pivot-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:right;font-size:13px;vertical-align:middle;white-space:nowrap}
@@ -175,6 +181,10 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .pivot-table .level-2 td:first-child{padding-left:38px;color:var(--muted)}
 .pivot-table .level-3 td:first-child{padding-left:56px;color:var(--muted);font-style:italic}
 .pivot-table .section-row td{background:#f9fbfd}
+.pivot-row-hidden{display:none}
+.pivot-label-wrap{display:inline-flex;align-items:center;gap:8px}
+.pivot-toggle-btn{border:none;background:transparent;color:var(--brand);cursor:pointer;font:inherit;font-weight:800;padding:0;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px}
+.pivot-toggle-spacer{display:inline-block;width:16px;height:16px}
 @media (max-width:1120px){
   .app{grid-template-columns:1fr}
   .sidebar{border-right:none;border-bottom:1px solid #26446f}
@@ -752,6 +762,7 @@ const state = {
   periodPickerOpen: false,
   periodPreset: '',
   annualPilotageCache: {},
+  pivotExpanded: {},
   backendUrl: '',
   password: '',
   dataCache: {},
@@ -1274,6 +1285,14 @@ function attachEventListeners() {
     };
   });
 
+  document.querySelectorAll('[id^="sub-"]').forEach(function(select) {
+    if (!select.classList.contains('inline-select')) return;
+    select.onchange = function() {
+      const transactionUid = this.id.replace(/^sub-/, '');
+      toggleNewSousCategorieField_(transactionUid);
+    };
+  });
+
   document.querySelectorAll('.saveInvoicePaymentBtn').forEach(function(btn) {
     btn.onclick = function(e) {
       e.preventDefault();
@@ -1303,6 +1322,25 @@ function attachEventListeners() {
       saveDriveRoot(entite);
     };
   });
+
+  document.querySelectorAll('.annual-line-hit-target').forEach(function(target) {
+    target.onmouseenter = function(event) {
+      showAnnualLineTooltip_(event.currentTarget, event);
+    };
+    target.onmousemove = function(event) {
+      showAnnualLineTooltip_(event.currentTarget, event);
+    };
+    target.onmouseleave = function() {
+      hideAnnualLineTooltip_();
+    };
+  });
+
+  document.querySelectorAll('.pivot-toggle-btn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      togglePivotRow_(this.getAttribute('data-pivot-key'));
+    };
+  });
 }
 
 function euro(value) {
@@ -1317,6 +1355,53 @@ function toNumberUi_(value) {
   const normalized = String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/€/g, '').replace(/â‚¬/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
   const parsed = parseFloat(normalized);
   return isNaN(parsed) ? 0 : parsed;
+}
+
+function getAnnualLineTooltipEl_() {
+  let tooltip = document.getElementById('annualLineTooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'annualLineTooltip';
+    tooltip.className = 'annual-line-tooltip';
+    document.body.appendChild(tooltip);
+  }
+  return tooltip;
+}
+
+function showAnnualLineTooltip_(target, event) {
+  if (!target) return;
+  const tooltip = getAnnualLineTooltipEl_();
+  const period = target.getAttribute('data-period') || '';
+  const series = target.getAttribute('data-series') || '';
+  const value = target.getAttribute('data-value') || '';
+  tooltip.innerHTML = '<div class="annual-line-tooltip-period">' + esc(period) + '</div>'
+    + '<div class="annual-line-tooltip-series">' + esc(series) + '</div>'
+    + '<div class="annual-line-tooltip-value">' + esc(value) + '</div>';
+  tooltip.classList.add('visible');
+  const offsetX = 16;
+  const offsetY = 16;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  let left = event.clientX + offsetX;
+  let top = event.clientY + offsetY;
+  const rect = tooltip.getBoundingClientRect();
+  if (left + rect.width + 12 > viewportWidth) left = Math.max(12, event.clientX - rect.width - offsetX);
+  if (top + rect.height + 12 > viewportHeight) top = Math.max(12, event.clientY - rect.height - offsetY);
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+function hideAnnualLineTooltip_() {
+  const tooltip = document.getElementById('annualLineTooltip');
+  if (!tooltip) return;
+  tooltip.classList.remove('visible');
+}
+
+function togglePivotRow_(rowKey) {
+  if (!rowKey) return;
+  state.pivotExpanded[rowKey] = !state.pivotExpanded[rowKey];
+  renderCurrentPage();
+  attachEventListeners();
 }
 
 function parseExcelDate_(value) {
@@ -1723,6 +1808,14 @@ function saveDriveRoot(entite) {
     .setDriveRoot({ entite: entite, folderId: input ? input.value : '' });
 }
 
+function runAppsScriptMethod_(methodName, payload) {
+  return new Promise(function(resolve, reject) {
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(reject)[methodName](payload);
+  });
+}
+
 function renderRecentPrevisions(rows) {
   if (!rows.length) return '<div class="empty">Aucune prévision enregistrée pour le moment.</div>';
   return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Date</th><th>Fréquence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
@@ -2005,7 +2098,6 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
   const minValue = Math.min.apply(null, allValues.concat([0]));
   const valueRange = Math.max(1, maxValue - minValue);
   const stepX = normalizedPoints.length > 1 ? chartWidth / (normalizedPoints.length - 1) : chartWidth / 2;
-  const hoverStep = normalizedPoints.length > 0 ? chartWidth / normalizedPoints.length : chartWidth;
 
   function getX(index) {
     return padding.left + (normalizedPoints.length > 1 ? index * stepX : chartWidth / 2);
@@ -2021,6 +2113,14 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
       const prefix = index === 0 ? 'M' : 'L';
       return prefix + getX(index).toFixed(1) + ' ' + getY(point.values[key]).toFixed(1);
     }).join(' ');
+  }
+
+  function buildHitTargets(point, index) {
+    const x = getX(index);
+    return seriesDefs.map(function(def) {
+      const y = getY(point.values[def.key]);
+      return `<circle class="annual-line-hit-target" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" data-period="${esc(point.label)}" data-series="${esc(def.label)}" data-value="${esc(euro(point.values[def.key]))}"></circle>`;
+    }).join('');
   }
 
   const tickValues = [0, 0.25, 0.5, 0.75, 1].map(function(ratio) {
@@ -2045,20 +2145,13 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
       }).join('')}
       ${normalizedPoints.map(function(point, index) {
         const x = getX(index);
-        const hoverX = padding.left + (index * hoverStep);
-        const hoverWidth = Math.max(18, hoverStep);
-        const tooltipLines = [point.label].concat(seriesDefs.map(function(def) {
-          return `${def.label}: ${euro(point.values[def.key])}`;
-        }));
         return `<g>
-          <rect x="${hoverX.toFixed(1)}" y="${padding.top}" width="${hoverWidth.toFixed(1)}" height="${chartHeight.toFixed(1)}" fill="transparent">
-            <title>${esc(tooltipLines.join(' | '))}</title>
-          </rect>
           <line class="annual-line-grid" x1="${x.toFixed(1)}" y1="${padding.top}" x2="${x.toFixed(1)}" y2="${(padding.top + chartHeight).toFixed(1)}" style="opacity:.18"></line>
           ${seriesDefs.map(function(def) {
             const y = getY(point.values[def.key]);
             return `<circle class="annual-line-point" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.5" fill="${def.color}"></circle>`;
           }).join('')}
+          ${buildHitTargets(point, index)}
           <text class="annual-line-label" x="${x.toFixed(1)}" y="${(height - 12).toFixed(1)}" text-anchor="middle">${esc(point.label)}</text>
         </g>`;
       }).join('')}
@@ -2103,11 +2196,66 @@ function renderVarianceChart_(points) {
 function renderAnnualPivotTable_(rows) {
   if (!rows || !rows.length) return '<div class="empty">Aucune ligne annuelle disponible pour cette selection.</div>';
   const monthHeaders = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const pathByLevel = [];
+  const metadata = rows.map(function(row, index) {
+    const level = Number(row.level || 0);
+    pathByLevel[level] = String(row.label || '');
+    pathByLevel.length = level + 1;
+    const path = pathByLevel.slice(0, level + 1);
+    const rowKey = path.join(' > ') + ' #' + index;
+    const parentKey = level > 0 ? (path.slice(0, level).join(' > ') + ' #' + (index - 1)) : '';
+    return {
+      row: row,
+      index: index,
+      level: level,
+      rowKey: rowKey,
+      path: path,
+      parentPath: path.slice(0, level),
+      parentKey: parentKey
+    };
+  });
+
+  metadata.forEach(function(meta, index) {
+    let parentMeta = null;
+    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+      if (metadata[cursor].level === meta.level - 1) {
+        parentMeta = metadata[cursor];
+        break;
+      }
+      if (metadata[cursor].level < meta.level - 1) break;
+    }
+    meta.parentKey = parentMeta ? parentMeta.rowKey : '';
+  });
+
+  metadata.forEach(function(meta, index) {
+    meta.hasChildren = metadata.some(function(candidate, candidateIndex) {
+      return candidateIndex > index && candidate.parentKey === meta.rowKey;
+    });
+    if (meta.hasChildren && state.pivotExpanded[meta.rowKey] === undefined) {
+      state.pivotExpanded[meta.rowKey] = meta.level === 0;
+    }
+  });
+
+  function isVisible(meta) {
+    let parentKey = meta.parentKey;
+    while (parentKey) {
+      if (!state.pivotExpanded[parentKey]) return false;
+      const parentMeta = metadata.find(function(item) { return item.rowKey === parentKey; });
+      parentKey = parentMeta ? parentMeta.parentKey : '';
+    }
+    return true;
+  }
+
   return `<div class="pivot-wrap"><table class="pivot-table"><thead><tr><th>Element</th>${monthHeaders.map(function(month) {
     return `<th>${month}</th>`;
-  }).join('')}<th>Total</th></tr></thead><tbody>${rows.map(function(row) {
-    return `<tr class="level-${row.level || 0} ${row.kind === 'section' ? 'section-row' : ''}">
-      <td>${esc(row.label)}</td>
+  }).join('')}<th>Total</th></tr></thead><tbody>${metadata.map(function(meta) {
+    const row = meta.row;
+    const isExpanded = !!state.pivotExpanded[meta.rowKey];
+    const toggleControl = meta.hasChildren
+      ? `<button type="button" class="pivot-toggle-btn" data-pivot-key="${esc(meta.rowKey)}" aria-label="${esc(isExpanded ? 'Replier' : 'Déplier')}">${isExpanded ? '−' : '+'}</button>`
+      : '<span class="pivot-toggle-spacer"></span>';
+    return `<tr class="level-${row.level || 0} ${row.kind === 'section' ? 'section-row' : ''} ${isVisible(meta) ? '' : 'pivot-row-hidden'}">
+      <td><span class="pivot-label-wrap">${toggleControl}<span>${esc(row.label)}</span></span></td>
       ${(row.monthly || []).map(function(value) { return `<td>${euro(value)}</td>`; }).join('')}
       <td>${euro(row.total)}</td>
     </tr>`;
@@ -2408,22 +2556,23 @@ function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const categories = Object.keys(categoryMap);
-  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Montant</th><th>Catégorie</th><th>Sous-catégorie</th><th>Site / magasin</th><th>Créer une règle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Sens</th><th>Montant</th><th>Catégorie</th><th>Sous-catégorie</th><th>Site / magasin</th><th>Créer une règle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const firstCategory = row.Categorie_proposee || categories[0] || '';
     const catOptions = categories.map(function(cat) {
       return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(frLabel(cat))}</option>`;
-    }).join('');
+    }).join('') + '<option value="__new__">+ Nouvelle catégorie</option>';
     const subOptions = (categoryMap[firstCategory] || []).map(function(sub) {
       return `<option value="${esc(sub)}">${esc(frLabel(sub))}</option>`;
-    }).join('');
+    }).join('') + '<option value="__new__">+ Nouvelle sous-catégorie</option>';
     return `<tr>
       <td>${esc(formatUiDate_(row.Date))}</td>
       <td>${esc(row.Libelle)}</td>
       <td>${esc(frLabel(row.Entite))}</td>
       <td>${esc(frLabel(row.Compte))}</td>
+      <td><span class="badge ${row.Sens === 'Encaissement' ? 'ok' : 'warn'}">${esc(frLabel(row.Sens || (toNumberUi_(row.Montant) >= 0 ? 'Encaissement' : 'Decaissement')))}</span><input type="hidden" id="sens-${esc(row.Transaction_uid)}" value="${esc(row.Sens || (toNumberUi_(row.Montant) >= 0 ? 'Encaissement' : 'Decaissement'))}"></td>
       <td>${euro(row.Montant)}</td>
-      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select></td>
-      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">À définir</option>'}</select></td>
+      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select><div id="cat-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="cat-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle catégorie"></div></td>
+      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">À définir</option>'}</select><div id="sub-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="sub-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle sous-catégorie"></div></td>
       <td><input class="inline-input" id="site-${esc(row.Transaction_uid)}" value="${esc(row.Site || '')}" placeholder="Ex. : Poiré"></td>
       <td>
         <div class="flex">
@@ -3232,19 +3381,64 @@ function updateSousCategories(transactionUid) {
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const cat = document.getElementById('cat-' + transactionUid).value;
   const sub = document.getElementById('sub-' + transactionUid);
-  const options = categoryMap[cat] || [];
-  sub.innerHTML = options.length ? options.map(function(value) {
-    return `<option value="${esc(value)}">${esc(value)}</option>`;
-  }).join('') : '<option value="">A definir</option>';
+  const catNewWrap = document.getElementById('cat-new-wrap-' + transactionUid);
+  const subNewWrap = document.getElementById('sub-new-wrap-' + transactionUid);
+  if (catNewWrap) catNewWrap.classList.toggle('hidden', cat !== '__new__');
+  const options = cat === '__new__' ? [] : (categoryMap[cat] || []);
+  sub.innerHTML = (options.length ? options.map(function(value) {
+    return `<option value="${esc(value)}">${esc(frLabel(value))}</option>`;
+  }).join('') : '<option value="">À définir</option>') + '<option value="__new__">+ Nouvelle sous-catégorie</option>';
+  if (subNewWrap) subNewWrap.classList.add('hidden');
+  toggleNewSousCategorieField_(transactionUid);
+}
+
+function toggleNewSousCategorieField_(transactionUid) {
+  const sub = document.getElementById('sub-' + transactionUid);
+  const subNewWrap = document.getElementById('sub-new-wrap-' + transactionUid);
+  if (!sub || !subNewWrap) return;
+  subNewWrap.classList.toggle('hidden', sub.value !== '__new__');
 }
 
 function saveClassification(transactionUid) {
-  const categorie = document.getElementById('cat-' + transactionUid).value;
-  const sousCategorie = document.getElementById('sub-' + transactionUid).value;
+  const categorySelectValue = document.getElementById('cat-' + transactionUid).value;
+  const sousSelectValue = document.getElementById('sub-' + transactionUid).value;
+  const newCategoryEl = document.getElementById('cat-new-' + transactionUid);
+  const newSubEl = document.getElementById('sub-new-' + transactionUid);
+  const categorie = categorySelectValue === '__new__' ? String(newCategoryEl ? newCategoryEl.value : '').trim() : categorySelectValue;
+  const sousCategorie = sousSelectValue === '__new__' ? String(newSubEl ? newSubEl.value : '').trim() : sousSelectValue;
   const siteEl = document.getElementById('site-' + transactionUid);
   const site = siteEl ? siteEl.value : '';
   const createRule = document.getElementById('rule-' + transactionUid).checked;
   const ruleValue = document.getElementById('ruleValue-' + transactionUid).value;
+  const sensEl = document.getElementById('sens-' + transactionUid);
+  const sens = sensEl ? sensEl.value : 'Décaissement';
+
+  if (!categorie) {
+    showToast('Renseigne une catégorie.', 'warn');
+    return;
+  }
+  if (sousSelectValue === '__new__' && !sousCategorie) {
+    showToast('Renseigne une nouvelle sous-catégorie.', 'warn');
+    return;
+  }
+
+  const categoryPayload = {
+    Categorie: categorie,
+    Sous_categorie: sousCategorie,
+    Type_flux: sens,
+    Frequence: 'Variable',
+    Active: 'Oui',
+    Commentaire: 'Créée depuis Transactions à classer'
+  };
+
+  const beforeSave = (categorySelectValue === '__new__' || sousSelectValue === '__new__')
+    ? runAppsScriptMethod_('upsertCategorie', categoryPayload).then(function(result) {
+        state.bootstrap.config = result.config || state.bootstrap.config;
+        state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      })
+    : Promise.resolve();
+
+  beforeSave.then(function() {
     google.script.run
       .withSuccessHandler(function(result) {
         state.dataCache = {};
@@ -3273,17 +3467,20 @@ function saveClassification(transactionUid) {
           showToast(error.message || error, 'error');
         });
       })
-    .withFailureHandler(function(error) {
-      showToast(error.message || error, 'error');
-    })
-    .classifyTransaction({
-      transactionUid: transactionUid,
-      categorie: categorie,
-      sousCategorie: sousCategorie,
-      site: site,
-      createRule: createRule,
-      ruleValue: ruleValue
-    });
+      .withFailureHandler(function(error) {
+        showToast(error.message || error, 'error');
+      })
+      .classifyTransaction({
+        transactionUid: transactionUid,
+        categorie: categorie,
+        sousCategorie: sousCategorie,
+        site: site,
+        createRule: createRule,
+        ruleValue: ruleValue
+      });
+  }).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
 }
 
 function applyRulesToHistory() {
