@@ -1026,6 +1026,14 @@ function euro(value) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(isNaN(normalized) ? 0 : normalized);
 }
 
+function toNumberUi_(value) {
+  if (value === '' || value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  const normalized = String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/€/g, '').replace(/â‚¬/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 function parseExcelDate_(value) {
   if (value === '' || value === null || value === undefined) return null;
   if (value instanceof Date && !isNaN(value.getTime())) return value;
@@ -1640,7 +1648,7 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
   const normalizedPoints = points.map(function(point) {
     const values = {};
     seriesDefs.forEach(function(def) {
-      values[def.key] = toNumber_(point[def.key] || 0);
+      values[def.key] = toNumberUi_(point[def.key] || 0);
     });
     return {
       label: point.label || '',
