@@ -120,6 +120,11 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .toolbar .field-inline{display:flex;flex-direction:column;gap:6px}
 .toolbar label{font-size:12px;color:var(--muted);font-weight:700}
 .toolbar select{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+.global-period-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
+.global-period-toolbar .field-inline{display:flex;flex-direction:column;gap:6px}
+.global-period-toolbar label{font-size:12px;color:var(--muted);font-weight:700}
+.global-period-toolbar input{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;min-width:160px}
+.period-status{font-size:12px;color:var(--muted);line-height:1.4}
 .annual-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;align-items:end;min-height:320px;margin-top:10px}
 .annual-col{display:flex;flex-direction:column;align-items:center;gap:8px}
 .annual-bars{height:220px;display:flex;align-items:flex-end;gap:6px}
@@ -211,6 +216,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
         </div>
         <div class="title" style="flex:1;">
           <h1 id="pageTitle">Accueil</h1>
+          <div id="periodToolbar"></div>
           <p id="pageSubtitle">Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.</p>
         </div>
       </div>
@@ -283,7 +289,67 @@ function normalizeBackendUrl_(url) {
 }
 
 function annualPilotageCacheKey_() {
-  return [state.selectedEntite || 'TOUTES', state.annualSelectedYear || new Date().getFullYear()].join('|');
+  return [
+    state.selectedEntite || 'TOUTES',
+    state.annualSelectedYear || new Date().getFullYear(),
+    currentDateRangeKey_()
+  ].join('|');
+}
+
+function currentDateRangeKey_() {
+  return state.customPeriod && state.customPeriod.active && state.customPeriod.start && state.customPeriod.end
+    ? [state.customPeriod.start, state.customPeriod.end].join('|')
+    : 'default';
+}
+
+function currentDateRangePayload_() {
+  if (!state.customPeriod || !state.customPeriod.active || !state.customPeriod.start || !state.customPeriod.end) {
+    return {};
+  }
+  return {
+    dateStart: state.customPeriod.start,
+    dateEnd: state.customPeriod.end
+  };
+}
+
+function hasActiveCustomPeriod_() {
+  return !!(state.customPeriod && state.customPeriod.active && state.customPeriod.start && state.customPeriod.end);
+}
+
+function formatPeriodLabel_(isoDate) {
+  if (!isoDate) return '';
+  const parsed = parseUiDate_(isoDate);
+  return parsed ? formatUiDate_(parsed) : isoDate;
+}
+
+function currentPeriodDisplayLabel_() {
+  if (!hasActiveCustomPeriod_()) return '';
+  return 'du ' + formatPeriodLabel_(state.customPeriod.start) + ' au ' + formatPeriodLabel_(state.customPeriod.end);
+}
+
+function renderPeriodToolbar_() {
+  const target = document.getElementById('periodToolbar');
+  if (!target) return;
+  const start = (state.customPeriod && state.customPeriod.start) || '';
+  const end = (state.customPeriod && state.customPeriod.end) || '';
+  const active = hasActiveCustomPeriod_();
+  const status = active
+    ? `Periode active: du ${esc(formatPeriodLabel_(start))} au ${esc(formatPeriodLabel_(end))}`
+    : 'Vue par defaut active. Personnalise une plage si tu veux recalculer les graphes et les montants.';
+  target.innerHTML = `
+    <div class="global-period-toolbar">
+      <div class="field-inline">
+        <label>Date debut</label>
+        <input id="periodStart" type="date" value="${esc(start)}">
+      </div>
+      <div class="field-inline">
+        <label>Date fin</label>
+        <input id="periodEnd" type="date" value="${esc(end)}">
+      </div>
+      <button class="btn secondary" type="button" onclick="applyCustomPeriod()">Appliquer</button>
+      <button class="btn ghost" type="button" onclick="resetCustomPeriod()"${active ? '' : ' disabled'}>Reinitialiser</button>
+      <div class="period-status">${status}</div>
+    </div>`;
 }
 
 function getAnnualPilotageData_() {
@@ -304,7 +370,9 @@ function loadAnnualPilotageData_(forceRefresh) {
       .withFailureHandler(reject)
       .getAnnualPilotageData({
         entite: state.selectedEntite,
-        year: state.annualSelectedYear
+        year: state.annualSelectedYear,
+        dateStart: currentDateRangePayload_().dateStart || '',
+        dateEnd: currentDateRangePayload_().dateEnd || ''
       });
   });
 }
@@ -544,6 +612,11 @@ const state = {
   movementLoadTimer: null,
   movementRenderLimit: 500,
   previsionView: 'forecast',
+  customPeriod: {
+    start: '',
+    end: '',
+    active: false
+  },
   annualPilotageCache: {},
   backendUrl: '',
   password: '',
@@ -609,6 +682,7 @@ function init() {
         showToast('Erreur renderNav: ' + e.message, 'error');
       }
       try {
+        renderPeriodToolbar_();
         renderCurrentPage();
         console.log('renderCurrentPage() succeeded');
       } catch (e) {
@@ -723,6 +797,7 @@ function showPage(page) {
   document.getElementById('pageTitle').textContent = displayPageName(page);
   document.getElementById('pageSubtitle').textContent = pageMeta[page];
   renderNav();
+  renderPeriodToolbar_();
   renderCurrentPageSafely_(page);
 }
 
@@ -774,6 +849,72 @@ function renderPageErrorState_(page, error) {
   target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} n a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">Detail technique: ${esc(message)}</div></div>`;
 }
 
+function currentDataCacheKey_(entite) {
+  return [String(entite || state.selectedEntite || 'TOUTES'), currentDateRangeKey_()].join('|');
+}
+
+function reloadSelectionData_(forceAnnualRefresh) {
+  const payload = Object.assign({ entite: state.selectedEntite }, currentDateRangePayload_());
+  return new Promise(function(resolve, reject) {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        const cacheKey = currentDataCacheKey_(state.selectedEntite);
+        state.dataCache[cacheKey] = data;
+        state.cacheTimestamp[cacheKey] = Date.now();
+        updateStateWithData_(data);
+        state.movementCacheKey = '';
+        loadAnnualIfNeeded_(!!forceAnnualRefresh).then(function() {
+          renderPeriodToolbar_();
+          renderCurrentPage();
+          attachEventListeners();
+          resolve(data);
+        }).catch(reject);
+      })
+      .withFailureHandler(reject)
+      .getDataForEntite(payload);
+  });
+}
+
+function applyCustomPeriod() {
+  const startInput = document.getElementById('periodStart');
+  const endInput = document.getElementById('periodEnd');
+  const start = startInput ? String(startInput.value || '').trim() : '';
+  const end = endInput ? String(endInput.value || '').trim() : '';
+  if (!start || !end) {
+    showToast('Renseigne une date de debut et une date de fin.', 'warn');
+    return;
+  }
+  const startDate = parseUiDate_(start);
+  const endDate = parseUiDate_(end);
+  if (!startDate || !endDate) {
+    showToast('Les dates saisies ne sont pas valides.', 'error');
+    return;
+  }
+  if (startDate.getTime() > endDate.getTime()) {
+    showToast('La date de debut doit etre avant la date de fin.', 'warn');
+    return;
+  }
+  state.customPeriod = { start: start, end: end, active: true };
+  if (startDate.getFullYear() === endDate.getFullYear()) {
+    state.annualSelectedYear = startDate.getFullYear();
+  }
+  state.annualPilotageCache = {};
+  renderPeriodToolbar_();
+  reloadSelectionData_(true).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
+}
+
+function resetCustomPeriod() {
+  if (!hasActiveCustomPeriod_()) return;
+  state.customPeriod = { start: '', end: '', active: false };
+  state.annualPilotageCache = {};
+  renderPeriodToolbar_();
+  reloadSelectionData_(true).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
+}
+
 function changeEntite() {
   // Récupère l'entité sélectionnée
   const select = document.getElementById('selectedEntite');
@@ -788,10 +929,11 @@ function changeEntite() {
 
   // Vérifier si les données sont en cache et non expirées
   const now = Date.now();
-  if (state.dataCache[newEntite] && state.cacheTimestamp[newEntite] &&
-      (now - state.cacheTimestamp[newEntite]) < state.cacheExpireMs) {
+  const cacheKey = currentDataCacheKey_(newEntite);
+  if (state.dataCache[cacheKey] && state.cacheTimestamp[cacheKey] &&
+      (now - state.cacheTimestamp[cacheKey]) < state.cacheExpireMs) {
     // Utiliser le cache
-    const cachedData = state.dataCache[newEntite];
+    const cachedData = state.dataCache[cacheKey];
     updateStateWithData_(cachedData);
     loadAnnualIfNeeded_(false).then(function() {
       renderCurrentPage();
@@ -806,8 +948,8 @@ function changeEntite() {
   google.script.run
     .withSuccessHandler(function(data) {
       // Mettre en cache
-      state.dataCache[newEntite] = data;
-      state.cacheTimestamp[newEntite] = Date.now();
+      state.dataCache[cacheKey] = data;
+      state.cacheTimestamp[cacheKey] = Date.now();
 
       // Mettre à jour l'état
       updateStateWithData_(data);
@@ -824,7 +966,7 @@ function changeEntite() {
     .withFailureHandler(function(error) {
       showToast('Erreur lors du chargement de l\'entite: ' + error.message, 'error');
     })
-    .getDataForEntite(newEntite);
+    .getDataForEntite(Object.assign({ entite: newEntite }, currentDateRangePayload_()));
 }
 
 function updateStateWithData_(data) {
@@ -853,7 +995,13 @@ function refreshData() {
   state.dataCache = {};
   state.cacheTimestamp = {};
   state.annualPilotageCache = {};
-  init();
+  if (!state.bootstrap) {
+    init();
+    return;
+  }
+  reloadSelectionData_(true).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
 }
 
 function switchTresorerieView(view) {
@@ -1443,6 +1591,9 @@ function renderAlerts(rows) {
 
 function renderPeriodAnalytics(periodAnalytics) {
   if (!periodAnalytics) return '<div class="empty">Aucune analyse de periode pour le moment.</div>';
+  if (periodAnalytics.custom) {
+    return `<div class="row"><div>Personnalise<small>${esc(periodAnalytics.custom.currentLabel)} vs ${esc(periodAnalytics.custom.previousLabel)}</small></div><div>${euro(periodAnalytics.custom.current.net)} / ${euro(periodAnalytics.custom.previous.net)}</div></div>`;
+  }
   const labels = [
     ['day', 'Jour'],
     ['week', 'Semaine'],
@@ -1634,6 +1785,7 @@ function renderAnnualToolbar_(options) {
         return `<option value="${year}"${Number(year) === Number(state.annualSelectedYear) ? ' selected' : ''}>${year}</option>`;
       }).join('')}</select>
     </div>
+    ${hasActiveCustomPeriod_() ? `<div class="field-inline"><label>Periode active</label><div class="period-status">${esc(currentPeriodDisplayLabel_())}</div></div>` : ''}
     ${options && options.viewButtons ? `<div class="subtabs" style="margin:18px 0 0 0">${options.viewButtons}</div>` : ''}
   </div>`;
 }
@@ -2060,7 +2212,11 @@ function renderGraphiques() {
   const points = state.bootstrap.graphData || [];
   const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, currentMonth:'', previousMonth:'' };
   const periodAnalytics = state.bootstrap.periodAnalytics || {};
-  const comparisonValues = [
+  const customComparison = periodAnalytics.custom || null;
+  const comparisonValues = customComparison ? [
+    { label: 'Periode active', montant: (customComparison.current || {}).net || 0 },
+    { label: 'Periode precedente', montant: (customComparison.previous || {}).net || 0 }
+  ] : [
     { label: 'Prevu', montant: (summary.totals || {}).forecast || 0 },
     { label: 'Realise', montant: (summary.totals || {}).actual || 0 },
     { label: 'Mois precedent', montant: (summary.totals || {}).previous || 0 }
@@ -2091,7 +2247,7 @@ function renderGraphiques() {
         </div>
       </div>
       <div class="card panel-full">
-        <h3>Comparaison ${esc(summary.currentMonth || '')}</h3>
+        <h3>${customComparison ? 'Comparaison de la periode personnalisee' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
         ${renderInteractiveLineChart_(comparisonValues, [
           { key: 'montant', label: 'Montant', color: '#d97706' }
         ], {
