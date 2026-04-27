@@ -120,11 +120,32 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .toolbar .field-inline{display:flex;flex-direction:column;gap:6px}
 .toolbar label{font-size:12px;color:var(--muted);font-weight:700}
 .toolbar select{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
-.global-period-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
-.global-period-toolbar .field-inline{display:flex;flex-direction:column;gap:6px}
-.global-period-toolbar label{font-size:12px;color:var(--muted);font-weight:700}
-.global-period-toolbar input{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;min-width:160px}
-.period-status{font-size:12px;color:var(--muted);line-height:1.4}
+.period-shell{position:relative;display:flex;justify-content:flex-start;margin-top:14px}
+.period-trigger{display:inline-flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text);cursor:pointer;box-shadow:0 6px 16px rgba(16,32,51,.05);min-width:280px}
+.period-trigger:hover{border-color:#bfd0e8}
+.period-trigger-icon{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:#e7f1ff;color:#0f5bb8;font-size:20px;flex:0 0 38px}
+.period-trigger-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.period-trigger-label{font-size:12px;color:var(--muted);font-weight:700}
+.period-trigger-value{font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.period-trigger-chevron{margin-left:auto;color:var(--muted);font-size:12px}
+.period-popover{position:absolute;top:calc(100% + 10px);left:0;z-index:40;width:min(860px,calc(100vw - 80px));background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 44px rgba(16,32,51,.18);padding:16px}
+.period-popover-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px}
+.period-presets{display:flex;flex-direction:column;gap:8px}
+.period-preset-btn{border:none;border-radius:12px;padding:11px 12px;text-align:left;background:#f3f6fb;color:var(--text);font-weight:700;cursor:pointer}
+.period-preset-btn:hover,.period-preset-btn.active{background:#dfeafb;color:var(--brand)}
+.period-config{display:flex;flex-direction:column;gap:14px}
+.period-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.period-inputs .field-inline{display:flex;flex-direction:column;gap:6px}
+.period-inputs label{font-size:12px;color:var(--muted);font-weight:700}
+.period-inputs input{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit}
+.period-status{font-size:12px;color:var(--muted);line-height:1.5}
+.period-actions{display:flex;gap:10px;flex-wrap:wrap}
+@media (max-width:760px){
+  .period-popover{width:min(96vw,520px);left:0}
+  .period-popover-grid{grid-template-columns:1fr}
+  .period-inputs{grid-template-columns:1fr}
+  .period-trigger{min-width:0;width:100%}
+}
 .annual-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;align-items:end;min-height:320px;margin-top:10px}
 .annual-col{display:flex;flex-direction:column;align-items:center;gap:8px}
 .annual-bars{height:220px;display:flex;align-items:flex-end;gap:6px}
@@ -327,6 +348,82 @@ function currentPeriodDisplayLabel_() {
   return 'du ' + formatPeriodLabel_(state.customPeriod.start) + ' au ' + formatPeriodLabel_(state.customPeriod.end);
 }
 
+function getDefaultPeriodSummary_() {
+  const today = new Date();
+  const monthLabel = today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  return monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+}
+
+function getPeriodToolbarSummary_() {
+  return hasActiveCustomPeriod_() ? currentPeriodDisplayLabel_() : getDefaultPeriodSummary_();
+}
+
+function togglePeriodPicker_() {
+  state.periodPickerOpen = !state.periodPickerOpen;
+  renderPeriodToolbar_();
+}
+
+function setPeriodInputs_(startDate, endDate, preset) {
+  const startIso = formatDateForInput_(startDate);
+  const endIso = formatDateForInput_(endDate);
+  state.periodPreset = preset || '';
+  if (state.customPeriod && state.customPeriod.active) {
+    state.customPeriod.start = startIso;
+    state.customPeriod.end = endIso;
+  }
+  renderPeriodToolbar_();
+}
+
+function formatDateForInput_(date) {
+  if (!date) return '';
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return [yyyy, mm, dd].join('-');
+}
+
+function applyPeriodPreset_(preset) {
+  const today = startOfToday_();
+  let start = null;
+  let end = null;
+  if (preset === 'hier') {
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+    end = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  } else if (preset === 'semaine_cours') {
+    const day = (today.getDay() + 6) % 7;
+    start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - day);
+    end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  } else if (preset === 'semaine_derniere') {
+    const day = (today.getDay() + 6) % 7;
+    end = new Date(today.getFullYear(), today.getMonth(), today.getDate() - day - 1);
+    start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6);
+  } else if (preset === 'mois_cours') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  } else if (preset === 'mois_complet') {
+    start = new Date(today.getFullYear(), today.getMonth(), 1);
+    end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  } else if (preset === 'mois_dernier') {
+    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    end = new Date(today.getFullYear(), today.getMonth(), 0);
+  } else if (preset === 'annee_cours') {
+    start = new Date(today.getFullYear(), 0, 1);
+    end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  } else if (preset === 'annee_complete') {
+    start = new Date(today.getFullYear(), 0, 1);
+    end = new Date(today.getFullYear(), 11, 31);
+  } else if (preset === 'annee_derniere') {
+    start = new Date(today.getFullYear() - 1, 0, 1);
+    end = new Date(today.getFullYear() - 1, 11, 31);
+  }
+  if (!start || !end) {
+    state.periodPreset = preset || '';
+    renderPeriodToolbar_();
+    return;
+  }
+  setPeriodInputs_(start, end, preset);
+}
+
 function renderPeriodToolbar_() {
   const target = document.getElementById('periodToolbar');
   if (!target) return;
@@ -334,21 +431,56 @@ function renderPeriodToolbar_() {
   const end = (state.customPeriod && state.customPeriod.end) || '';
   const active = hasActiveCustomPeriod_();
   const status = active
-    ? `Periode active: du ${esc(formatPeriodLabel_(start))} au ${esc(formatPeriodLabel_(end))}`
-    : 'Vue par defaut active. Personnalise une plage si tu veux recalculer les graphes et les montants.';
+    ? `Période active : du ${esc(formatPeriodLabel_(start))} au ${esc(formatPeriodLabel_(end))}`
+    : 'Vue par défaut active. Ouvre le calendrier pour choisir une période.';
+  const presets = [
+    ['hier', 'Hier'],
+    ['semaine_cours', 'Semaine en cours'],
+    ['semaine_derniere', 'Semaine dernière'],
+    ['mois_cours', 'Mois en cours'],
+    ['mois_complet', 'Mois complet'],
+    ['mois_dernier', 'Mois dernier'],
+    ['annee_cours', 'Année en cours'],
+    ['annee_complete', 'Année complète'],
+    ['annee_derniere', 'Année dernière'],
+    ['personnaliser', 'Personnaliser']
+  ];
   target.innerHTML = `
-    <div class="global-period-toolbar">
-      <div class="field-inline">
-        <label>Date debut</label>
-        <input id="periodStart" type="date" value="${esc(start)}">
-      </div>
-      <div class="field-inline">
-        <label>Date fin</label>
-        <input id="periodEnd" type="date" value="${esc(end)}">
-      </div>
-      <button class="btn secondary" type="button" onclick="applyCustomPeriod()">Appliquer</button>
-      <button class="btn ghost" type="button" onclick="resetCustomPeriod()"${active ? '' : ' disabled'}>Reinitialiser</button>
-      <div class="period-status">${status}</div>
+    <div class="period-shell">
+      <button class="period-trigger" type="button" onclick="togglePeriodPicker_()">
+        <span class="period-trigger-icon">📅</span>
+        <span class="period-trigger-copy">
+          <span class="period-trigger-label">${active ? 'Période personnalisée' : 'Vue active'}</span>
+          <span class="period-trigger-value">${esc(getPeriodToolbarSummary_())}</span>
+        </span>
+        <span class="period-trigger-chevron">${state.periodPickerOpen ? '▲' : '▼'}</span>
+      </button>
+      ${state.periodPickerOpen ? `<div class="period-popover">
+        <div class="period-popover-grid">
+          <div class="period-presets">
+            ${presets.map(function(item) {
+              return `<button class="period-preset-btn ${state.periodPreset === item[0] ? 'active' : ''}" type="button" onclick="applyPeriodPreset_('${item[0]}')">${item[1]}</button>`;
+            }).join('')}
+          </div>
+          <div class="period-config">
+            <div class="period-inputs">
+              <div class="field-inline">
+                <label>Date de début</label>
+                <input id="periodStart" type="date" value="${esc(start)}">
+              </div>
+              <div class="field-inline">
+                <label>Date de fin</label>
+                <input id="periodEnd" type="date" value="${esc(end)}">
+              </div>
+            </div>
+            <div class="period-actions">
+              <button class="btn secondary" type="button" onclick="applyCustomPeriod()">Appliquer</button>
+              <button class="btn ghost" type="button" onclick="resetCustomPeriod()"${active ? '' : ' disabled'}>Réinitialiser</button>
+            </div>
+            <div class="period-status">${status}</div>
+          </div>
+        </div>
+      </div>` : ''}
     </div>`;
 }
 
@@ -617,6 +749,8 @@ const state = {
     end: '',
     active: false
   },
+  periodPickerOpen: false,
+  periodPreset: '',
   annualPilotageCache: {},
   backendUrl: '',
   password: '',
@@ -846,7 +980,7 @@ function renderPageErrorState_(page, error) {
   const target = document.getElementById('page-' + page);
   if (!target) return;
   const message = error && error.message ? error.message : String(error || 'Erreur inconnue');
-  target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} n a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">Detail technique: ${esc(message)}</div></div>`;
+  target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} n’a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">Détail technique : ${esc(message)}</div></div>`;
 }
 
 function currentDataCacheKey_(entite) {
@@ -881,7 +1015,7 @@ function applyCustomPeriod() {
   const start = startInput ? String(startInput.value || '').trim() : '';
   const end = endInput ? String(endInput.value || '').trim() : '';
   if (!start || !end) {
-    showToast('Renseigne une date de debut et une date de fin.', 'warn');
+    showToast('Renseigne une date de début et une date de fin.', 'warn');
     return;
   }
   const startDate = parseUiDate_(start);
@@ -891,10 +1025,11 @@ function applyCustomPeriod() {
     return;
   }
   if (startDate.getTime() > endDate.getTime()) {
-    showToast('La date de debut doit etre avant la date de fin.', 'warn');
+    showToast('La date de début doit être antérieure à la date de fin.', 'warn');
     return;
   }
   state.customPeriod = { start: start, end: end, active: true };
+  state.periodPickerOpen = false;
   if (startDate.getFullYear() === endDate.getFullYear()) {
     state.annualSelectedYear = startDate.getFullYear();
   }
@@ -908,6 +1043,8 @@ function applyCustomPeriod() {
 function resetCustomPeriod() {
   if (!hasActiveCustomPeriod_()) return;
   state.customPeriod = { start: '', end: '', active: false };
+  state.periodPreset = '';
+  state.periodPickerOpen = false;
   state.annualPilotageCache = {};
   renderPeriodToolbar_();
   reloadSelectionData_(true).catch(function(error) {
@@ -1251,6 +1388,57 @@ function frLabel(value) {
   return labels[raw] || labels[raw.replace(/\s+/g, '_')] || raw;
 }
 
+function frLabel(value) {
+  const labels = {
+    Securite: 'Sécurité',
+    Electricite: 'Électricité',
+    Decaissement: 'Décaissement',
+    Encaissement: 'Encaissement',
+    Regles: 'Règles',
+    Categories: 'Catégories',
+    Categorie: 'Catégorie',
+    Sous_categorie: 'Sous-catégorie',
+    Frequence: 'Fréquence',
+    Entite: 'Entité',
+    Parametres: 'Paramètres',
+    Previsionnel: 'Prévisionnel',
+    Scenarios: 'Scénarios',
+    Tresorerie: 'Trésorerie',
+    A_classer: 'À classer',
+    Non_classe: 'Non classé',
+    A_definir: 'À définir',
+    'A definir': 'À définir',
+    'Non classe': 'Non classé',
+    'Non renseigne': 'Non renseigné',
+    'Non renseignee': 'Non renseignée',
+    Mode_reglement: 'Mode de règlement',
+    Compte_id: 'Compte bancaire',
+    Date_valeur: 'Date de valeur',
+    Date_creation: 'Date de création',
+    Date_maj: 'Date de mise à jour',
+    Sous_categorie_proposee: 'Sous-catégorie proposée',
+    Categorie_proposee: 'Catégorie proposée',
+    Source_import: 'Source d’import',
+    Statut_classement: 'Statut de classement',
+    Statut_rapprochement: 'Statut de rapprochement',
+    Variable: 'Variable',
+    Mensuelle: 'Mensuelle',
+    Trimestrielle: 'Trimestrielle',
+    Semestrielle: 'Semestrielle',
+    Annuelle: 'Annuelle',
+    Ponctuelle: 'Ponctuelle',
+    societe: 'société',
+    groupe: 'groupe'
+  };
+  const raw = String(value == null ? '' : value);
+  const normalized = raw.replace(/\s+/g, '_');
+  if (labels[raw]) return labels[raw];
+  if (labels[normalized]) return labels[normalized];
+  const cleaned = raw.replace(/_/g, ' ').trim();
+  if (!cleaned) return '';
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 function esc(value) {
   return String(value == null ? '' : value)
     .replace(/&/g, '&amp;')
@@ -1536,15 +1724,15 @@ function saveDriveRoot(entite) {
 }
 
 function renderRecentPrevisions(rows) {
-  if (!rows.length) return '<div class="empty">Aucune prevision enregistree pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Date</th><th>Frequence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucune prévision enregistrée pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Date</th><th>Fréquence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
-      <td>${esc(row.Entite)}</td>
-      <td>${esc(row.Categorie)}</td>
-      <td>${esc(row.Sous_categorie)}</td>
+      <td>${esc(frLabel(row.Entite))}</td>
+      <td>${esc(frLabel(row.Categorie))}</td>
+      <td>${esc(frLabel(row.Sous_categorie))}</td>
       <td>${esc(row.Date_prevue)}</td>
-      <td>${esc(row.Frequence)}</td>
-      <td>${esc(row.Sens)}</td>
+      <td>${esc(frLabel(row.Frequence))}</td>
+      <td>${esc(frLabel(row.Sens))}</td>
       <td>${euro(row.Montant_prevu)}</td>
       <td>${esc(row.Active)}</td>
     </tr>`;
@@ -1552,13 +1740,13 @@ function renderRecentPrevisions(rows) {
 }
 
 function renderRecentScenarios(rows) {
-  if (!rows.length) return '<div class="empty">Aucun scenario enregistre pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Type</th><th>Valeur</th><th>Cible</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucun scénario enregistré pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Type</th><th>Valeur</th><th>Cible</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Nom_scenario)}</td>
-      <td>${esc(row.Entite)}</td>
-      <td>${esc(row.Categorie)}</td>
-      <td>${esc(row.Sous_categorie)}</td>
+      <td>${esc(frLabel(row.Entite))}</td>
+      <td>${esc(frLabel(row.Categorie))}</td>
+      <td>${esc(frLabel(row.Sous_categorie))}</td>
       <td>${esc(row.Type_ajustement)}</td>
       <td>${row.Valeur_ajustement !== '' ? esc(row.Valeur_ajustement) : '-'}</td>
       <td>${row.Montant_cible !== '' ? euro(row.Montant_cible) : '-'}</td>
@@ -1569,13 +1757,13 @@ function renderRecentScenarios(rows) {
 
 function renderScenarioTable(summary) {
   const lines = (summary && summary.lines) || [];
-  if (!lines.length) return '<div class="empty">Aucun scenario actif pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Scenario</th><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Base</th><th>Projete</th><th>Impact</th></tr></thead><tbody>${lines.map(function(row) {
+  if (!lines.length) return '<div class="empty">Aucun scénario actif pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Scénario</th><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Base</th><th>Projeté</th><th>Impact</th></tr></thead><tbody>${lines.map(function(row) {
     return `<tr>
       <td>${esc(row.nom)}</td>
-      <td>${esc(row.entite)}</td>
-      <td>${esc(row.categorie)}</td>
-      <td>${esc(row.sousCategorie)}</td>
+      <td>${esc(frLabel(row.entite))}</td>
+      <td>${esc(frLabel(row.categorie))}</td>
+      <td>${esc(frLabel(row.sousCategorie))}</td>
       <td>${euro(row.baseAmount)}</td>
       <td>${euro(row.projectedAmount)}</td>
       <td>${euro(row.impact)}</td>
@@ -1592,7 +1780,7 @@ function renderAlerts(rows) {
 function renderPeriodAnalytics(periodAnalytics) {
   if (!periodAnalytics) return '<div class="empty">Aucune analyse de periode pour le moment.</div>';
   if (periodAnalytics.custom) {
-    return `<div class="row"><div>Personnalise<small>${esc(periodAnalytics.custom.currentLabel)} vs ${esc(periodAnalytics.custom.previousLabel)}</small></div><div>${euro(periodAnalytics.custom.current.net)} / ${euro(periodAnalytics.custom.previous.net)}</div></div>`;
+    return `<div class="row"><div>Personnalisé<small>${esc(periodAnalytics.custom.currentLabel)} vs ${esc(periodAnalytics.custom.previousLabel)}</small></div><div>${euro(periodAnalytics.custom.current.net)} / ${euro(periodAnalytics.custom.previous.net)}</div></div>`;
   }
   const labels = [
     ['day', 'Jour'],
@@ -1600,7 +1788,7 @@ function renderPeriodAnalytics(periodAnalytics) {
     ['month', 'Mois'],
     ['quarter', 'Trimestre'],
     ['semester', 'Semestre'],
-    ['year', 'Annee']
+    ['year', 'Année']
   ];
   return labels.map(function(item) {
     const data = periodAnalytics[item[0]];
@@ -1626,11 +1814,11 @@ function renderTransactionsWithoutInvoice(rows) {
 function renderForecastTable(summary) {
   const lines = (summary && summary.lines) || [];
   if (!lines.length) return '<div class="empty">Aucune ligne de prevision exploitable pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Categorie</th><th>Sous-categorie</th><th>Prevu</th><th>Realise</th><th>Mois precedent</th><th>Ecart vs prevu</th><th>Ecart vs precedent</th></tr></thead><tbody>${lines.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Prévu</th><th>Réalisé</th><th>Mois précédent</th><th>Écart vs prévu</th><th>Écart vs précédent</th></tr></thead><tbody>${lines.map(function(row) {
     return `<tr>
-      <td>${esc(row.entite)}</td>
-      <td>${esc(row.categorie)}</td>
-      <td>${esc(row.sousCategorie)}</td>
+      <td>${esc(frLabel(row.entite))}</td>
+      <td>${esc(frLabel(row.categorie))}</td>
+      <td>${esc(frLabel(row.sousCategorie))}</td>
       <td>${euro(row.forecast)}</td>
       <td>${euro(row.actual)}</td>
       <td>${euro(row.previous)}</td>
@@ -1642,7 +1830,7 @@ function renderForecastTable(summary) {
 function renderSimpleList(items, emptyText, subtitle) {
   if (!items || !items.length) return `<div class="empty">${emptyText}</div>`;
   return items.map(function(item) {
-    return `<div class="row"><div>${esc(item.label)}<small>${subtitle}</small></div><div>${euro(item.value)}</div></div>`;
+    return `<div class="row"><div>${esc(frLabel(item.label))}<small>${subtitle}</small></div><div>${euro(item.value)}</div></div>`;
   }).join('');
 }
 
@@ -1730,10 +1918,10 @@ function buildActionItems_() {
   const txWithoutInvoice = (state.bootstrap.transactionsWithoutInvoice || []).length;
   const urgentInvoices = buildPilotageSnapshot_().urgentInvoices.length;
   return [
-    { title: 'Transactions a classer', detail: 'Operations qui attendent une categorie fiable.', badge: String(aClasser), badgeLevel: aClasser ? 'warn' : 'ok' },
-    { title: 'Factures a verifier', detail: 'Documents a controler ou lecture OCR incertaine.', badge: String(facturesToVerify), badgeLevel: facturesToVerify ? 'warn' : 'ok' },
-    { title: 'Transactions sans facture', detail: 'Decaissements encore non rapproches.', badge: String(txWithoutInvoice), badgeLevel: txWithoutInvoice ? 'danger' : 'ok' },
-    { title: 'Factures echeance 7 jours', detail: 'Paiements a arbitrer rapidement.', badge: String(urgentInvoices), badgeLevel: urgentInvoices ? 'danger' : 'ok' }
+    { title: 'Transactions à classer', detail: 'Opérations en attente d’une catégorie fiable.', badge: String(aClasser), badgeLevel: aClasser ? 'warn' : 'ok' },
+    { title: 'Factures à vérifier', detail: 'Documents à contrôler ou lecture OCR incertaine.', badge: String(facturesToVerify), badgeLevel: facturesToVerify ? 'warn' : 'ok' },
+    { title: 'Transactions sans facture', detail: 'Décaissements encore non rapprochés.', badge: String(txWithoutInvoice), badgeLevel: txWithoutInvoice ? 'danger' : 'ok' },
+    { title: 'Factures à échéance sous 7 jours', detail: 'Paiements à arbitrer rapidement.', badge: String(urgentInvoices), badgeLevel: urgentInvoices ? 'danger' : 'ok' }
   ];
 }
 
@@ -1743,11 +1931,11 @@ function buildUrgentInvoiceItems_() {
     .slice(0, 5)
     .map(function(row) {
       const diff = diffDaysFromToday_(row.Date_echeance);
-      const badge = diff === 0 ? 'Aujourd hui' : (diff < 0 ? 'En retard' : diff + ' j');
+      const badge = diff === 0 ? 'Aujourd’hui' : (diff < 0 ? 'En retard' : diff + ' j');
       const badgeLevel = diff <= 1 ? 'danger' : 'warn';
       return {
         title: [row.Entite, row.Fournisseur || row.Nom_fichier || 'Facture'].filter(Boolean).join(' - '),
-        detail: 'Echeance ' + (row.Date_echeance || 'non renseignee'),
+        detail: 'Échéance ' + (row.Date_echeance || 'non renseignée'),
         badge: badge,
         badgeLevel: badgeLevel,
         amount: euro(row.Montant_TTC)
@@ -1780,7 +1968,7 @@ function renderAnnualToolbar_(options) {
   });
   return `<div class="toolbar">
     <div class="field-inline">
-      <label>Annee</label>
+      <label>Année</label>
       <select onchange="changeAnnualYear(this.value)">${years.map(function(year) {
         return `<option value="${year}"${Number(year) === Number(state.annualSelectedYear) ? ' selected' : ''}>${year}</option>`;
       }).join('')}</select>
@@ -1791,7 +1979,7 @@ function renderAnnualToolbar_(options) {
 }
 
 function renderInteractiveLineChart_(points, seriesDefs, options) {
-  if (!points || !points.length) return `<div class="empty">${esc((options && options.emptyText) || 'Aucune donnee disponible.')}</div>`;
+  if (!points || !points.length) return `<div class="empty">${esc((options && options.emptyText) || 'Aucune donnée disponible.')}</div>`;
   const width = (options && options.width) || 960;
   const height = (options && options.height) || 320;
   const padding = Object.assign({ top: 18, right: 18, bottom: 40, left: 52 }, (options && options.padding) || {});
@@ -1879,7 +2067,7 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
 }
 
 function renderAnnualComboChart_(points, mode) {
-  if (!points || !points.length) return '<div class="empty">Aucune donnee annuelle disponible pour cette selection.</div>';
+  if (!points || !points.length) return '<div class="empty">Aucune donnée annuelle disponible pour cette sélection.</div>';
   const chartPoints = points.map(function(point) {
     return {
       label: point.label,
@@ -1889,9 +2077,9 @@ function renderAnnualComboChart_(points, mode) {
     };
   });
   return renderInteractiveLineChart_(chartPoints, [
-    { key: 'tresorerie', label: 'Tresorerie', color: '#173d7a' },
+    { key: 'tresorerie', label: 'Trésorerie', color: '#173d7a' },
     { key: 'encaissements', label: 'Encaissements', color: '#0f9d58' },
-    { key: 'decaissements', label: 'Decaissements', color: '#c62828' }
+    { key: 'decaissements', label: 'Décaissements', color: '#c62828' }
   ], {
     ariaLabel: 'Courbes annuelles interactives avec montants exacts au survol'
   });
@@ -1934,22 +2122,22 @@ function renderAccueil() {
     <div class="grid">
       <div class="card hero-card">
         <h3>Situation actuelle</h3>
-        <p>Resume de tresorerie pour l entite selectionnee, ou vision consolidee si TOUTES LES ENTITES est active.</p>
+        <p>Résumé de trésorerie pour l’entité sélectionnée, ou vision consolidée si TOUTES LES ENTITÉS est active.</p>
         <div class="hero-metrics">
           <div class="hero-metric">
-            <div class="label">Tresorerie actuelle</div>
+            <div class="label">Trésorerie actuelle</div>
             <div class="value">${euro(d.tresorerieActuelle)}</div>
-            <div class="hint">Situation courante de tresorerie</div>
+            <div class="hint">Situation courante de trésorerie</div>
           </div>
           <div class="hero-metric">
             <div class="label">Encaissements</div>
             <div class="value">${euro(d.encaissements)}</div>
-            <div class="hint">Flux positifs de l entite choisie</div>
+            <div class="hint">Flux positifs de l’entité choisie</div>
           </div>
           <div class="hero-metric">
-            <div class="label">Decaissements</div>
+            <div class="label">Décaissements</div>
             <div class="value">${euro(d.decaissements)}</div>
-            <div class="hint">Flux negatifs de l entite choisie</div>
+            <div class="hint">Flux négatifs de l’entité choisie</div>
           </div>
           <div class="hero-metric">
             <div class="label">Comptes visibles</div>
@@ -1962,8 +2150,8 @@ function renderAccueil() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Evolution annuelle de tresorerie</h3>
-            <p>Le graphe suit l entite selectionnee. En vue TOUTES, il montre le consolide.</p>
+            <h3>Évolution annuelle de trésorerie</h3>
+            <p>Le graphe suit l’entité sélectionnée. En vue TOUTES, il montre le consolidé.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
@@ -1973,35 +2161,35 @@ function renderAccueil() {
       <div class="card panel-wide">
         <div class="section-title">
           <div>
-            <h3>Tresorerie par entite</h3>
+            <h3>Trésorerie par entité</h3>
             <p>Lecture consolidee pour savoir quelle structure porte le cash ou la tension.</p>
           </div>
         </div>
-        <div class="list">${renderSimpleList(d.entites, 'Aucune entite alimentee pour le moment.', 'Solde de tresorerie calcule')}</div>
+        <div class="list">${renderSimpleList(d.entites, 'Aucune entité alimentée pour le moment.', 'Solde de trésorerie calculé')}</div>
       </div>
       <div class="card panel-side">
         <div class="section-title">
           <div>
-            <h3>Comptes de l entite</h3>
-            <p>Lecture directe des comptes bancaires relies a la selection courante.</p>
+            <h3>Comptes de l’entité</h3>
+            <p>Lecture directe des comptes bancaires reliés à la sélection courante.</p>
           </div>
         </div>
-        <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimente.', 'Dernier solde connu ou net cumule')}</div>
+        <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimenté.', 'Dernier solde connu ou net cumulé')}</div>
       </div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Base reliee</h3>
-            <p>Le socle technique du suivi de tresorerie.</p>
+            <h3>Base reliée</h3>
+            <p>Le socle technique du suivi de trésorerie.</p>
           </div>
         </div>
         <div class="list">
           <div class="row"><div>Google Sheet<small>Structure centrale du projet</small></div><div><span class="badge ok">Actif</span></div></div>
           <div class="row"><div>ID du sheet<small>${esc(state.bootstrap.spreadsheetId)}</small></div><div></div></div>
-          <div class="row"><div>Onglets synchronises<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
+          <div class="row"><div>Onglets synchronisés<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
         </div>
-        <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le sheet</a></div>
+        <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le tableur</a></div>
       </div>
     </div>`;
 }
@@ -2031,15 +2219,15 @@ function renderTresorerie() {
   state.tresorerieView = activeView;
   const activeViewLabel = (tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1];
   const mainTitle = activeView === 'a_classer'
-    ? 'Transactions a classer'
+    ? 'Transactions à classer'
     : activeView === 'imports'
       ? 'Historique des imports bancaires'
       : 'Mouvements du mois';
   const mainSubtitle = activeView === 'a_classer'
-    ? 'Acces direct aux transactions en attente de classement, sans scroller dans toute la page.'
+    ? 'Accès direct aux transactions en attente de classement, sans avoir à parcourir toute la page.'
     : activeView === 'imports'
-      ? 'Si un fichier a ete importe par erreur, le bouton annule ses mouvements, classements et rapprochements lies.'
-      : 'Journal complet des mouvements pour le mois, la societe et les filtres choisis.';
+      ? 'Si un fichier a été importé par erreur, le bouton annule ses mouvements, classements et rapprochements liés.'
+      : 'Journal complet des mouvements pour le mois, la société et les filtres choisis.';
   const mainContent = activeView === 'a_classer'
     ? renderReapplyRulesAction_() + renderAClasserTable(aClasser)
     : activeView === 'imports'
@@ -2068,7 +2256,7 @@ function renderTresorerie() {
         <div class="section-title">
           <div>
             <h3>Pilotage annuel des mouvements</h3>
-            <p>Vue annuelle du realise par categorie et sous-categorie, avec graphe d evolution pour l entite choisie ou le consolide.</p>
+            <p>Vue annuelle du réalisé par catégorie et sous-catégorie, avec graphe d’évolution pour l’entité choisie ou le consolidé.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
@@ -2078,18 +2266,18 @@ function renderTresorerie() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel du realise</h3>
-            <p>Montants mensuels des mouvements reels, groupes par encaissements, decaissements, categories et sous-categories.</p>
+            <h3>Tableau annuel du réalisé</h3>
+            <p>Montants mensuels des mouvements réels, regroupés par encaissements, décaissements, catégories et sous-catégories.</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(realised ? realised.rows : [])}
       </div>
 
       <div class="card panel-side">
-        <h3>Etat des imports</h3>
+        <h3>État des imports</h3>
         <div class="list">
-          <div class="row"><div>A classer<small>Transactions non reconnues visibles</small></div><div>${aClasser.length}</div></div>
-          <div class="row"><div>Regles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
+          <div class="row"><div>À classer<small>Transactions non reconnues visibles</small></div><div>${aClasser.length}</div></div>
+          <div class="row"><div>Règles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
           <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
         </div>
       </div>
@@ -2098,7 +2286,7 @@ function renderTresorerie() {
         <div class="section-title">
           <div>
             <h3>${mainTitle}</h3>
-            <p>Section active: <strong>${esc(activeViewLabel)}</strong>. ${mainSubtitle}</p>
+            <p>Section active : <strong>${esc(activeViewLabel)}</strong>. ${mainSubtitle}</p>
           </div>
         </div>
         ${mainContent}
@@ -2132,18 +2320,18 @@ function renderMovementsJournal_(rows, total, options) {
   return `
     <div class="form-grid" style="margin-bottom:12px">
       <div class="field"><label>Mois</label><select onchange="updateMovementFilter('month', this.value)">${monthOptions}</select></div>
-      <div class="field"><label>Annee</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
+      <div class="field"><label>Année</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
       <div class="field"><label>Compte</label><select onchange="updateMovementFilter('compteId', this.value)">${compteOptions}</select></div>
-      <div class="field"><label>Categorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
-      <div class="field"><label>Sous-categorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
+      <div class="field"><label>Catégorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
+      <div class="field"><label>Sous-catégorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
       <div class="field"><label>Site / magasin</label><select onchange="updateMovementFilter('site', this.value)">${selectOptions(options.sites, state.movementFilters.site)}</select></div>
       <div class="field"><label>Statut</label><select onchange="updateMovementFilter('status', this.value)">
         <option value="">Tous</option>
-        <option value="A_CLASSER"${state.movementFilters.status === 'A_CLASSER' ? ' selected' : ''}>A classer</option>
-        <option value="CLASSE"${state.movementFilters.status === 'CLASSE' ? ' selected' : ''}>Classe</option>
+        <option value="A_CLASSER"${state.movementFilters.status === 'A_CLASSER' ? ' selected' : ''}>À classer</option>
+        <option value="CLASSE"${state.movementFilters.status === 'CLASSE' ? ' selected' : ''}>Classé</option>
       </select></div>
     </div>
-    <div class="note" style="margin-bottom:12px"><strong>${total || rows.length}</strong> mouvement(s) charges pour le mois selectionne. ${visibleRows.length} affiche(s) a l ecran pour garder la page fluide.</div>
+    <div class="note" style="margin-bottom:12px"><strong>${total || rows.length}</strong> mouvement(s) chargés pour le mois sélectionné. ${visibleRows.length} affiché(s) à l’écran pour garder la page fluide.</div>
     ${renderMovementAnomalies_(rows)}
     <div class="table-wrap">${renderMovementsTable(visibleRows)}</div>
     ${visibleRows.length < (rows || []).length ? `<div class="actions-row"><button class="btn secondary" onclick="showMoreMovements()">Afficher 500 mouvements de plus</button></div>` : ''}`;
@@ -2160,16 +2348,20 @@ function renderMovementAnomalies_(rows) {
   const missingSub = anomalies.filter(function(row) { return !String(row.Sous_categorie || '').trim(); }).length;
   const missingSite = anomalies.filter(function(row) { return !String(row.Site || '').trim(); }).length;
   return `<div class="note" style="margin-bottom:12px;background:#fff7e9;border-color:#f5d9a6;color:#8a5a00">
-    Controle: ${anomalies.length} mouvement(s) du mois doivent etre verifies.
-    Categorie manquante: ${missingCategory}. Sous-categorie manquante: ${missingSub}. Site manquant: ${missingSite}.
+    Contrôle : ${anomalies.length} mouvement(s) du mois doivent être vérifiés.
+    Catégorie manquante : ${missingCategory}. Sous-catégorie manquante : ${missingSub}. Site manquant : ${missingSite}.
   </div>`;
 }
 
 function renderMovementsTable(rows) {
   if (!rows.length) return '<div class="empty">Aucun mouvement pour le moment.</div>';
-  return `<table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Site</th><th>Categorie</th><th>Sous-categorie</th><th>Encaissement</th><th>Decaissement</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
-    return `<tr><td>${esc(formatUiDate_(row.Date))}</td><td>${esc(row.Libelle)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Compte)}</td><td>${esc(row.Site || '-')}</td><td>${esc(row.Categorie || '-')}</td><td>${esc(row.Sous_categorie || '-')}</td><td>${euro(row.Encaissement)}</td><td>${euro(row.Decaissement)}</td><td>${euro(row.Montant)}</td><td>${esc(row.Statut_classement || '-')}</td></tr>`;
+  return `<table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Site</th><th>Catégorie</th><th>Sous-catégorie</th><th>Encaissement</th><th>Décaissement</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+    return `<tr><td>${esc(formatUiDate_(row.Date))}</td><td>${esc(row.Libelle)}</td><td>${esc(frLabel(row.Entite))}</td><td>${esc(frLabel(row.Compte))}</td><td>${esc(frLabel(row.Site || '-'))}</td><td>${esc(frLabel(row.Categorie || '-'))}</td><td>${esc(frLabel(row.Sous_categorie || '-'))}</td><td>${euro(row.Encaissement)}</td><td>${euro(row.Decaissement)}</td><td>${euro(row.Montant)}</td><td>${esc(frLabel(row.Statut_classement || '-'))}</td></tr>`;
   }).join('')}</tbody></table>`;
+}
+
+function renderReapplyRulesAction_() {
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
 }
 
 function renderReapplyRulesAction_() {
@@ -2208,6 +2400,42 @@ function renderAClasserTable(rows) {
   }).join('')}</tbody></table></div>`;
 }
 
+function renderReapplyRulesAction_() {
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
+}
+
+function renderAClasserTable(rows) {
+  if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
+  const categoryMap = state.bootstrap.config.categoryMap || {};
+  const categories = Object.keys(categoryMap);
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Montant</th><th>Catégorie</th><th>Sous-catégorie</th><th>Site / magasin</th><th>Créer une règle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+    const firstCategory = row.Categorie_proposee || categories[0] || '';
+    const catOptions = categories.map(function(cat) {
+      return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(frLabel(cat))}</option>`;
+    }).join('');
+    const subOptions = (categoryMap[firstCategory] || []).map(function(sub) {
+      return `<option value="${esc(sub)}">${esc(frLabel(sub))}</option>`;
+    }).join('');
+    return `<tr>
+      <td>${esc(formatUiDate_(row.Date))}</td>
+      <td>${esc(row.Libelle)}</td>
+      <td>${esc(frLabel(row.Entite))}</td>
+      <td>${esc(frLabel(row.Compte))}</td>
+      <td>${euro(row.Montant)}</td>
+      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select></td>
+      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">À définir</option>'}</select></td>
+      <td><input class="inline-input" id="site-${esc(row.Transaction_uid)}" value="${esc(row.Site || '')}" placeholder="Ex. : Poiré"></td>
+      <td>
+        <div class="flex">
+          <input type="checkbox" id="rule-${esc(row.Transaction_uid)}">
+          <input class="inline-input" id="ruleValue-${esc(row.Transaction_uid)}" placeholder="Mot-clé ou fournisseur">
+        </div>
+      </td>
+      <td><button class="btn secondary saveClassificationBtn" data-transaction-uid="${esc(row.Transaction_uid)}">Valider</button></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
 function renderGraphiques() {
   const points = state.bootstrap.graphData || [];
   const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, currentMonth:'', previousMonth:'' };
@@ -2230,24 +2458,24 @@ function renderGraphiques() {
   document.getElementById('page-Graphiques').innerHTML = `
     <div class="grid">
       <div class="card panel-wide">
-        <h3>Evolution mensuelle nette</h3>
+        <h3>Évolution mensuelle nette</h3>
         ${renderInteractiveLineChart_(netPoints, [
           { key: 'net', label: 'Net mensuel', color: '#3669be' }
         ], {
-          emptyText: 'Les graphiques se rempliront apres import des mouvements.',
+          emptyText: 'Les graphiques se rempliront après import des mouvements.',
           ariaLabel: 'Courbe du net mensuel avec montants exacts au survol'
         })}
       </div>
       <div class="card panel-side">
         <h3>Lectures actives</h3>
         <div class="list">
-          <div class="row"><div>Tresorerie<small>Jour, semaine, mois, trimestre, semestre, annee</small></div><div><span class="badge ok">Oui</span></div></div>
-          <div class="row"><div>Previsionnel vs realise<small>Par categorie et sous-categorie</small></div><div><span class="badge ok">Oui</span></div></div>
-          <div class="row"><div>Realise vs realise passe<small>Mensuel, trimestriel, semestriel, annuel</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Trésorerie<small>Jour, semaine, mois, trimestre, semestre, année</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Prévisionnel vs réalisé<small>Par catégorie et sous-catégorie</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Réalisé vs période précédente<small>Mensuel, trimestriel, semestriel, annuel</small></div><div><span class="badge ok">Oui</span></div></div>
         </div>
       </div>
       <div class="card panel-full">
-        <h3>${customComparison ? 'Comparaison de la periode personnalisee' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
+        <h3>${customComparison ? 'Comparaison de la période personnalisée' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
         ${renderInteractiveLineChart_(comparisonValues, [
           { key: 'montant', label: 'Montant', color: '#d97706' }
         ], {
@@ -2255,7 +2483,7 @@ function renderGraphiques() {
         })}
       </div>
       <div class="card panel-full">
-        <h3>Comparaisons par periode</h3>
+        <h3>Comparaisons par période</h3>
         <div class="list">${renderPeriodAnalytics(periodAnalytics)}</div>
       </div>
     </div>`;
@@ -2283,37 +2511,37 @@ function renderPrevisionnel() {
   }).join('');
   document.getElementById('page-Previsionnel').innerHTML = `
     <div class="grid">
-      <div class="card kpi"><div class="label">Prevu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total previsionnel du mois</div></div>
-      <div class="card kpi"><div class="label">Realise ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).actual || 0)}</div><div class="hint">Total realise du mois</div></div>
-      <div class="card kpi"><div class="label">Realise ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative precedente</div></div>
-      <div class="card kpi"><div class="label">Lignes de prevision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">Previsions enregistrees dans le sheet</div></div>
+      <div class="card kpi"><div class="label">Prévu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total prévisionnel du mois</div></div>
+      <div class="card kpi"><div class="label">Réalisé ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).actual || 0)}</div><div class="hint">Total réalisé du mois</div></div>
+      <div class="card kpi"><div class="label">Réalisé ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative précédente</div></div>
+      <div class="card kpi"><div class="label">Lignes de prévision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">Prévisions enregistrées dans le sheet</div></div>
 
       <div class="card panel-full">
-        <h3>Ajouter / modifier une prevision</h3>
+        <h3>Ajouter / modifier une prévision</h3>
         <div class="form-grid">
-          <div class="field"><label>Prevision_id</label><input id="prev-id" placeholder="Laisser vide pour creation"></div>
-          <div class="field"><label>Entite</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non specifie</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Categorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(c)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-categorie</label><input id="prev-sous" placeholder="Ex: Blain ou EDF"></div>
-          <div class="field"><label>Date prevue</label><input id="prev-date" type="date"></div>
-          <div class="field"><label>Periode</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
-          <div class="field"><label>Frequence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
-          <div class="field"><label>Sens</label><select id="prev-sens"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
-          <div class="field"><label>Montant prevu</label><input id="prev-montant" type="number" step="0.01" placeholder="1200"></div>
-          <div class="field"><label>Mode calcul</label><select id="prev-mode-calcul"><option value="Manuel">Manuel</option><option value="Historique">Historique</option><option value="Recurrent">Recurrent</option></select></div>
-          <div class="field"><label>Base reference</label><input id="prev-base-reference" placeholder="3 derniers mois"></div>
+          <div class="field"><label>Prévision_id</label><input id="prev-id" placeholder="Laisser vide pour création"></div>
+          <div class="field"><label>Entité</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non spécifié</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Catégorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catégorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>Date prévue</label><input id="prev-date" type="date"></div>
+          <div class="field"><label>Période</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
+          <div class="field"><label>Fréquence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
+          <div class="field"><label>Sens</label><select id="prev-sens"><option value="Decaissement">Décaissement</option><option value="Encaissement">Encaissement</option></select></div>
+          <div class="field"><label>Montant prévu</label><input id="prev-montant" type="number" step="0.01" placeholder="1200"></div>
+          <div class="field"><label>Mode de calcul</label><select id="prev-mode-calcul"><option value="Manuel">Manuel</option><option value="Historique">Historique</option><option value="Recurrent">Récurrent</option></select></div>
+          <div class="field"><label>Base de référence</label><input id="prev-base-reference" placeholder="3 derniers mois"></div>
           <div class="field"><label>Active</label><select id="prev-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
           <div class="field"><label>Commentaire</label><input id="prev-commentaire" placeholder="Loyer mensuel magasin Blain"></div>
         </div>
-        <div class="actions-row"><button class="btn primary" onclick="savePrevision()">Enregistrer prevision</button></div>
+        <div class="actions-row"><button class="btn primary" onclick="savePrevision()">Enregistrer la prévision</button></div>
       </div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphiques annuels du previsionnel</h3>
-            <p>Lecture annuelle du prevu, du realise et des ecarts, toujours filtree par entite ou consolidee selon la selection.</p>
+            <h3>Graphiques annuels du prévisionnel</h3>
+            <p>Lecture annuelle du prévu, du réalisé et des écarts, toujours filtrée par entité ou consolidée selon la sélection.</p>
           </div>
         </div>
         ${renderAnnualToolbar_({ viewButtons: previsionButtons })}
@@ -2323,20 +2551,20 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prevu' : state.previsionView === 'actual' ? 'du realise' : 'des ecarts'}</h3>
-            <p>Structure annuelle par tresorerie, encaissements, decaissements, categories et sous-categories.</p>
+            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prévu' : state.previsionView === 'actual' ? 'du réalisé' : 'des écarts'}</h3>
+            <p>Structure annuelle par trésorerie, encaissements, décaissements, catégories et sous-catégories.</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(previsionRows)}
       </div>
 
       <div class="card panel-full">
-        <h3>Previsionnel vs realise du mois</h3>
+        <h3>Prévisionnel vs réalisé du mois</h3>
         ${renderForecastTable(summary)}
       </div>
 
       <div class="card panel-full">
-        <h3>Previsions recentes</h3>
+        <h3>Prévisions récentes</h3>
         ${renderRecentPrevisions(recentPrevisions)}
       </div>
       </div>`;
@@ -2349,36 +2577,36 @@ function renderScenarios() {
   const recentScenarios = state.bootstrap.recentScenarios || [];
   document.getElementById('page-Scenarios').innerHTML = `
     <div class="grid">
-      <div class="card kpi"><div class="label">Base previsionnelle</div><div class="value">${euro(summary.baseForecastTotal || 0)}</div><div class="hint">Avant scenario</div></div>
-      <div class="card kpi"><div class="label">Projection scenario</div><div class="value">${euro(summary.scenarioForecastTotal || 0)}</div><div class="hint">Apres ajustements</div></div>
-      <div class="card kpi"><div class="label">Impact total</div><div class="value">${euro(summary.impactTotal || 0)}</div><div class="hint">Difference scenario - base</div></div>
-      <div class="card kpi"><div class="label">Scenarios</div><div class="value">${state.bootstrap.counts.Scenarios || 0}</div><div class="hint">Lignes dans le sheet</div></div>
+      <div class="card kpi"><div class="label">Base prévisionnelle</div><div class="value">${euro(summary.baseForecastTotal || 0)}</div><div class="hint">Avant scénario</div></div>
+      <div class="card kpi"><div class="label">Projection scénario</div><div class="value">${euro(summary.scenarioForecastTotal || 0)}</div><div class="hint">Après ajustements</div></div>
+      <div class="card kpi"><div class="label">Impact total</div><div class="value">${euro(summary.impactTotal || 0)}</div><div class="hint">Différence scénario - base</div></div>
+      <div class="card kpi"><div class="label">Scénarios</div><div class="value">${state.bootstrap.counts.Scenarios || 0}</div><div class="hint">Lignes dans le sheet</div></div>
 
       <div class="card panel-full">
-        <h3>Ajouter / modifier un scenario</h3>
+        <h3>Ajouter / modifier un scénario</h3>
         <div class="form-grid">
-          <div class="field"><label>Scenario_id</label><input id="scenario-id" placeholder="Laisser vide pour creation"></div>
-          <div class="field"><label>Nom du scenario</label><input id="scenario-nom" placeholder="Ex: Hausse loyer ete"></div>
-          <div class="field"><label>Entite</label><select id="scenario-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Categorie</label><select id="scenario-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(c)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-categorie</label><input id="scenario-sous" placeholder="Ex: Blain ou EDF"></div>
-          <div class="field"><label>Type ajustement</label><select id="scenario-type"><option value="pourcentage">Pourcentage</option><option value="montant">Montant ajoute / retire</option><option value="cible">Montant cible</option></select></div>
-          <div class="field"><label>Valeur ajustement</label><input id="scenario-valeur" type="number" step="0.01" placeholder="Ex: 10 ou -150"></div>
+          <div class="field"><label>Scenario_id</label><input id="scenario-id" placeholder="Laisser vide pour création"></div>
+          <div class="field"><label>Nom du scénario</label><input id="scenario-nom" placeholder="Ex. : Hausse du loyer été"></div>
+          <div class="field"><label>Entité</label><select id="scenario-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Catégorie</label><select id="scenario-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catégorie</label><input id="scenario-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>Type d’ajustement</label><select id="scenario-type"><option value="pourcentage">Pourcentage</option><option value="montant">Montant ajouté / retiré</option><option value="cible">Montant cible</option></select></div>
+          <div class="field"><label>Valeur d’ajustement</label><input id="scenario-valeur" type="number" step="0.01" placeholder="Ex. : 10 ou -150"></div>
           <div class="field"><label>Montant cible</label><input id="scenario-cible" type="number" step="0.01" placeholder="Ex: 1400"></div>
-          <div class="field"><label>Date effet</label><input id="scenario-date" type="date"></div>
+          <div class="field"><label>Date d’effet</label><input id="scenario-date" type="date"></div>
           <div class="field"><label>Active</label><select id="scenario-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Commentaire</label><input id="scenario-commentaire" placeholder="Scenario de test sans toucher au reel"></div>
+          <div class="field"><label>Commentaire</label><input id="scenario-commentaire" placeholder="Scénario de test sans toucher au réel"></div>
         </div>
-        <div class="actions-row"><button class="btn primary" onclick="saveScenario()">Enregistrer scenario</button></div>
+        <div class="actions-row"><button class="btn primary" onclick="saveScenario()">Enregistrer le scénario</button></div>
       </div>
 
       <div class="card panel-full">
-        <h3>Impact des scenarios</h3>
+        <h3>Impact des scénarios</h3>
         ${renderScenarioTable(summary)}
       </div>
 
       <div class="card panel-full">
-        <h3>Scenarios recents</h3>
+        <h3>Scénarios récents</h3>
         ${renderRecentScenarios(recentScenarios)}
       </div>
     </div>`;
