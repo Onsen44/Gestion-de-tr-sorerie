@@ -182,36 +182,36 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .forecast-bar-legend span{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:700}
 .forecast-bar-legend i{display:inline-block;width:14px;height:14px;border-radius:4px}
 .forecast-grid-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
-.forecast-grid-table{width:100%;border-collapse:collapse;min-width:1500px;background:#fff}
-.forecast-grid-table th,.forecast-grid-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;vertical-align:top}
+.forecast-grid-table{width:100%;border-collapse:collapse;min-width:1240px;background:#fff}
+.forecast-grid-table th,.forecast-grid-table td{padding:8px 6px;border-bottom:1px solid #eef2f7;vertical-align:top}
 .forecast-grid-table thead th{position:sticky;top:0;background:#f7f9fc;z-index:2}
-.forecast-grid-table th:first-child,.forecast-grid-table td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+.forecast-grid-table th:first-child,.forecast-grid-table td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1;min-width:185px;max-width:185px}
 .forecast-grid-table thead th:first-child{z-index:3}
 .forecast-grid-table .section-row td{background:#f9fbfd;font-weight:800}
 .forecast-grid-table .category-row td:first-child{font-weight:700}
 .forecast-grid-table .subcategory-row td:first-child{padding-left:24px}
 .forecast-grid-table .meta-row td:first-child{font-weight:800}
-.forecast-grid-cell{display:flex;flex-direction:column;gap:8px;min-width:110px}
-.forecast-grid-input{width:100%;padding:8px 10px;border:1px solid #d8e0ea;border-radius:10px;font:inherit;text-align:right;background:#fff}
-.forecast-grid-value{font-weight:700;text-align:right}
+.forecast-grid-cell{display:flex;flex-direction:column;gap:5px;min-width:74px}
+.forecast-grid-input{width:100%;padding:5px 7px;border:1px solid #d8e0ea;border-radius:8px;font:inherit;font-size:12px;text-align:right;background:#fff}
+.forecast-grid-value{font-weight:700;text-align:right;font-size:12px}
 .forecast-row-actions{display:inline-flex;align-items:center;gap:8px;margin-left:8px}
 .forecast-delete-btn{border:none;background:#f8d7da;color:#8b1e2d;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;cursor:pointer}
 .forecast-add-grid{display:grid;grid-template-columns:1.2fr 1.4fr .9fr .8fr .9fr auto;gap:10px;align-items:end}
-.forecast-progress-btn{border:none;background:transparent;padding:0;cursor:pointer;text-align:left;width:100%}
-.forecast-progress-wrap{position:relative;padding-top:28px}
-.forecast-progress-track{height:16px;border-radius:999px;background:#d9dee5;overflow:visible;position:relative}
-.forecast-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#63d6ab 0%,#57c898 100%);position:relative;min-width:14px}
+.forecast-progress-btn{border:none;background:transparent;padding:0;cursor:pointer;text-align:left}
+.forecast-progress-row{display:flex;align-items:center;gap:6px}
+.forecast-progress-track{height:10px;border-radius:999px;background:#d9dee5;overflow:hidden;position:relative;flex:1;min-width:0}
+.forecast-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#63d6ab 0%,#57c898 100%);position:relative;min-width:0}
 .forecast-progress-fill.over{background:linear-gradient(90deg,#ff5a7a 0%,#f3345d 100%)}
 .forecast-progress-fill.low{background:linear-gradient(90deg,#49b9ee 0%,#2ca7e0 100%)}
 .forecast-progress-fill.neutral{background:linear-gradient(90deg,#cfd6dd 0%,#bcc5cf 100%)}
 .forecast-progress-fill.warning{background:linear-gradient(90deg,#ffd45a 0%,#f4bf2a 100%)}
 .forecast-progress-fill.good{background:linear-gradient(90deg,#63d6ab 0%,#57c898 100%)}
 .forecast-progress-fill.alert{background:linear-gradient(90deg,#ff5a7a 0%,#f3345d 100%)}
-.forecast-progress-badge{position:absolute;top:-30px;transform:translateX(-50%);background:#1f2430;color:#fff;font-size:11px;font-weight:800;line-height:1;padding:7px 8px;border-radius:8px;white-space:nowrap;box-shadow:0 6px 14px rgba(15,23,42,.18)}
-.forecast-progress-badge::after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #1f2430}
-.forecast-progress-text{font-size:11px;color:var(--muted);margin-top:6px}
-.forecast-grid-subline{font-size:11px;color:var(--muted);text-align:right}
-.forecast-locked-note{font-size:12px;color:var(--muted)}
+.forecast-progress-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#16304f;pointer-events:none}
+.forecast-progress-icon{width:18px;height:18px;border:1px solid #d8e0ea;border-radius:999px;background:#fff;color:#173d7a;display:inline-flex;align-items:center;justify-content:center;font-size:11px;line-height:1;cursor:pointer;flex:0 0 auto}
+.forecast-progress-text{font-size:10px;color:var(--muted);margin-top:2px;text-align:right}
+.forecast-grid-subline{font-size:10px;color:var(--muted);text-align:right;line-height:1.35}
+.forecast-locked-note{font-size:10px;color:var(--muted);text-align:right}
 .pivot-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
 .pivot-table{width:100%;border-collapse:collapse;min-width:1100px}
 .pivot-table th,.pivot-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:right;font-size:13px;vertical-align:middle;white-space:nowrap}
@@ -307,6 +307,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
     <section id="page-Accueil"></section>
     <section id="page-Gestion de tresorerie" class="hidden"></section>
     <section id="page-Graphiques" class="hidden"></section>
+    <section id="page-Budget" class="hidden"></section>
     <section id="page-Previsionnel" class="hidden"></section>
     <section id="page-Scenarios" class="hidden"></section>
     <section id="page-Rapprochement bancaire" class="hidden"></section>
@@ -823,6 +824,7 @@ const state = {
   movementCacheKey: '',
   movementLoadTimer: null,
   movementRenderLimit: 500,
+  budgetView: 'encaissements',
   previsionView: 'forecast',
   customPeriod: {
     start: '',
@@ -856,6 +858,7 @@ const state = {
 };
 
 const pageMeta = {
+  'Budget': 'Budget annuel des encaissements et des dÃ©caissements, saisi mois par mois par entitÃ©.',
   'Accueil': 'Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.',
   'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions récentes et onglet À classer.',
   'Graphiques': 'Courbes de trésorerie, prévisionnel vs réalisé et comparaison avec la période précédente.',
@@ -876,6 +879,11 @@ const tresorerieNavItems = [
   ['mouvements', 'Mouvements'],
   ['a_classer', 'Mouvements à classer'],
   ['imports', 'Historique des imports bancaires']
+];
+
+const budgetNavItems = [
+  ['encaissements', 'Budget encaissement'],
+  ['decaissements', 'Budget décaissement']
 ];
 
 function init() {
@@ -945,6 +953,38 @@ function renderNav() {
           child.textContent = item[1];
           child.className = 'nav-sub' + (state.tresorerieView === item[0] ? ' active' : '');
           child.onclick = function() { switchTresorerieView(item[0]); };
+          subnav.appendChild(child);
+        });
+        group.appendChild(subnav);
+      }
+
+      nav.appendChild(group);
+      return;
+    }
+
+    if (page === 'Budget') {
+      const group = document.createElement('div');
+      const isOpen = page === state.currentPage;
+      group.className = 'nav-group';
+
+      const parent = document.createElement('button');
+      parent.type = 'button';
+      parent.className = 'nav-parent' + (isOpen ? ' active' : '');
+      parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
+      parent.onclick = function() {
+        showPage(page);
+      };
+      group.appendChild(parent);
+
+      if (isOpen) {
+        const subnav = document.createElement('div');
+        subnav.className = 'nav-subgroup';
+        budgetNavItems.forEach(function(item) {
+          const child = document.createElement('button');
+          child.type = 'button';
+          child.textContent = item[1];
+          child.className = 'nav-sub' + (state.budgetView === item[0] ? ' active' : '');
+          child.onclick = function() { switchBudgetView(item[0]); };
           subnav.appendChild(child);
         });
         group.appendChild(subnav);
@@ -1194,6 +1234,7 @@ function updateStateWithData_(data) {
   if (data.aClasser) state.bootstrap.aClasser = data.aClasser;
   if (data.recentMovements) state.bootstrap.recentMovements = data.recentMovements;
   if (data.monthlyMovements) state.bootstrap.monthlyMovements = data.monthlyMovements;
+  if (data.recentBudgets) state.bootstrap.recentBudgets = data.recentBudgets;
   if (data.recentPrevisions) state.bootstrap.recentPrevisions = data.recentPrevisions;
   if (data.recentScenarios) state.bootstrap.recentScenarios = data.recentScenarios;
   if (data.recentRapprochements) state.bootstrap.recentRapprochements = data.recentRapprochements;
@@ -1308,8 +1349,14 @@ function switchRapprochementView(view) {
   showPage('Rapprochement bancaire');
 }
 
+function switchBudgetView(view) {
+  const allowed = budgetNavItems.map(function(item) { return item[0]; });
+  state.budgetView = allowed.indexOf(view) !== -1 ? view : 'encaissements';
+  showPage('Budget');
+}
+
 function pageNeedsAnnualData_(page) {
-  return ['Accueil', 'Gestion de tresorerie', 'Graphiques', 'Previsionnel'].indexOf(page || state.currentPage) !== -1;
+  return ['Accueil', 'Gestion de tresorerie', 'Graphiques', 'Budget', 'Previsionnel'].indexOf(page || state.currentPage) !== -1;
 }
 
 function loadAnnualIfNeeded_(forceRefresh) {
@@ -1320,6 +1367,7 @@ function renderAll() {
   renderAccueil();
   renderTresorerie();
   renderGraphiques();
+  renderBudget();
   renderPrevisionnel();
   renderScenarios();
   renderRapprochement();
@@ -1333,6 +1381,7 @@ function renderCurrentPage() {
   if (state.currentPage === 'Accueil') renderAccueil();
   else if (state.currentPage === 'Gestion de tresorerie') renderTresorerie();
   else if (state.currentPage === 'Graphiques') renderGraphiques();
+  else if (state.currentPage === 'Budget') renderBudget();
   else if (state.currentPage === 'Previsionnel') renderPrevisionnel();
   else if (state.currentPage === 'Scenarios') renderScenarios();
   else if (state.currentPage === 'Rapprochement bancaire') renderRapprochement();
@@ -2333,6 +2382,100 @@ function renderAnnualPivotTable_(rows) {
   }).join('')}</tbody></table></div>`;
 }
 
+function filterBudgetRows_(rows, budgetView) {
+  const allowedRoot = budgetView === 'encaissements' ? 'Encaissements' : 'Decaissements';
+  let currentRoot = '';
+  return (rows || []).filter(function(row) {
+    if (row.id === 'opening-balance' || row.id === 'net-variation' || row.id === 'closing-balance') return true;
+    if (row.level === 0 && String(row.label || '') === allowedRoot) {
+      currentRoot = allowedRoot;
+      return true;
+    }
+    if (row.level === 0 && String(row.label || '') !== allowedRoot) {
+      currentRoot = '';
+      return false;
+    }
+    return currentRoot === allowedRoot;
+  });
+}
+
+function renderBudget() {
+  const annualData = getAnnualPilotageData_() || {};
+  const budget = annualData && annualData.budget ? annualData.budget : null;
+  const viewLabel = state.budgetView === 'encaissements' ? 'encaissements' : 'decaissements';
+  if (!budget) {
+    document.getElementById('page-Budget').innerHTML = `
+      <div class="grid">
+        <div class="card panel-full">
+          <div class="section-title">
+            <div>
+              <h3>Budget annuel</h3>
+              <p>Le module Budget a besoin du backend Apps Script a jour pour charger ses donnees.</p>
+            </div>
+          </div>
+          ${renderAnnualToolbar_()}
+          <div class="empty">Deploie <code>Code.gs</code> pour afficher le budget ${esc(viewLabel)} de l'entite selectionnee.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const rows = filterBudgetRows_(budget.budgetRows || [], state.budgetView);
+  const chartPoints = (budget.chart || []).map(function(point) {
+    return {
+      label: point.label,
+      planned: state.budgetView === 'encaissements' ? (point.forecastEncaissements || 0) : (point.forecastDecaissements || 0),
+      actual: state.budgetView === 'encaissements' ? (point.realisedEncaissements || 0) : (point.realisedDecaissements || 0),
+      variance: state.budgetView === 'encaissements'
+        ? (point.realisedEncaissements || 0) - (point.forecastEncaissements || 0)
+        : (point.realisedDecaissements || 0) - (point.forecastDecaissements || 0),
+      progress: null
+    };
+  });
+
+  const totals = budget.totals || {};
+  const plannedTotal = state.budgetView === 'encaissements' ? (totals.budgetEncaissements || 0) : (totals.budgetDecaissements || 0);
+  const actualTotal = state.budgetView === 'encaissements' ? (totals.realisedEncaissements || 0) : (totals.realisedDecaissements || 0);
+  const varianceTotal = actualTotal - plannedTotal;
+
+  document.getElementById('page-Budget').innerHTML = `
+    <div class="grid">
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Budget ${esc(viewLabel)}</h3>
+            <p>Vue budgetaire annuelle par entite. Le consolide additionne les entites par categorie et sous-categorie.</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_()}
+      </div>
+
+      <div class="card kpi"><div class="label">Budget ${esc(viewLabel)}</div><div class="value">${euro(plannedTotal)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi"><div class="label">Realise ${esc(viewLabel)}</div><div class="value">${euro(actualTotal)}</div><div class="hint">Transactions annuelles</div></div>
+      <div class="card kpi"><div class="label">Ecart</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Realise moins budget</div></div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Graphe annuel budget vs realise</h3>
+            <p>Lecture mensuelle du budget et du realise pour les ${esc(viewLabel)}.</p>
+          </div>
+        </div>
+        ${renderForecastGroupedBarChart_({ chartPoints: chartPoints })}
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Tableau annuel du budget</h3>
+            <p>La saisie budgetaire detaillee sera branchee sur ce tableau apres deploiement complet du backend.</p>
+          </div>
+        </div>
+        ${renderAnnualPivotTable_(rows)}
+      </div>
+    </div>`;
+}
+
 function renderAccueil() {
   const d = state.bootstrap.dashboard;
   const annualData = getAnnualPilotageData_();
@@ -3007,16 +3150,16 @@ function buildForecastPlanningModel_() {
   const plannedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance'; });
   const recalibratedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance-rebased'; });
   if (plannedTreasuryRow && recalibratedTreasuryRow) {
-    plannedTreasuryRow.comparisonLabel = 'Tresorerie finale previsionnelle';
+    plannedTreasuryRow.comparisonLabel = 'Trésorerie finale prévisionnelle';
     plannedTreasuryRow.comparisonMonthly = recalibratedTreasuryRow.plannedMonthly.slice();
     plannedTreasuryRow.comparisonTotal = recalibratedTreasuryRow.totalPlanned;
-    plannedTreasuryRow.primaryVarianceLabel = 'Ecart projection';
-    plannedTreasuryRow.secondaryVarianceLabel = 'Ecart pilotage';
-    recalibratedTreasuryRow.comparisonLabel = 'Tresorerie previsionnelle';
+    plannedTreasuryRow.primaryVarianceLabel = 'Écart de projection';
+    plannedTreasuryRow.secondaryVarianceLabel = 'Écart de pilotage';
+    recalibratedTreasuryRow.comparisonLabel = 'Trésorerie prévisionnelle';
     recalibratedTreasuryRow.comparisonMonthly = plannedTreasuryRow.plannedMonthly.slice();
     recalibratedTreasuryRow.comparisonTotal = plannedTreasuryRow.totalPlanned;
-    recalibratedTreasuryRow.primaryVarianceLabel = 'Ecart pilotage';
-    recalibratedTreasuryRow.secondaryVarianceLabel = 'Ecart projection';
+    recalibratedTreasuryRow.primaryVarianceLabel = 'Écart de pilotage';
+    recalibratedTreasuryRow.secondaryVarianceLabel = 'Écart de projection';
   }
 
   const chartPoints = forecastMonthLabels_().map(function(label, monthIndex) {
@@ -3053,14 +3196,14 @@ function renderForecastProgressCell_(row, monthIndex, compact) {
   const variance = actual === null ? null : actual - planned;
   const progressPercent = planned ? Math.round((actual || 0) / planned * 100) : 0;
   const progressWidth = planned ? Math.min(100, progressPercent) : 0;
-  const progressText = actual === null ? 'pas de reel' : formatForecastPercent_(planned, actual);
+  const progressText = actual === null ? '0%' : formatForecastPercent_(planned, actual);
   const detailKey = `${row.uniqueKey}:${monthIndex}`;
   const expanded = state.forecastCellDetailKey === detailKey;
   const comparisonValue = row.comparisonMonthly ? Math.abs(toForecastAmount_(row.comparisonMonthly[monthIndex])) : null;
   const comparisonVariance = actual === null || comparisonValue === null ? null : actual - comparisonValue;
-  const primaryLabel = row.primaryVarianceLabel || 'Ecart';
-  const secondaryLabel = row.secondaryVarianceLabel || 'Ecart secondaire';
-  const detailHtml = expanded ? `<div class="forecast-grid-subline">Realise ${actual === null ? '-' : euro(actual)} | ${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? ` | ${esc(row.comparisonLabel)} ${euro(comparisonValue)} | ${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
+  const primaryLabel = row.primaryVarianceLabel || 'Écart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
+  const detailHtml = expanded ? `<div class="forecast-grid-subline">Réalisé ${actual === null ? '-' : euro(actual)}<br>${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonValue)}<br>${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
   let fillClass = 'neutral';
   if (actual !== null && progressPercent > 0) {
     if (row.sense === 'Encaissement') {
@@ -3071,16 +3214,15 @@ function renderForecastProgressCell_(row, monthIndex, compact) {
       fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
     }
   }
-  const progressBar = actual === null ? '<div class="forecast-locked-note">Sans realise</div>' : `<button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
-        <span class="forecast-progress-wrap">
-          <span class="forecast-progress-track">
-            <span class="forecast-progress-fill ${fillClass}" style="width:${Math.max(progressWidth, 14)}%">
-              <span class="forecast-progress-badge" style="left:${Math.max(progressWidth, 14)}%">${esc(progressText)}</span>
-            </span>
-          </span>
+  const showProgress = row.editable || row.kind === 'subcategory';
+  const progressBar = showProgress ? `<div class="forecast-progress-row">
+        <span class="forecast-progress-track">
+          <span class="forecast-progress-fill ${fillClass}" style="width:${progressWidth}%"></span>
+          <span class="forecast-progress-label">${esc(progressText)}</span>
         </span>
-        <span class="forecast-progress-text">${actual === null ? '' : `Realise ${euro(actual)}`}</span>
-      </button>`;
+        <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le réalisé et l'écart" title="Voir le réalisé et l'écart">&#9998;</button>
+      </div>
+      <span class="forecast-progress-text">${actual === null ? 'Sans réalisé' : `Réalisé ${euro(actual)}`}</span>` : '';
 
   if (compact && !row.editable) {
     return `<div class="forecast-grid-cell">
@@ -3111,13 +3253,13 @@ function renderForecastTotalCell_(row) {
   const hasActual = row.actualMonthly.some(function(value) { return value !== null; });
   const progressPercent = planned ? Math.round((actual || 0) / planned * 100) : 0;
   const progressWidth = planned ? Math.min(100, progressPercent) : 0;
-  const progressText = hasActual ? formatForecastPercent_(planned, actual) : 'pas de reel';
+  const progressText = hasActual ? formatForecastPercent_(planned, actual) : '0%';
   const detailKey = `${row.uniqueKey}:total`;
   const expanded = state.forecastCellDetailKey === detailKey;
   const comparisonTotal = row.comparisonTotal === undefined ? null : Math.abs(toForecastAmount_(row.comparisonTotal));
   const comparisonVariance = comparisonTotal === null ? null : actual - comparisonTotal;
-  const primaryLabel = row.primaryVarianceLabel || 'Ecart';
-  const secondaryLabel = row.secondaryVarianceLabel || 'Ecart secondaire';
+  const primaryLabel = row.primaryVarianceLabel || 'Écart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
   let fillClass = 'neutral';
   if (hasActual && progressPercent > 0) {
     if (row.sense === 'Encaissement') {
@@ -3130,22 +3272,20 @@ function renderForecastTotalCell_(row) {
   }
   return `<div class="forecast-grid-cell">
     <div class="forecast-grid-value">${euro(planned)}</div>
-    ${hasActual ? `<button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
-      <span class="forecast-progress-wrap">
-        <span class="forecast-progress-track">
-          <span class="forecast-progress-fill ${fillClass}" style="width:${Math.max(progressWidth, 14)}%">
-            <span class="forecast-progress-badge" style="left:${Math.max(progressWidth, 14)}%">${esc(progressText)}</span>
-          </span>
-        </span>
+    ${hasActual ? `<div class="forecast-progress-row">
+      <span class="forecast-progress-track">
+        <span class="forecast-progress-fill ${fillClass}" style="width:${progressWidth}%"></span>
+        <span class="forecast-progress-label">${esc(progressText)}</span>
       </span>
-      <span class="forecast-progress-text">Realise ${euro(actual)}</span>
-    </button>` : ''}
-    ${expanded ? `<div class="forecast-grid-subline">Realise ${euro(actual)} | ${esc(primaryLabel)} ${euro(actual - planned)}${comparisonTotal !== null ? ` | ${esc(row.comparisonLabel)} ${euro(comparisonTotal)} | ${esc(secondaryLabel)} ${euro(comparisonVariance || 0)}` : ''}</div>` : ''}
+      <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le réalisé et l'écart" title="Voir le réalisé et l'écart">&#9998;</button>
+    </div>
+    <span class="forecast-progress-text">Réalisé ${euro(actual)}</span>` : ''}
+    ${expanded ? `<div class="forecast-grid-subline">Réalisé ${euro(actual)}<br>${esc(primaryLabel)} ${euro(actual - planned)}${comparisonTotal !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonTotal)}<br>${esc(secondaryLabel)} ${euro(comparisonVariance || 0)}` : ''}</div>` : ''}
   </div>`;
 }
 
 function renderForecastPlanningTable_(model) {
-  if (!model || !model.rows.length) return '<div class="empty">Aucune structure annuelle disponible pour cette selection.</div>';
+  if (!model || !model.rows.length) return '<div class="empty">Aucune structure annuelle disponible pour cette sélection.</div>';
   state.forecastPivotExpanded = state.forecastPivotExpanded || {};
   model.rows.forEach(function(row) {
     if (row.hasChildren && state.forecastPivotExpanded[row.uniqueKey] === undefined) {
@@ -3170,7 +3310,7 @@ function renderForecastPlanningTable_(model) {
       ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveForecastLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.subCategory || '')}, ${JSON.stringify(row.sense)})'>Supprimer</button></span>`
       : '';
     const labelContent = row.hasChildren
-      ? `<button type="button" class="forecast-toggle-label ${state.forecastPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'Deplier')}">
+      ? `<button type="button" class="forecast-toggle-label ${state.forecastPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'Déplier')}">
           <span class="forecast-toggle-caret">${state.forecastPivotExpanded[row.uniqueKey] ? '-' : '+'}</span>
           <span>${esc(row.label)}</span>
         </button>`
@@ -3188,14 +3328,14 @@ function renderForecastPlanningTable_(model) {
 }
 
 function renderForecastGroupedBarChart_(model) {
-  if (!model || !model.chartPoints.length) return '<div class="empty">Aucune comparaison annuelle disponible pour cette selection.</div>';
+  if (!model || !model.chartPoints.length) return '<div class="empty">Aucune comparaison annuelle disponible pour cette sélection.</div>';
   const maxValue = Math.max.apply(null, model.chartPoints.map(function(point) {
     return Math.max(Math.abs(point.planned || 0), Math.abs(point.actual || 0), 1);
   }));
   return `<div class="forecast-bar-chart">
     <div class="forecast-bar-legend">
-      <span><i style="background:#cbdaf3"></i>Prevu</span>
-      <span><i style="background:#173d7a"></i>Realise</span>
+      <span><i style="background:#cbdaf3"></i>Prévu</span>
+      <span><i style="background:#173d7a"></i>Réalisé</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(12,minmax(70px,1fr));gap:12px;align-items:end;min-height:240px;">
       ${model.chartPoints.map(function(point) {
@@ -3203,10 +3343,10 @@ function renderForecastGroupedBarChart_(model) {
         const actualHeight = point.actual === null ? 0 : Math.max(6, Math.round((Math.abs(point.actual || 0) / maxValue) * 160));
         const tooltip = [
           point.label,
-          `Prevu: ${euro(point.planned || 0)}`,
-          `Realise: ${point.actual === null ? '-' : euro(point.actual)}`,
-          `Ecart: ${point.variance === null ? '-' : euro(point.variance)}`,
-          `% realisation: ${point.progress === null ? '-' : point.progress + '%'}`
+          `Prévu: ${euro(point.planned || 0)}`,
+          `Réalisé: ${point.actual === null ? '-' : euro(point.actual)}`,
+          `Écart: ${point.variance === null ? '-' : euro(point.variance)}`,
+          `% de réalisation: ${point.progress === null ? '-' : point.progress + '%'}`
         ].join(' | ');
         return `<button type="button" class="forecast-bar-group" title="${esc(tooltip)}" style="border:none;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
           <div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;height:180px;width:100%;">
@@ -3221,7 +3361,7 @@ function renderForecastGroupedBarChart_(model) {
 }
 
 function renderForecastRealisedSummary_(model) {
-  if (!model) return '<div class="empty">Aucune lecture du realise disponible.</div>';
+  if (!model) return '<div class="empty">Aucune lecture du réalisé disponible.</div>';
   const rowsById = {};
   (model.rows || []).forEach(function(row) {
     rowsById[row.id] = row;
@@ -3231,10 +3371,10 @@ function renderForecastRealisedSummary_(model) {
   const actualNet = rowsById['net-variation'] ? rowsById['net-variation'].totalActual : 0;
   const actualClosing = rowsById['closing-balance'] ? rowsById['closing-balance'].totalActual : 0;
   return `<div class="table-wrap"><table class="table"><thead><tr><th>Ligne</th><th>Formule</th><th>Total annuel</th></tr></thead><tbody>
-    <tr><td>Encaissements realises</td><td>Credits categorises</td><td>${euro(actualEnc)}</td></tr>
-    <tr><td>Decaissements realises</td><td>Debits categorises</td><td>${euro(actualDec)}</td></tr>
-    <tr><td>Variation nette realisee</td><td>Encaissements - Decaissements</td><td>${euro(actualNet)}</td></tr>
-    <tr><td>Tresorerie finale reelle</td><td>Solde initial + Encaissements - Decaissements</td><td>${euro(actualClosing)}</td></tr>
+    <tr><td>Encaissements réalisés</td><td>Crédits catégorisés</td><td>${euro(actualEnc)}</td></tr>
+    <tr><td>Décaissements réalisés</td><td>Débits catégorisés</td><td>${euro(actualDec)}</td></tr>
+    <tr><td>Variation nette réalisée</td><td>Encaissements - Décaissements</td><td>${euro(actualNet)}</td></tr>
+    <tr><td>Trésorerie finale réelle</td><td>Solde initial + Encaissements - Décaissements</td><td>${euro(actualClosing)}</td></tr>
   </tbody></table></div>`;
 }
 
@@ -3250,11 +3390,11 @@ function addForecastLine() {
   const month = Number(monthInput ? monthInput.value : 1);
   const amount = Math.abs(toForecastAmount_(amountInput ? amountInput.value : 0));
   if (state.selectedEntite === 'TOUTES') {
-    showToast('Selectionne une entite pour ajouter une ligne de prevision.', 'error');
+    showToast('Sélectionne une entité pour ajouter une ligne de prévision.', 'error');
     return;
   }
   if (!categorie) {
-    showToast('Categorie manquante.', 'error');
+    showToast('Catégorie manquante.', 'error');
     return;
   }
   const monthToken = `${Number(state.annualSelectedYear || new Date().getFullYear())}-${String(month).padStart(2, '0')}`;
@@ -3273,9 +3413,9 @@ function addForecastLine() {
     Sens: sens,
     Montant_prevu: amount,
     Mode_calcul: 'Manuel',
-    Base_reference: 'Ligne ajoutee depuis le previsionnel',
+    Base_reference: 'Ligne ajoutée depuis le prévisionnel',
     Active: 'Oui',
-    Commentaire: 'Ajout manuel dans le tableau previsionnel'
+    Commentaire: 'Ajout manuel dans le tableau prévisionnel'
   }).then(function(result) {
     state.dataCache = {};
     state.cacheTimestamp = {};
@@ -3287,7 +3427,7 @@ function addForecastLine() {
   }).then(function() {
     renderCurrentPage();
     attachEventListeners();
-    showToast('Ligne de prevision ajoutee.', 'success');
+    showToast('Ligne de prévision ajoutée.', 'success');
   }).catch(function(error) {
     showToast(error.message || error, 'error');
   });
@@ -3295,7 +3435,7 @@ function addForecastLine() {
 
 function archiveForecastLine(categorie, sousCategorie, sens) {
   if (state.selectedEntite === 'TOUTES') {
-    showToast('Selectionne une entite pour modifier le previsionnel.', 'error');
+    showToast('Sélectionne une entité pour modifier le prévisionnel.', 'error');
     return;
   }
   runAppsScriptMethod_('archiveForecastRow', {
@@ -3315,7 +3455,7 @@ function archiveForecastLine(categorie, sousCategorie, sens) {
   }).then(function() {
     renderCurrentPage();
     attachEventListeners();
-    showToast('Ligne retiree du previsionnel.', 'success');
+    showToast('Ligne retirée du prévisionnel.', 'success');
   }).catch(function(error) {
     showToast(error.message || error, 'error');
   });
@@ -3336,7 +3476,7 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
   const model = buildForecastPlanningModel_();
   const row = model && model.rows ? model.rows.find(function(item) { return item.id === rowId && item.editable; }) : null;
   if (!row) {
-    showToast('Cellule de prevision introuvable.', 'error');
+    showToast('Cellule de prévision introuvable.', 'error');
     return;
   }
   const year = Number(state.annualSelectedYear || new Date().getFullYear());
@@ -3359,9 +3499,9 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
     Sens: row.sense,
     Montant_prevu: amount,
     Mode_calcul: 'Manuel',
-    Base_reference: 'Tableau previsionnel',
+    Base_reference: 'Tableau prévisionnel',
     Active: 'Oui',
-    Commentaire: 'Saisie depuis le tableau previsionnel'
+    Commentaire: 'Saisie depuis le tableau prévisionnel'
   };
 
   runAppsScriptMethod_('upsertPrevision', payload)
@@ -3379,7 +3519,7 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
     .then(function() {
       renderCurrentPage();
       attachEventListeners();
-      showToast('Prevision enregistree.', 'success');
+      showToast('Prévision enregistrée.', 'success');
     })
     .catch(function(error) {
       showToast(error.message || error, 'error');
@@ -3394,36 +3534,36 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel du previsionnel</h3>
-            <p>Saisie manuelle des montants par mois, suivi du realise depuis les transactions et lecture immediate des ecarts.</p>
+            <h3>Tableau annuel du prévisionnel</h3>
+            <p>Saisie manuelle des montants par mois, suivi du réalisé depuis les transactions et lecture immédiate des écarts.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
         <p class="forecast-plan-note">${model && model.editable
-          ? 'Chaque cellule saisit le prevu du mois. La barre montre le pourcentage de realisation. Clique sur la barre pour voir le realise et l ecart en euro.'
-          : 'La vue TOUTES LES ENTITES reste en lecture seule. Selectionne une entite pour saisir les previsions mois par mois.'}</p>
+          ? 'Chaque cellule saisit le prévu du mois. La barre montre le pourcentage de réalisation. Clique sur la barre pour voir le réalisé et l’écart en euros.'
+          : 'La vue TOUTES LES ENTITÉS reste en lecture seule. Sélectionne une entité pour saisir les prévisions mois par mois.'}</p>
         ${state.selectedEntite !== 'TOUTES' ? `<div class="forecast-add-grid">
-          <div class="field"><label>Categorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-categorie</label><input id="forecast-add-subcategory" placeholder="Ex. Nouveau fournisseur"></div>
+          <div class="field"><label>Catégorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catégorie</label><input id="forecast-add-subcategory" placeholder="Ex. Nouveau fournisseur"></div>
           <div class="field"><label>Sens</label><select id="forecast-add-sense"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
           <div class="field"><label>Mois</label><select id="forecast-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
           }).join('')}</select></div>
           <div class="field"><label>Montant initial</label><input id="forecast-add-amount" type="number" step="0.01" placeholder="0"></div>
-          <div class="field"><button class="btn secondary" type="button" onclick="addForecastLine()">Ajouter la ligne</button></div>
+          <div class="field"><button class="btn secondary" type="button" onclick="addForecastLine()">Ajouter une ligne</button></div>
         </div>` : ''}
       </div>
 
-      <div class="card kpi forecast-summary-kpi"><div class="label">Encaissements prevus</div><div class="value">${euro(model ? model.totals.plannedEncaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Decaissements prevus</div><div class="value">${euro(model ? model.totals.plannedDecaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Realise net</div><div class="value">${euro(model ? model.totals.actualNet : 0)}</div><div class="hint">Transactions annuelles cumulees</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Ecart net</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Realise moins prevu</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Encaissements prévus</div><div class="value">${euro(model ? model.totals.plannedEncaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Décaissements prévus</div><div class="value">${euro(model ? model.totals.plannedDecaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Réalisé net</div><div class="value">${euro(model ? model.totals.actualNet : 0)}</div><div class="hint">Transactions annuelles cumulées</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Écart net</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Réalisé moins prévu</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel prevu vs realise</h3>
-            <p>Lecture interactive de la tresorerie prevue et de la tresorerie reelle, mois par mois.</p>
+            <h3>Graphe annuel prévu vs réalisé</h3>
+            <p>Lecture interactive de la trésorerie prévue et de la trésorerie réelle, mois par mois.</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_(model)}
@@ -3432,16 +3572,16 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Pilotage mensuel des categories</h3>
-            <p>Le realise vient des transactions. Les details d ecart restent accessibles au clic pour garder un tableau lisible.</p>
+            <h3>Pilotage mensuel des catégories</h3>
+            <p>Le réalisé vient des transactions. Les détails d’écart restent accessibles au clic pour garder un tableau lisible.</p>
           </div>
         </div>
         ${renderForecastPlanningTable_(model)}
       </div>
 
       <div class="card panel-full">
-        <h3>Lecture du realise</h3>
-        <p class="forecast-locked-note">Encaissements = credits categorises. Decaissements = debits categorises. Variation nette = encaissements moins decaissements.</p>
+        <h3>Lecture du réalisé</h3>
+        <p class="forecast-locked-note">Encaissements = crédits catégorisés. Décaissements = débits catégorisés. Variation nette = encaissements moins décaissements.</p>
         ${renderForecastRealisedSummary_(model)}
       </div>
     </div>`;
@@ -4362,6 +4502,7 @@ if (hasNativeAppsScriptRuntime) {
 </script>
 </body>
 </html>
+
 
 
 
