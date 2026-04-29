@@ -171,6 +171,36 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 .annual-line-tooltip-period{font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
 .annual-line-tooltip-series{font-size:13px;font-weight:800}
 .annual-line-tooltip-value{font-size:16px;font-weight:800;margin-top:2px}
+.forecast-plan-note{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.5}
+.forecast-bar-chart{margin-top:10px;border:1px solid #eef2f7;border-radius:16px;background:linear-gradient(180deg,#fcfdff 0%,#f6f9fd 100%);padding:14px}
+.forecast-bar-svg{display:block;width:100%;height:auto}
+.forecast-bar-grid{stroke:#dfe7f1;stroke-width:1}
+.forecast-bar-axis{stroke:#c8d5e6;stroke-width:1.2}
+.forecast-bar-label{font-size:11px;fill:var(--muted)}
+.forecast-bar-group{cursor:pointer}
+.forecast-bar-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.forecast-bar-legend span{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:700}
+.forecast-bar-legend i{display:inline-block;width:14px;height:14px;border-radius:4px}
+.forecast-grid-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
+.forecast-grid-table{width:100%;border-collapse:collapse;min-width:1500px;background:#fff}
+.forecast-grid-table th,.forecast-grid-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;vertical-align:top}
+.forecast-grid-table thead th{position:sticky;top:0;background:#f7f9fc;z-index:2}
+.forecast-grid-table th:first-child,.forecast-grid-table td:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+.forecast-grid-table thead th:first-child{z-index:3}
+.forecast-grid-table .section-row td{background:#f9fbfd;font-weight:800}
+.forecast-grid-table .category-row td:first-child{font-weight:700}
+.forecast-grid-table .subcategory-row td:first-child{padding-left:24px}
+.forecast-grid-table .meta-row td:first-child{font-weight:800}
+.forecast-grid-cell{display:flex;flex-direction:column;gap:8px;min-width:110px}
+.forecast-grid-input{width:100%;padding:8px 10px;border:1px solid #d8e0ea;border-radius:10px;font:inherit;text-align:right;background:#fff}
+.forecast-grid-value{font-weight:700;text-align:right}
+.forecast-progress-btn{border:none;background:transparent;padding:0;cursor:pointer;text-align:left}
+.forecast-progress-track{height:12px;border-radius:999px;background:#edf2f7;overflow:hidden;position:relative}
+.forecast-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#c8d8f5 0%,#7fa5de 100%)}
+.forecast-progress-fill.over{background:linear-gradient(90deg,#f5d0c5 0%,#e58e77 100%)}
+.forecast-progress-text{font-size:11px;color:var(--muted);margin-top:4px}
+.forecast-grid-subline{font-size:11px;color:var(--muted);text-align:right}
+.forecast-locked-note{font-size:12px;color:var(--muted)}
 .pivot-wrap{overflow:auto;border:1px solid #eef2f7;border-radius:16px}
 .pivot-table{width:100%;border-collapse:collapse;min-width:1100px}
 .pivot-table th,.pivot-table td{padding:10px 8px;border-bottom:1px solid #eef2f7;text-align:right;font-size:13px;vertical-align:middle;white-space:nowrap}
@@ -377,10 +407,8 @@ function setPeriodInputs_(startDate, endDate, preset) {
   const startIso = formatDateForInput_(startDate);
   const endIso = formatDateForInput_(endDate);
   state.periodPreset = preset || '';
-  if (state.customPeriod && state.customPeriod.active) {
-    state.customPeriod.start = startIso;
-    state.customPeriod.end = endIso;
-  }
+  state.customPeriod.start = startIso;
+  state.customPeriod.end = endIso;
   renderPeriodToolbar_();
 }
 
@@ -396,6 +424,20 @@ function applyPeriodPreset_(preset) {
   const today = startOfToday_();
   let start = null;
   let end = null;
+  if (preset === 'personnaliser') {
+    state.periodPreset = preset || '';
+    if (!state.customPeriod) {
+      state.customPeriod = { start: '', end: '', active: false };
+    }
+    if (!state.customPeriod.start || !state.customPeriod.end) {
+      const defaultStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const defaultEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      setPeriodInputs_(defaultStart, defaultEnd, preset);
+    } else {
+      renderPeriodToolbar_();
+    }
+    return;
+  }
   if (preset === 'hier') {
     start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
     end = new Date(start.getFullYear(), start.getMonth(), start.getDate());
@@ -431,7 +473,21 @@ function applyPeriodPreset_(preset) {
     renderPeriodToolbar_();
     return;
   }
-  setPeriodInputs_(start, end, preset);
+  state.periodPreset = preset || '';
+  state.customPeriod = {
+    start: formatDateForInput_(start),
+    end: formatDateForInput_(end),
+    active: true
+  };
+  state.periodPickerOpen = false;
+  if (start.getFullYear() === end.getFullYear()) {
+    state.annualSelectedYear = start.getFullYear();
+  }
+  state.annualPilotageCache = {};
+  renderPeriodToolbar_();
+  reloadSelectionData_(true).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
 }
 
 function renderPeriodToolbar_() {
@@ -738,7 +794,7 @@ const state = {
   bootstrap: null,
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
-  tresorerieView: 'mouvements',
+  tresorerieView: 'overview',
   rapprochementView: 'a_verifier',
   annualSelectedYear: new Date().getFullYear(),
   movementYear: new Date().getFullYear(),
@@ -861,6 +917,7 @@ function renderNav() {
       parent.className = 'nav-parent' + (isOpen ? ' active' : '');
       parent.innerHTML = '<span>' + displayPageName(page) + '</span><span class="nav-chevron">' + (isOpen ? 'v' : '>') + '</span>';
       parent.onclick = function() {
+        state.tresorerieView = 'overview';
         showPage(page);
       };
       group.appendChild(parent);
@@ -2362,10 +2419,13 @@ function renderTresorerie() {
   const importEntite = state.selectedEntite && state.selectedEntite !== 'TOUTES' ? state.selectedEntite : (entites[0] || '');
   const annualData = getAnnualPilotageData_();
   const realised = annualData && annualData.realised ? annualData.realised : null;
-  const allowedViews = tresorerieNavItems.map(function(item) { return item[0]; });
-  const activeView = allowedViews.indexOf(state.tresorerieView) !== -1 ? state.tresorerieView : 'mouvements';
+  const allowedViews = ['overview'].concat(tresorerieNavItems.map(function(item) { return item[0]; }));
+  const activeView = allowedViews.indexOf(state.tresorerieView) !== -1 ? state.tresorerieView : 'overview';
+  const isOverview = activeView === 'overview';
   state.tresorerieView = activeView;
-  const activeViewLabel = (tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1];
+  const activeViewLabel = isOverview
+    ? 'Gestion de trésorerie'
+    : ((tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1]);
   const mainTitle = activeView === 'a_classer'
     ? 'Transactions à classer'
     : activeView === 'imports'
@@ -2387,7 +2447,8 @@ function renderTresorerie() {
           comptes: filteredComptes
         });
 
-  document.getElementById('page-Gestion de tresorerie').innerHTML = `
+  const tresoreriePage = document.getElementById('page-Gestion de tresorerie');
+  tresoreriePage.innerHTML = `
     <div class="grid">
       <div class="card panel-full">
         <h3>Import bancaire</h3>
@@ -2440,6 +2501,12 @@ function renderTresorerie() {
         ${mainContent}
       </div>
     </div>`;
+
+  if (!isOverview) {
+    const annualCards = tresoreriePage.querySelectorAll('.card.panel-full');
+    if (annualCards[1]) annualCards[1].remove();
+    if (annualCards[2]) annualCards[2].remove();
+  }
 }
 
 function renderMovementsJournal_(rows, total, options) {
@@ -2717,6 +2784,564 @@ function renderPrevisionnel() {
         ${renderRecentPrevisions(recentPrevisions)}
       </div>
       </div>`;
+}
+
+function forecastMonthLabels_() {
+  return ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec'];
+}
+
+function toForecastAmount_(value) {
+  if (value === '' || value === null || typeof value === 'undefined') return 0;
+  const normalized = typeof value === 'string' ? value.replace(/\s/g, '').replace(',', '.') : value;
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function getForecastActualValue_(row, monthIndex) {
+  if (!row || !row.monthly) return null;
+  const value = row.monthly[monthIndex];
+  return value === '' || value === null || typeof value === 'undefined' ? null : toForecastAmount_(value);
+}
+
+function formatForecastInputValue_(value) {
+  const amount = Math.round(toForecastAmount_(value) * 100) / 100;
+  return Math.abs(amount) > 0.0001 ? String(amount) : '';
+}
+
+function formatForecastPercent_(planned, actual) {
+  if (!planned) return actual ? 'hors prev.' : '0%';
+  return `${Math.round((actual / planned) * 100)}%`;
+}
+
+function normalizeForecastKey_(value) {
+  return String(value || '')
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildForecastPlanningMetadata_(rows) {
+  const metadata = [];
+  rows.forEach(function(row, index) {
+    metadata.push({
+      row: row,
+      index: index,
+      level: Number(row.level || 0),
+      uniqueKey: `${row.id || 'row'}#${index}`,
+      parentKey: '',
+      hasChildren: false
+    });
+  });
+  metadata.forEach(function(meta, index) {
+    if (meta.row && meta.row.parentIdHint) {
+      const hintedParent = metadata.find(function(candidate) {
+        return candidate.row && candidate.row.id === meta.row.parentIdHint;
+      });
+      if (hintedParent) {
+        meta.parentKey = hintedParent.uniqueKey;
+        return;
+      }
+    }
+    for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+      if (metadata[cursor].level === meta.level - 1) {
+        meta.parentKey = metadata[cursor].uniqueKey;
+        break;
+      }
+      if (metadata[cursor].level < meta.level - 1) break;
+    }
+  });
+  metadata.forEach(function(meta, index) {
+    meta.hasChildren = metadata.some(function(candidate, candidateIndex) {
+      return candidateIndex > index && candidate.parentKey === meta.uniqueKey;
+    });
+  });
+  return metadata;
+}
+
+function buildForecastPlanningModel_() {
+  const annualData = getAnnualPilotageData_();
+  const forecast = annualData && annualData.forecast ? annualData.forecast : null;
+  const realised = annualData && annualData.realised ? annualData.realised : null;
+  const configCategories = (((state.bootstrap || {}).config || {}).categories || []).filter(function(row) {
+    return String(row.Active || '').toLowerCase() !== 'non';
+  });
+  if (!forecast || !realised) return null;
+
+  const forecastRows = forecast.forecastRows || [];
+  const realisedRows = forecast.realisedRows || realised.rows || [];
+  const forecastMap = {};
+  const realisedMap = {};
+  forecastRows.forEach(function(row) { forecastMap[row.id] = row; });
+  realisedRows.forEach(function(row) { realisedMap[row.id] = row; });
+
+  const structureRows = [];
+  const seen = {};
+  realisedRows.forEach(function(row) {
+    structureRows.push(row);
+    seen[row.id] = true;
+  });
+  forecastRows.forEach(function(row) {
+    if (!seen[row.id]) structureRows.push(row);
+  });
+
+  const seededSections = {
+    Encaissements: {},
+    Decaissements: {}
+  };
+  configCategories.forEach(function(row) {
+    const sectionLabel = String(row.Type_flux || '').trim() === 'Encaissement' ? 'Encaissements' : 'Decaissements';
+    const category = String(row.Categorie || '').trim();
+    const subCategory = String(row.Sous_categorie || '').trim();
+    if (!category) return;
+    if (!seededSections[sectionLabel][category]) seededSections[sectionLabel][category] = {};
+    if (subCategory) seededSections[sectionLabel][category][subCategory] = true;
+  });
+
+  function ensureForecastStructureRow(id, label, level, kind, parentIdHint) {
+    if (structureRows.some(function(row) { return row.id === id; })) return;
+    structureRows.push({
+      id: id,
+      label: label,
+      level: level,
+      monthly: forecastMonthLabels_().map(function() { return 0; }),
+      total: 0,
+      kind: kind,
+      parentIdHint: parentIdHint || ''
+    });
+  }
+
+  Object.keys(seededSections).forEach(function(sectionLabel) {
+    const sectionId = normalizeForecastKey_(sectionLabel);
+    ensureForecastStructureRow(sectionId, sectionLabel, 0, 'section');
+    Object.keys(seededSections[sectionLabel]).sort().forEach(function(category) {
+      const categoryId = normalizeForecastKey_(`${sectionLabel}|${category}`);
+      ensureForecastStructureRow(categoryId, category, 1, 'category', sectionId);
+      Object.keys(seededSections[sectionLabel][category]).sort().forEach(function(subCategory) {
+        ensureForecastStructureRow(normalizeForecastKey_(`${sectionLabel}|${category}|${subCategory}`), subCategory, 2, 'subcategory', categoryId);
+      });
+    });
+  });
+
+  const meta = buildForecastPlanningMetadata_(structureRows);
+  const openingRow = forecastMap['opening-balance'] || realisedMap['opening-balance'];
+  const forecastNetRow = forecastMap['net-variation'];
+  const forecastClosingRow = forecastMap['closing-balance'];
+  const actualClosingRow = realisedMap['closing-balance'];
+  const actualNetRow = realisedMap['net-variation'];
+  const actualEncRow = realisedMap['encaissements'];
+  const actualDecRow = realisedMap['decaissements'];
+  const forecastEncRow = forecastMap['encaissements'];
+  const forecastDecRow = forecastMap['decaissements'];
+  const recalibratedClosing = [];
+  let rollingClosing = openingRow ? toForecastAmount_(openingRow.monthly && openingRow.monthly[0]) : 0;
+
+  forecastMonthLabels_().forEach(function(_, monthIndex) {
+    const actualClosing = getForecastActualValue_(actualClosingRow, monthIndex);
+    if (actualClosing !== null) {
+      rollingClosing = actualClosing;
+    } else {
+      rollingClosing += toForecastAmount_(forecastNetRow && forecastNetRow.monthly ? forecastNetRow.monthly[monthIndex] : 0);
+    }
+    recalibratedClosing.push(rollingClosing);
+  });
+
+  const rows = meta.map(function(metaRow) {
+    const row = metaRow.row;
+    const plannedSource = forecastMap[row.id] || { monthly: forecastMonthLabels_().map(function() { return 0; }), total: 0 };
+    const actualSource = realisedMap[row.id] || null;
+    let rootMeta = metaRow;
+    while (rootMeta.parentKey) {
+      const parent = meta.find(function(item) { return item.uniqueKey === rootMeta.parentKey; });
+      if (!parent) break;
+      rootMeta = parent;
+    }
+    const sectionLabel = String(rootMeta.row.label || '');
+    const sense = sectionLabel === 'Encaissements' ? 'Encaissement' : sectionLabel === 'Decaissements' ? 'Decaissement' : '';
+    const parentMeta = meta.find(function(item) { return item.uniqueKey === metaRow.parentKey; }) || null;
+    const category = !sense ? '' : metaRow.level === 1 ? row.label : metaRow.level >= 2 && parentMeta ? parentMeta.row.label : '';
+    const subCategory = sense && metaRow.level >= 2 ? row.label : '';
+    const plannedMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return toForecastAmount_(plannedSource && plannedSource.monthly ? plannedSource.monthly[monthIndex] : 0);
+    });
+    const actualMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return getForecastActualValue_(actualSource, monthIndex);
+    });
+    let displayLabel = row.label;
+    if (row.id === 'encaissements') displayLabel = 'Encaissements previsionnels';
+    if (row.id === 'decaissements') displayLabel = 'Decaissements previsionnels';
+    if (row.id === 'net-variation') displayLabel = 'Variation nette previsionnelle';
+    if (row.id === 'closing-balance') displayLabel = 'Tresorerie previsionnelle';
+    const editable = state.selectedEntite !== 'TOUTES'
+      && !!sense
+      && !metaRow.hasChildren
+      && row.kind !== 'section'
+      && row.kind !== 'meta'
+      && row.kind !== 'site';
+    return {
+      id: row.id,
+      uniqueKey: metaRow.uniqueKey,
+      parentKey: metaRow.parentKey,
+      hasChildren: metaRow.hasChildren,
+      level: metaRow.level,
+      kind: row.kind,
+      label: displayLabel,
+      sense: sense,
+      category: category,
+      subCategory: subCategory === 'Sans detail' ? '' : subCategory,
+      plannedMonthly: plannedMonthly,
+      actualMonthly: actualMonthly,
+      totalPlanned: plannedSource && typeof plannedSource.total !== 'undefined'
+        ? toForecastAmount_(plannedSource.total)
+        : plannedMonthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0),
+      totalActual: actualSource && typeof actualSource.total !== 'undefined'
+        ? toForecastAmount_(actualSource.total)
+        : actualMonthly.reduce(function(sum, value) { return value === null ? sum : sum + toForecastAmount_(value); }, 0),
+      editable: editable
+    };
+  });
+
+  const closingIndex = rows.findIndex(function(row) { return row.id === 'closing-balance'; });
+  if (closingIndex !== -1) {
+    const actualClosingMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return getForecastActualValue_(actualClosingRow, monthIndex);
+    });
+    rows.splice(closingIndex + 1, 0, {
+      id: 'closing-balance-rebased',
+      uniqueKey: `closing-balance-rebased#${closingIndex + 1}`,
+      parentKey: '',
+      hasChildren: false,
+      level: 0,
+      kind: 'meta',
+      label: 'Tresorerie finale previsionnelle',
+      sense: '',
+      category: '',
+      subCategory: '',
+      plannedMonthly: recalibratedClosing,
+      actualMonthly: actualClosingMonthly,
+      totalPlanned: recalibratedClosing[recalibratedClosing.length - 1] || 0,
+      totalActual: actualClosingRow && typeof actualClosingRow.total !== 'undefined'
+        ? toForecastAmount_(actualClosingRow.total)
+        : actualClosingMonthly.reduce(function(sum, value) { return value === null ? sum : sum + toForecastAmount_(value); }, 0),
+      editable: false
+    });
+  }
+
+  const plannedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance'; });
+  const recalibratedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance-rebased'; });
+  if (plannedTreasuryRow && recalibratedTreasuryRow) {
+    plannedTreasuryRow.comparisonLabel = 'Tresorerie finale previsionnelle';
+    plannedTreasuryRow.comparisonMonthly = recalibratedTreasuryRow.plannedMonthly.slice();
+    plannedTreasuryRow.comparisonTotal = recalibratedTreasuryRow.totalPlanned;
+    plannedTreasuryRow.primaryVarianceLabel = 'Ecart projection';
+    plannedTreasuryRow.secondaryVarianceLabel = 'Ecart pilotage';
+    recalibratedTreasuryRow.comparisonLabel = 'Tresorerie previsionnelle';
+    recalibratedTreasuryRow.comparisonMonthly = plannedTreasuryRow.plannedMonthly.slice();
+    recalibratedTreasuryRow.comparisonTotal = plannedTreasuryRow.totalPlanned;
+    recalibratedTreasuryRow.primaryVarianceLabel = 'Ecart pilotage';
+    recalibratedTreasuryRow.secondaryVarianceLabel = 'Ecart projection';
+  }
+
+  const chartPoints = forecastMonthLabels_().map(function(label, monthIndex) {
+    const planned = toForecastAmount_(forecastClosingRow && forecastClosingRow.monthly ? forecastClosingRow.monthly[monthIndex] : 0);
+    const actual = getForecastActualValue_(actualClosingRow, monthIndex);
+    return {
+      label: label,
+      planned: planned,
+      actual: actual,
+      variance: actual === null ? null : actual - planned,
+      progress: planned ? Math.round(((actual === null ? 0 : actual) / planned) * 100) : null
+    };
+  });
+
+  return {
+    editable: state.selectedEntite !== 'TOUTES',
+    rows: rows,
+    chartPoints: chartPoints,
+    totals: {
+      plannedEncaissements: forecastEncRow ? forecastEncRow.monthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0) : 0,
+      plannedDecaissements: forecastDecRow ? forecastDecRow.monthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0) : 0,
+      actualEncaissements: actualEncRow ? actualEncRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0,
+      actualDecaissements: actualDecRow ? actualDecRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0,
+      plannedNet: forecastNetRow ? forecastNetRow.monthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0) : 0,
+      actualNet: actualNetRow ? actualNetRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0
+    }
+  };
+}
+
+function renderForecastProgressCell_(row, monthIndex, compact) {
+  const planned = Math.abs(toForecastAmount_(row.plannedMonthly[monthIndex]));
+  const actualRaw = row.actualMonthly[monthIndex];
+  const actual = actualRaw === null ? null : Math.abs(toForecastAmount_(actualRaw));
+  const variance = actual === null ? null : actual - planned;
+  const progressWidth = planned ? Math.min(100, Math.round((actual || 0) / planned * 100)) : 0;
+  const progressText = actual === null ? 'pas de reel' : formatForecastPercent_(planned, actual);
+  const detailKey = `${row.uniqueKey}:${monthIndex}`;
+  const expanded = state.forecastCellDetailKey === detailKey;
+  const comparisonValue = row.comparisonMonthly ? Math.abs(toForecastAmount_(row.comparisonMonthly[monthIndex])) : null;
+  const comparisonVariance = actual === null || comparisonValue === null ? null : actual - comparisonValue;
+  const primaryLabel = row.primaryVarianceLabel || 'Ecart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Ecart secondaire';
+  const detailHtml = expanded ? `<div class="forecast-grid-subline">Realise ${actual === null ? '-' : euro(actual)} | ${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? ` | ${esc(row.comparisonLabel)} ${euro(comparisonValue)} | ${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
+
+  if (compact && !row.editable) {
+    return `<div class="forecast-grid-cell">
+      <div class="forecast-grid-value">${euro(planned)}</div>
+      ${actual === null ? '<div class="forecast-locked-note">Sans realise</div>' : `<button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
+        <span class="forecast-progress-track"><span class="forecast-progress-fill ${planned && actual > planned ? 'over' : ''}" style="width:${progressWidth}%"></span></span>
+        <span class="forecast-progress-text">${esc(progressText)}</span>
+      </button>`}
+      ${detailHtml}
+    </div>`;
+  }
+
+  if (!row.editable) {
+    return `<div class="forecast-grid-cell">
+      <div class="forecast-grid-value">${euro(planned)}</div>
+      ${actual === null ? '' : `<button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
+        <span class="forecast-progress-track"><span class="forecast-progress-fill ${planned && actual > planned ? 'over' : ''}" style="width:${progressWidth}%"></span></span>
+        <span class="forecast-progress-text">${esc(progressText)}</span>
+      </button>`}
+      ${detailHtml}
+    </div>`;
+  }
+
+  return `<div class="forecast-grid-cell">
+    <input class="forecast-grid-input" type="number" step="0.01" value="${esc(formatForecastInputValue_(planned))}" onchange='saveForecastCell(${JSON.stringify(row.id)}, ${monthIndex}, this.value)'>
+    <button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
+      <span class="forecast-progress-track"><span class="forecast-progress-fill ${planned && actual !== null && actual > planned ? 'over' : ''}" style="width:${progressWidth}%"></span></span>
+      <span class="forecast-progress-text">${esc(progressText)}</span>
+    </button>
+    ${detailHtml}
+  </div>`;
+}
+
+function renderForecastTotalCell_(row) {
+  const planned = Math.abs(toForecastAmount_(row.totalPlanned));
+  const actual = Math.abs(toForecastAmount_(row.totalActual));
+  const hasActual = row.actualMonthly.some(function(value) { return value !== null; });
+  const progressWidth = planned ? Math.min(100, Math.round((actual || 0) / planned * 100)) : 0;
+  const progressText = hasActual ? formatForecastPercent_(planned, actual) : 'pas de reel';
+  const detailKey = `${row.uniqueKey}:total`;
+  const expanded = state.forecastCellDetailKey === detailKey;
+  const comparisonTotal = row.comparisonTotal === undefined ? null : Math.abs(toForecastAmount_(row.comparisonTotal));
+  const comparisonVariance = comparisonTotal === null ? null : actual - comparisonTotal;
+  const primaryLabel = row.primaryVarianceLabel || 'Ecart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Ecart secondaire';
+  return `<div class="forecast-grid-cell">
+    <div class="forecast-grid-value">${euro(planned)}</div>
+    ${hasActual ? `<button type="button" class="forecast-progress-btn" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})'>
+      <span class="forecast-progress-track"><span class="forecast-progress-fill ${planned && actual > planned ? 'over' : ''}" style="width:${progressWidth}%"></span></span>
+      <span class="forecast-progress-text">${esc(progressText)}</span>
+    </button>` : ''}
+    ${expanded ? `<div class="forecast-grid-subline">Realise ${euro(actual)} | ${esc(primaryLabel)} ${euro(actual - planned)}${comparisonTotal !== null ? ` | ${esc(row.comparisonLabel)} ${euro(comparisonTotal)} | ${esc(secondaryLabel)} ${euro(comparisonVariance || 0)}` : ''}</div>` : ''}
+  </div>`;
+}
+
+function renderForecastPlanningTable_(model) {
+  if (!model || !model.rows.length) return '<div class="empty">Aucune structure annuelle disponible pour cette selection.</div>';
+  state.forecastPivotExpanded = state.forecastPivotExpanded || {};
+  model.rows.forEach(function(row) {
+    if (row.hasChildren && state.forecastPivotExpanded[row.uniqueKey] === undefined) {
+      state.forecastPivotExpanded[row.uniqueKey] = row.level < 2;
+    }
+  });
+
+  function isVisible(row) {
+    let parentKey = row.parentKey;
+    while (parentKey) {
+      if (!state.forecastPivotExpanded[parentKey]) return false;
+      const parent = model.rows.find(function(item) { return item.uniqueKey === parentKey; });
+      parentKey = parent ? parent.parentKey : '';
+    }
+    return true;
+  }
+
+  return `<div class="forecast-grid-wrap"><table class="forecast-grid-table"><thead><tr><th>Element</th>${forecastMonthLabels_().map(function(month) {
+    return `<th>${month}</th>`;
+  }).join('')}<th>Total</th></tr></thead><tbody>${model.rows.map(function(row) {
+    const toggleControl = row.hasChildren
+      ? `<button type="button" class="pivot-toggle-btn" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'Deplier')}">${state.forecastPivotExpanded[row.uniqueKey] ? '-' : '+'}</button>`
+      : '<span class="pivot-toggle-spacer"></span>';
+    const rowClass = row.kind === 'section' ? 'section-row' : row.kind === 'category' ? 'category-row' : row.kind === 'subcategory' ? 'subcategory-row' : row.kind === 'meta' ? 'meta-row' : '';
+    const compact = row.kind === 'section' || row.kind === 'category';
+    return `<tr class="${rowClass} ${isVisible(row) ? '' : 'pivot-row-hidden'}">
+      <td><span class="pivot-label-wrap">${toggleControl}<span>${esc(row.label)}</span></span></td>
+      ${forecastMonthLabels_().map(function(_, monthIndex) {
+        return `<td>${renderForecastProgressCell_(row, monthIndex, compact)}</td>`;
+      }).join('')}
+      <td>${renderForecastTotalCell_(row)}</td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function renderForecastGroupedBarChart_(model) {
+  if (!model || !model.chartPoints.length) return '<div class="empty">Aucune comparaison annuelle disponible pour cette selection.</div>';
+  const maxValue = Math.max.apply(null, model.chartPoints.map(function(point) {
+    return Math.max(Math.abs(point.planned || 0), Math.abs(point.actual || 0), 1);
+  }));
+  return `<div class="forecast-bar-chart">
+    <div class="forecast-bar-legend">
+      <span><i style="background:#cbdaf3"></i>Prevu</span>
+      <span><i style="background:#173d7a"></i>Realise</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(12,minmax(70px,1fr));gap:12px;align-items:end;min-height:240px;">
+      ${model.chartPoints.map(function(point) {
+        const plannedHeight = Math.max(6, Math.round((Math.abs(point.planned || 0) / maxValue) * 160));
+        const actualHeight = point.actual === null ? 0 : Math.max(6, Math.round((Math.abs(point.actual || 0) / maxValue) * 160));
+        const tooltip = [
+          point.label,
+          `Prevu: ${euro(point.planned || 0)}`,
+          `Realise: ${point.actual === null ? '-' : euro(point.actual)}`,
+          `Ecart: ${point.variance === null ? '-' : euro(point.variance)}`,
+          `% realisation: ${point.progress === null ? '-' : point.progress + '%'}`
+        ].join(' | ');
+        return `<button type="button" class="forecast-bar-group" title="${esc(tooltip)}" style="border:none;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;height:180px;width:100%;">
+            <span style="display:block;width:18px;height:${plannedHeight}px;border-radius:8px 8px 0 0;background:#cbdaf3;"></span>
+            <span style="display:block;width:18px;height:${actualHeight}px;border-radius:8px 8px 0 0;background:#173d7a;opacity:${point.actual === null ? 0.25 : 1};"></span>
+          </div>
+          <span class="forecast-bar-label" style="color:#697b90;font-size:12px;font-weight:700;">${esc(point.label)}</span>
+        </button>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderForecastRealisedSummary_(model) {
+  if (!model) return '<div class="empty">Aucune lecture du realise disponible.</div>';
+  const rowsById = {};
+  (model.rows || []).forEach(function(row) {
+    rowsById[row.id] = row;
+  });
+  const actualEnc = rowsById['encaissements'] ? rowsById['encaissements'].totalActual : 0;
+  const actualDec = rowsById['decaissements'] ? rowsById['decaissements'].totalActual : 0;
+  const actualNet = rowsById['net-variation'] ? rowsById['net-variation'].totalActual : 0;
+  const actualClosing = rowsById['closing-balance'] ? rowsById['closing-balance'].totalActual : 0;
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Ligne</th><th>Formule</th><th>Total annuel</th></tr></thead><tbody>
+    <tr><td>Encaissements realises</td><td>Credits categorises</td><td>${euro(actualEnc)}</td></tr>
+    <tr><td>Decaissements realises</td><td>Debits categorises</td><td>${euro(actualDec)}</td></tr>
+    <tr><td>Variation nette realisee</td><td>Encaissements - Decaissements</td><td>${euro(actualNet)}</td></tr>
+    <tr><td>Tresorerie finale reelle</td><td>Solde initial + Encaissements - Decaissements</td><td>${euro(actualClosing)}</td></tr>
+  </tbody></table></div>`;
+}
+
+function toggleForecastPivot(key) {
+  state.forecastPivotExpanded = state.forecastPivotExpanded || {};
+  state.forecastPivotExpanded[key] = !state.forecastPivotExpanded[key];
+  if (state.currentPage === 'Previsionnel') renderPrevisionnel();
+}
+
+function toggleForecastCellDetail(key) {
+  state.forecastCellDetailKey = state.forecastCellDetailKey === key ? '' : key;
+  if (state.currentPage === 'Previsionnel') renderPrevisionnel();
+}
+
+function saveForecastCell(rowId, monthIndex, rawValue) {
+  const model = buildForecastPlanningModel_();
+  const row = model && model.rows ? model.rows.find(function(item) { return item.id === rowId && item.editable; }) : null;
+  if (!row) {
+    showToast('Cellule de prevision introuvable.', 'error');
+    return;
+  }
+  const year = Number(state.annualSelectedYear || new Date().getFullYear());
+  const month = Number(monthIndex) + 1;
+  const monthToken = `${year}-${String(month).padStart(2, '0')}`;
+  const amount = Math.abs(toForecastAmount_(rawValue));
+  const subCategory = String(row.subCategory || '').trim();
+  const forecastId = ['PREVGRID', state.selectedEntite, row.sense, row.category, subCategory || 'SansDetail', monthToken]
+    .join('|')
+    .replace(/\s+/g, '_');
+  const payload = {
+    Prevision_id: forecastId,
+    Entite: state.selectedEntite,
+    Compte_id: '',
+    Categorie: row.category,
+    Sous_categorie: subCategory,
+    Date_prevue: `${monthToken}-01`,
+    Periode: 'Mensuel',
+    Frequence: 'Mensuelle',
+    Sens: row.sense,
+    Montant_prevu: amount,
+    Mode_calcul: 'Manuel',
+    Base_reference: 'Tableau previsionnel',
+    Active: 'Oui',
+    Commentaire: 'Saisie depuis le tableau previsionnel'
+  };
+
+  runAppsScriptMethod_('upsertPrevision', payload)
+    .then(function(result) {
+      state.dataCache = {};
+      state.cacheTimestamp = {};
+      state.annualPilotageCache = {};
+      state.forecastCellDetailKey = '';
+      state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      return loadAnnualPilotageData_(true);
+    })
+    .then(function() {
+      renderCurrentPage();
+      attachEventListeners();
+      showToast('Prevision enregistree.', 'success');
+    })
+    .catch(function(error) {
+      showToast(error.message || error, 'error');
+    });
+}
+
+function renderPrevisionnel() {
+  const model = buildForecastPlanningModel_();
+  const varianceTotal = (model ? model.totals.actualNet : 0) - (model ? model.totals.plannedNet : 0);
+  document.getElementById('page-Previsionnel').innerHTML = `
+    <div class="grid">
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Tableau annuel du previsionnel</h3>
+            <p>Saisie manuelle des montants par mois, suivi du realise depuis les transactions et lecture immediate des ecarts.</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_()}
+        <p class="forecast-plan-note">${model && model.editable
+          ? 'Chaque cellule saisit le prevu du mois. La barre montre le pourcentage de realisation. Clique sur la barre pour voir le realise et l ecart en euro.'
+          : 'La vue TOUTES LES ENTITES reste en lecture seule. Selectionne une entite pour saisir les previsions mois par mois.'}</p>
+      </div>
+
+      <div class="card kpi forecast-summary-kpi"><div class="label">Encaissements prevus</div><div class="value">${euro(model ? model.totals.plannedEncaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Decaissements prevus</div><div class="value">${euro(model ? model.totals.plannedDecaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Realise net</div><div class="value">${euro(model ? model.totals.actualNet : 0)}</div><div class="hint">Transactions annuelles cumulees</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Ecart net</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Realise moins prevu</div></div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Graphe annuel prevu vs realise</h3>
+            <p>Lecture interactive de la tresorerie prevue et de la tresorerie reelle, mois par mois.</p>
+          </div>
+        </div>
+        ${renderForecastGroupedBarChart_(model)}
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Pilotage mensuel des categories</h3>
+            <p>Le realise vient des transactions. Les details d ecart restent accessibles au clic pour garder un tableau lisible.</p>
+          </div>
+        </div>
+        ${renderForecastPlanningTable_(model)}
+      </div>
+
+      <div class="card panel-full">
+        <h3>Lecture du realise</h3>
+        <p class="forecast-locked-note">Encaissements = credits categorises. Decaissements = debits categorises. Variation nette = encaissements moins decaissements.</p>
+        ${renderForecastRealisedSummary_(model)}
+      </div>
+    </div>`;
 }
 
 function renderScenarios() {
