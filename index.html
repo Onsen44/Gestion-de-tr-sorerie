@@ -2500,17 +2500,20 @@ function buildBudgetGlobalRows_(budget) {
   const openingMonthly = [];
   const encMonthly = [];
   const decMonthly = [];
+  const netMonthly = [];
   const closingMonthly = [];
   chart.forEach(function(point, index) {
     openingMonthly.push(index === 0 ? toForecastAmount_(budget.openingBalance || 0) : toForecastAmount_(chart[index - 1].forecastClosingCash || 0));
     encMonthly.push(toForecastAmount_(point.forecastEncaissements || 0));
     decMonthly.push(toForecastAmount_(point.forecastDecaissements || 0));
+    netMonthly.push(toForecastAmount_(point.forecastEncaissements || 0) - toForecastAmount_(point.forecastDecaissements || 0));
     closingMonthly.push(toForecastAmount_(point.forecastClosingCash || 0));
   });
   return [
     { id: 'budget-opening', label: 'Solde initial', level: 0, monthly: openingMonthly, total: openingMonthly[0] || 0, kind: 'meta' },
     { id: 'budget-enc', label: 'Total Encaissements', level: 0, monthly: encMonthly, total: encMonthly.reduce(function(sum, value) { return sum + value; }, 0), kind: 'section' },
     { id: 'budget-dec', label: 'Total Decaissements', level: 0, monthly: decMonthly, total: decMonthly.reduce(function(sum, value) { return sum + value; }, 0), kind: 'section' },
+    { id: 'budget-net', label: 'Variation nette', level: 0, monthly: netMonthly, total: netMonthly.reduce(function(sum, value) { return sum + value; }, 0), kind: 'meta' },
     { id: 'budget-closing', label: 'Solde final', level: 0, monthly: closingMonthly, total: closingMonthly[closingMonthly.length - 1] || 0, kind: 'meta' }
   ];
 }
