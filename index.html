@@ -3470,7 +3470,7 @@ function renderForecastPlanningTable_(model) {
     return `<th>${month}</th>`;
   }).join('')}<th>Total</th></tr></thead><tbody>${model.rows.map(function(row) {
     const actionHtml = row.canArchive
-      ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveForecastLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.subCategory || '')}, ${JSON.stringify(row.sense)})'>Supprimer</button></span>`
+      ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveForecastLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.subCategory || '')}, ${JSON.stringify(row.sense)})' aria-label="Supprimer la ligne de prevision" title="Supprimer la ligne de prevision">x</button></span>`
       : '';
     const labelContent = row.hasChildren
       ? `<button type="button" class="forecast-toggle-label ${state.forecastPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'Déplier')}">
@@ -3696,6 +3696,10 @@ function splitForecastRowsBySection_(rows) {
   let currentSection = '';
   (rows || []).forEach(function(row) {
     if (!row) return;
+    if (row.kind === 'meta') {
+      currentSection = '';
+      return;
+    }
     if (row.kind === 'section') {
       if (isEncaissementSectionId_(row.id)) currentSection = 'encaissements';
       else if (isDecaissementSectionId_(row.id)) currentSection = 'decaissements';
@@ -3850,7 +3854,9 @@ function buildForecastPlanningModel_() {
     row.totalActual = row.actualMonthly.reduce(function(sum, value) {
       return value === null ? sum : sum + toForecastAmount_(value);
     }, 0);
-    row.canArchive = row.editable && row.kind !== 'section' && row.totalActual === 0;
+    row.canArchive = row.editable
+      && row.kind !== 'section'
+      && (row.directFlags || []).some(function(flag) { return !!flag; });
   });
 
   const forecastEncRow = rows.find(function(row) { return isEncaissementSectionId_(row.id); });
