@@ -5212,6 +5212,10 @@ function splitBudgetRowsBySection_(rows) {
   let currentSection = '';
   (rows || []).forEach(function(row) {
     if (!row) return;
+    if (row.kind === 'meta') {
+      currentSection = '';
+      return;
+    }
     if (row.kind === 'section') {
       if (isEncaissementSectionId_(row.id)) currentSection = 'encaissements';
       else if (isDecaissementSectionId_(row.id)) currentSection = 'decaissements';
@@ -5296,13 +5300,13 @@ function buildBudgetPlanningModel_(view) {
     const subCategory = context.subCategory;
     const detail = context.detail;
     const plannedMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
-      return toForecastAmount_(plannedSource && plannedSource.monthly ? plannedSource.monthly[monthIndex] : (row.monthly ? row.monthly[monthIndex] : 0));
+      return toForecastAmount_(plannedSource && plannedSource.monthly ? plannedSource.monthly[monthIndex] : 0);
     });
     const directMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
-      return toForecastAmount_(plannedSource && plannedSource.directMonthly ? plannedSource.directMonthly[monthIndex] : (row.directMonthly ? row.directMonthly[monthIndex] : 0));
+      return toForecastAmount_(plannedSource && plannedSource.directMonthly ? plannedSource.directMonthly[monthIndex] : 0);
     });
     const directFlags = forecastMonthLabels_().map(function(_, monthIndex) {
-      return !!(plannedSource && plannedSource.directFlags ? plannedSource.directFlags[monthIndex] : (row.directFlags ? row.directFlags[monthIndex] : false));
+      return !!(plannedSource && plannedSource.directFlags ? plannedSource.directFlags[monthIndex] : false);
     });
     const actualMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
       return getForecastActualValue_(actualSource, monthIndex);
@@ -5359,7 +5363,9 @@ function buildBudgetPlanningModel_(view) {
   rows.forEach(function(row) {
     row.totalPlanned = row.plannedMonthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0);
     row.totalActual = row.actualMonthly.reduce(function(sum, value) { return value === null ? sum : sum + toForecastAmount_(value); }, 0);
-    row.canArchive = row.editable && row.kind !== 'section' && row.totalActual === 0;
+    row.canArchive = row.editable
+      && row.kind !== 'section'
+      && (row.directFlags || []).some(function(flag) { return !!flag; });
   });
 
   return {
@@ -5458,7 +5464,7 @@ function renderBudgetPlanningTable_(model) {
     return `<th>${month}</th>`;
   }).join('')}<th>Total</th></tr></thead><tbody>${model.rows.map(function(row) {
     const actionHtml = row.canArchive
-      ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveBudgetLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.storageSubCategory || '')}, ${JSON.stringify(row.sense)})'>Supprimer</button></span>`
+      ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveBudgetLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.storageSubCategory || '')}, ${JSON.stringify(row.sense)})' aria-label="Supprimer la ligne de budget" title="Supprimer la ligne de budget">x</button></span>`
       : '';
     const labelContent = row.hasChildren
       ? `<button type="button" class="forecast-toggle-label ${state.budgetPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleBudgetPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.budgetPivotExpanded[row.uniqueKey] ? 'Replier' : 'Deplier')}">
