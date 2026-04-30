@@ -3135,6 +3135,14 @@ function normalizeForecastKey_(value) {
     .trim();
 }
 
+function isEncaissementSectionId_(value) {
+  return normalizeForecastKey_(value) === 'ENCAISSEMENTS';
+}
+
+function isDecaissementSectionId_(value) {
+  return normalizeForecastKey_(value) === 'DECAISSEMENTS';
+}
+
 function buildForecastPlanningMetadata_(rows) {
   const metadata = [];
   rows.forEach(function(row, index) {
@@ -3202,10 +3210,10 @@ function buildForecastPlanningModel_() {
   const forecastClosingRow = forecastMap['closing-balance'];
   const actualClosingRow = realisedMap['closing-balance'];
   const actualNetRow = realisedMap['net-variation'];
-  const actualEncRow = realisedMap['encaissements'];
-  const actualDecRow = realisedMap['decaissements'];
-  const forecastEncRow = forecastMap['encaissements'];
-  const forecastDecRow = forecastMap['decaissements'];
+  const actualEncRow = realisedRows.find(function(row) { return row && isEncaissementSectionId_(row.id); }) || null;
+  const actualDecRow = realisedRows.find(function(row) { return row && isDecaissementSectionId_(row.id); }) || null;
+  const forecastEncRow = forecastRows.find(function(row) { return row && isEncaissementSectionId_(row.id); }) || null;
+  const forecastDecRow = forecastRows.find(function(row) { return row && isDecaissementSectionId_(row.id); }) || null;
   const recalibratedClosing = [];
   let rollingClosing = openingRow ? toForecastAmount_(openingRow.monthly && openingRow.monthly[0]) : 0;
 
@@ -3241,8 +3249,8 @@ function buildForecastPlanningModel_() {
       return getForecastActualValue_(actualSource, monthIndex);
     });
     let displayLabel = row.label;
-    if (row.id === 'encaissements') displayLabel = 'Encaissements previsionnels';
-    if (row.id === 'decaissements') displayLabel = 'Decaissements previsionnels';
+    if (isEncaissementSectionId_(row.id)) displayLabel = 'Encaissements previsionnels';
+    if (isDecaissementSectionId_(row.id)) displayLabel = 'Decaissements previsionnels';
     if (row.id === 'net-variation') displayLabel = 'Variation nette previsionnelle';
     if (row.id === 'closing-balance') displayLabel = 'Tresorerie previsionnelle';
     const editable = state.selectedEntite !== 'TOUTES'
@@ -3521,8 +3529,10 @@ function renderForecastRealisedSummary_(model) {
   (model.rows || []).forEach(function(row) {
     rowsById[row.id] = row;
   });
-  const actualEnc = rowsById['encaissements'] ? rowsById['encaissements'].totalActual : 0;
-  const actualDec = rowsById['decaissements'] ? rowsById['decaissements'].totalActual : 0;
+  const actualEncKey = Object.keys(rowsById).find(function(key) { return isEncaissementSectionId_(key); });
+  const actualDecKey = Object.keys(rowsById).find(function(key) { return isDecaissementSectionId_(key); });
+  const actualEnc = actualEncKey ? rowsById[actualEncKey].totalActual : 0;
+  const actualDec = actualDecKey ? rowsById[actualDecKey].totalActual : 0;
   const actualNet = rowsById['net-variation'] ? rowsById['net-variation'].totalActual : 0;
   const actualClosing = rowsById['closing-balance'] ? rowsById['closing-balance'].totalActual : 0;
   return `<div class="table-wrap"><table class="table"><thead><tr><th>Ligne</th><th>Formule</th><th>Total annuel</th></tr></thead><tbody>
@@ -3687,8 +3697,8 @@ function splitForecastRowsBySection_(rows) {
   (rows || []).forEach(function(row) {
     if (!row) return;
     if (row.kind === 'section') {
-      if (row.id === 'encaissements') currentSection = 'encaissements';
-      else if (row.id === 'decaissements') currentSection = 'decaissements';
+      if (isEncaissementSectionId_(row.id)) currentSection = 'encaissements';
+      else if (isDecaissementSectionId_(row.id)) currentSection = 'decaissements';
       else currentSection = '';
     }
     if (currentSection) sections[currentSection].push(row);
@@ -3756,8 +3766,8 @@ function buildForecastPlanningModel_() {
   const rowByKey = {};
   const actualClosingRow = realisedMap['closing-balance'];
   const actualNetRow = realisedMap['net-variation'];
-  const actualEncRow = realisedMap['encaissements'];
-  const actualDecRow = realisedMap['decaissements'];
+  const actualEncRow = realisedRows.find(function(row) { return row && isEncaissementSectionId_(row.id); }) || null;
+  const actualDecRow = realisedRows.find(function(row) { return row && isDecaissementSectionId_(row.id); }) || null;
 
   meta.forEach(function(metaRow) {
     const row = metaRow.row;
@@ -3787,8 +3797,8 @@ function buildForecastPlanningModel_() {
       return getForecastActualValue_(actualSource, monthIndex);
     });
     let displayLabel = row.label;
-    if (row.id === 'encaissements') displayLabel = 'Encaissements previsionnels';
-    if (row.id === 'decaissements') displayLabel = 'Decaissements previsionnels';
+    if (isEncaissementSectionId_(row.id)) displayLabel = 'Encaissements previsionnels';
+    if (isDecaissementSectionId_(row.id)) displayLabel = 'Decaissements previsionnels';
     if (row.id === 'net-variation') displayLabel = 'Variation nette previsionnelle';
     if (row.id === 'closing-balance') displayLabel = 'Tresorerie previsionnelle';
     const rowData = {
@@ -3843,8 +3853,8 @@ function buildForecastPlanningModel_() {
     row.canArchive = row.editable && row.kind !== 'section' && row.totalActual === 0;
   });
 
-  const forecastEncRow = rows.find(function(row) { return row.id === 'encaissements'; });
-  const forecastDecRow = rows.find(function(row) { return row.id === 'decaissements'; });
+  const forecastEncRow = rows.find(function(row) { return isEncaissementSectionId_(row.id); });
+  const forecastDecRow = rows.find(function(row) { return isDecaissementSectionId_(row.id); });
   const netMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
     return toForecastAmount_(forecastEncRow && forecastEncRow.plannedMonthly ? forecastEncRow.plannedMonthly[monthIndex] : 0)
       - toForecastAmount_(forecastDecRow && forecastDecRow.plannedMonthly ? forecastDecRow.plannedMonthly[monthIndex] : 0);
@@ -5197,8 +5207,8 @@ function splitBudgetRowsBySection_(rows) {
   (rows || []).forEach(function(row) {
     if (!row) return;
     if (row.kind === 'section') {
-      if (row.id === 'encaissements') currentSection = 'encaissements';
-      else if (row.id === 'decaissements') currentSection = 'decaissements';
+      if (isEncaissementSectionId_(row.id)) currentSection = 'encaissements';
+      else if (isDecaissementSectionId_(row.id)) currentSection = 'decaissements';
       else currentSection = '';
     }
     if (currentSection) sections[currentSection].push(row);
@@ -5292,8 +5302,8 @@ function buildBudgetPlanningModel_(view) {
       return getForecastActualValue_(actualSource, monthIndex);
     });
     let label = row.label;
-    if (row.id === 'encaissements') label = 'Total Encaissements';
-    if (row.id === 'decaissements') label = 'Total Decaissements';
+    if (isEncaissementSectionId_(row.id)) label = 'Total Encaissements';
+    if (isDecaissementSectionId_(row.id)) label = 'Total Decaissements';
     const rowData = {
       id: row.id,
       uniqueKey: metaRow.uniqueKey,
