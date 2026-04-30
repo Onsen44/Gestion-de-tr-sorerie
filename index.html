@@ -5086,11 +5086,23 @@ function renderPrevisionnel() {
   const recentPrevisions = state.bootstrap.recentPrevisions || [];
   const annualData = getAnnualPilotageData_();
   const forecast = annualData && annualData.forecast ? annualData.forecast : null;
+  const annualForecastRows = (forecast ? (forecast.forecastRows || []) : []).map(function(row) {
+    const labelMap = {
+      'opening-balance': 'Solde debut de periode',
+      'encaissements': 'Encaissements previsionnels',
+      'decaissements': 'Decaissements previsionnels',
+      'net-variation': 'Variation nette previsionnelle',
+      'closing-balance': 'Tresorerie finale previsionnelle'
+    };
+    return Object.assign({}, row, {
+      label: labelMap[row.id] || row.label
+    });
+  });
   const previsionRows = state.previsionView === 'actual'
     ? (forecast ? forecast.realisedRows : [])
     : state.previsionView === 'variance'
       ? (forecast ? forecast.varianceRows : [])
-      : (forecast ? forecast.forecastRows : []);
+      : annualForecastRows;
   const previsionButtons = [
     { id: 'forecast', label: 'Prevu' },
     { id: 'actual', label: 'Realise' },
@@ -5140,8 +5152,10 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prevu' : state.previsionView === 'actual' ? 'du realise' : 'des ecarts'}</h3>
-            <p>Structure annuelle par tresorerie, encaissements, decaissements, categories et sous-categories.</p>
+            <h3>${state.previsionView === 'forecast' ? 'Tableau annuel du previsionnel' : state.previsionView === 'actual' ? 'Tableau annuel du realise' : 'Tableau annuel des ecarts'}</h3>
+            <p>${state.previsionView === 'forecast'
+              ? 'Solde debut de periode, encaissements previsionnels, decaissements previsionnels, variation nette et tresorerie finale previsionnelle.'
+              : 'Structure annuelle par tresorerie, encaissements, decaissements, categories et sous-categories.'}</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(previsionRows)}
