@@ -5086,18 +5086,8 @@ function renderPrevisionnel() {
   const recentPrevisions = state.bootstrap.recentPrevisions || [];
   const annualData = getAnnualPilotageData_();
   const forecast = annualData && annualData.forecast ? annualData.forecast : null;
-  const annualForecastRows = (forecast ? (forecast.forecastRows || []) : []).map(function(row) {
-    const labelMap = {
-      'opening-balance': 'Solde debut de periode',
-      'encaissements': 'Encaissements previsionnels',
-      'decaissements': 'Decaissements previsionnels',
-      'net-variation': 'Variation nette previsionnelle',
-      'closing-balance': 'Tresorerie finale previsionnelle'
-    };
-    return Object.assign({}, row, {
-      label: labelMap[row.id] || row.label
-    });
-  });
+  const planningModel = buildForecastPlanningModel_();
+  const annualForecastRows = planningModel ? planningModel.rows : [];
   const previsionRows = state.previsionView === 'actual'
     ? (forecast ? forecast.realisedRows : [])
     : state.previsionView === 'variance'
@@ -5117,7 +5107,26 @@ function renderPrevisionnel() {
       <div class="card kpi"><div class="label">Realise ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative precedente</div></div>
       <div class="card kpi"><div class="label">Lignes de prevision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">Previsions enregistrees dans le sheet</div></div>
 
-      <div class="card panel-full">
+      <div class="card panel-full" style="${state.previsionView === 'forecast' ? '' : 'display:none;'}">
+        <div class="section-title">
+          <div>
+            <h3>Ajouter une ligne de prevision</h3>
+            <p>Cette action ajoute une ligne dans le previsionnel uniquement, sans toucher au referentiel des categories.</p>
+          </div>
+        </div>
+        ${state.selectedEntite !== 'TOUTES' ? `<div class="forecast-add-grid">
+          <div class="field"><label>Categorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-categorie</label><input id="forecast-add-subcategory" placeholder="Ex. AXA"></div>
+          <div class="field"><label>Sens</label><select id="forecast-add-sense"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
+          <div class="field"><label>Mois</label><select id="forecast-add-month">${forecastMonthLabels_().map(function(label, index) {
+            return `<option value="${index + 1}">${label}</option>`;
+          }).join('')}</select></div>
+          <div class="field"><label>Montant initial</label><input id="forecast-add-amount" type="number" step="0.01" placeholder="0"></div>
+          <div class="field"><button class="btn secondary" type="button" onclick="addForecastLine()">Ajouter une ligne</button></div>
+        </div>` : `<div class="hint">Selectionne une entite pour saisir, ajouter ou supprimer des lignes dans le previsionnel.</div>`}
+      </div>
+
+      <div class="card panel-full" style="${state.previsionView === 'forecast' ? 'display:none;' : ''}">
         <h3>Ajouter / modifier une prevision</h3>
         <div class="form-grid">
           <div class="field"><label>Prevision_id</label><input id="prev-id" placeholder="Laisser vide pour creation"></div>
@@ -5146,7 +5155,11 @@ function renderPrevisionnel() {
           </div>
         </div>
         ${renderAnnualToolbar_({ viewButtons: previsionButtons })}
-        ${state.previsionView === 'variance' ? renderVarianceChart_(forecast ? forecast.chart : []) : renderAnnualComboChart_(state.previsionView === 'forecast' ? (forecast ? forecast.chart : []) : ((annualData && annualData.realised) ? annualData.realised.chart : []), state.previsionView === 'forecast' ? 'forecast' : 'realised')}
+        ${state.previsionView === 'forecast'
+          ? renderForecastGroupedBarChart_(planningModel)
+          : state.previsionView === 'variance'
+            ? renderVarianceChart_(forecast ? forecast.chart : [])
+            : renderAnnualComboChart_((annualData && annualData.realised) ? annualData.realised.chart : [], 'realised')}
       </div>
 
       <div class="card panel-full">
@@ -5154,16 +5167,21 @@ function renderPrevisionnel() {
           <div>
             <h3>${state.previsionView === 'forecast' ? 'Tableau annuel du previsionnel' : state.previsionView === 'actual' ? 'Tableau annuel du realise' : 'Tableau annuel des ecarts'}</h3>
             <p>${state.previsionView === 'forecast'
-              ? 'Solde debut de periode, encaissements previsionnels, decaissements previsionnels, variation nette et tresorerie finale previsionnelle.'
+              ? 'Solde debut de periode, encaissements previsionnels, categories et sous-categories, decaissements previsionnels, variation nette previsionnelle, tresorerie previsionnelle et tresorerie finale previsionnelle.'
               : 'Structure annuelle par tresorerie, encaissements, decaissements, categories et sous-categories.'}</p>
           </div>
         </div>
-        ${renderAnnualPivotTable_(previsionRows)}
+        ${state.previsionView === 'forecast' ? renderForecastPlanningTable_(planningModel) : renderAnnualPivotTable_(previsionRows)}
       </div>
 
-      <div class="card panel-full">
-        <h3>Previsionnel vs realise du mois</h3>
-        ${renderForecastTable(summary)}
+      <div class="card panel-full" style="${state.previsionView === 'forecast' ? '' : 'display:none;'}">
+        <div class="section-title">
+          <div>
+            <h3>Lecture du realise</h3>
+            <p>Le realise vient des transactions. Les details d'ecart restent accessibles au clic pour garder un tableau lisible.</p>
+          </div>
+        </div>
+        ${renderForecastRealisedSummary_(planningModel)}
       </div>
 
       <div class="card panel-full">
