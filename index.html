@@ -886,6 +886,8 @@ const budgetNavItems = [
   ['decaissements', 'Budget décaissement']
 ];
 
+budgetNavItems.push(['global', 'Budget de tresorerie']);
+
 function init() {
   console.log('init() called');
   google.script.run
@@ -2476,6 +2478,159 @@ function renderBudget() {
     </div>`;
 }
 
+function filterBudgetRows_(rows, budgetView) {
+  if (budgetView === 'global') return [];
+  const allowedRoot = budgetView === 'encaissements' ? 'Encaissements' : 'Decaissements';
+  let currentRoot = '';
+  return (rows || []).filter(function(row) {
+    if (row.level === 0 && String(row.label || '') === allowedRoot) {
+      currentRoot = allowedRoot;
+      return true;
+    }
+    if (row.level === 0 && String(row.label || '') !== allowedRoot) {
+      currentRoot = '';
+      return false;
+    }
+    return currentRoot === allowedRoot;
+  });
+}
+
+function buildBudgetGlobalRows_(budget) {
+  const chart = (budget && budget.chart) || [];
+  const openingMonthly = [];
+  const encMonthly = [];
+  const decMonthly = [];
+  const closingMonthly = [];
+  chart.forEach(function(point, index) {
+    openingMonthly.push(index === 0 ? toForecastAmount_(budget.openingBalance || 0) : toForecastAmount_(chart[index - 1].forecastClosingCash || 0));
+    encMonthly.push(toForecastAmount_(point.forecastEncaissements || 0));
+    decMonthly.push(toForecastAmount_(point.forecastDecaissements || 0));
+    closingMonthly.push(toForecastAmount_(point.forecastClosingCash || 0));
+  });
+  return [
+    { id: 'budget-opening', label: 'Solde initial', level: 0, monthly: openingMonthly, total: openingMonthly[0] || 0, kind: 'meta' },
+    { id: 'budget-enc', label: 'Total Encaissements', level: 0, monthly: encMonthly, total: encMonthly.reduce(function(sum, value) { return sum + value; }, 0), kind: 'section' },
+    { id: 'budget-dec', label: 'Total Decaissements', level: 0, monthly: decMonthly, total: decMonthly.reduce(function(sum, value) { return sum + value; }, 0), kind: 'section' },
+    { id: 'budget-closing', label: 'Solde final', level: 0, monthly: closingMonthly, total: closingMonthly[closingMonthly.length - 1] || 0, kind: 'meta' }
+  ];
+}
+
+function buildBudgetChartPoints_(budget, realised, budgetView) {
+  const budgetChart = (budget && budget.chart) || [];
+  const realisedChart = (realised && realised.chart) || [];
+  if (budgetView === 'global') {
+    return budgetChart.map(function(point, index) {
+      const realisedPoint = realisedChart[index] || {};
+      const planned = toForecastAmount_(point.forecastClosingCash || 0);
+      const actual = typeof realisedPoint.closingCash === 'number' ? toForecastAmount_(realisedPoint.closingCash) : null;
+      return {
+        label: point.label,
+        planned: planned,
+        actual: actual,
+        variance: actual === null ? null : actual - planned,
+        progress: planned ? Math.round(((actual === null ? 0 : actual) / planned) * 100) : null
+      };
+    });
+  }
+  return budgetChart.map(function(point) {
+    const planned = budgetView === 'encaissements'
+      ? toForecastAmount_(point.forecastEncaissements || 0)
+      : toForecastAmount_(point.forecastDecaissements || 0);
+    const actual = budgetView === 'encaissements'
+      ? toForecastAmount_(point.realisedEncaissements || 0)
+      : toForecastAmount_(point.realisedDecaissements || 0);
+    return {
+      label: point.label,
+      planned: planned,
+      actual: actual,
+      variance: actual - planned,
+      progress: planned ? Math.round((actual / planned) * 100) : null
+    };
+  });
+}
+
+function renderBudget() {
+  const annualData = getAnnualPilotageData_() || {};
+  const budget = annualData && annualData.budget ? annualData.budget : null;
+  const realised = annualData && annualData.realised ? annualData.realised : null;
+  const view = ['encaissements', 'decaissements', 'global'].indexOf(state.budgetView) !== -1 ? state.budgetView : 'encaissements';
+  const page = document.getElementById('page-Budget');
+  if (!budget) {
+    page.innerHTML = `
+      <div class="grid">
+        <div class="card panel-full">
+          <div class="section-title">
+            <div>
+              <h3>Budget annuel</h3>
+              <p>Le module Budget a besoin du backend Apps Script a jour pour charger ses donnees.</p>
+            </div>
+          </div>
+          ${renderAnnualToolbar_()}
+          <div class="empty">Deploie <code>Code.gs</code> pour afficher le budget de l'entite selectionnee.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const chartPoints = buildBudgetChartPoints_(budget, realised, view);
+  const rows = view === 'global' ? buildBudgetGlobalRows_(budget) : filterBudgetRows_(budget.budgetRows || [], view);
+  const totals = budget.totals || {};
+  const headerLabel = view === 'encaissements'
+    ? 'Budget encaissements'
+    : view === 'decaissements'
+      ? 'Budget decaissements'
+      : 'Budget de tresorerie global';
+  const plannedTotal = view === 'encaissements'
+    ? (totals.budgetEncaissements || 0)
+    : view === 'decaissements'
+      ? (totals.budgetDecaissements || 0)
+      : ((budget.chart || []).length ? toForecastAmount_((budget.chart || [])[((budget.chart || []).length - 1)].forecastClosingCash || 0) : 0);
+  const actualTotal = view === 'encaissements'
+    ? (totals.realisedEncaissements || 0)
+    : view === 'decaissements'
+      ? (totals.realisedDecaissements || 0)
+      : ((realised && realised.chart && realised.chart.length) ? toForecastAmount_(realised.chart[realised.chart.length - 1].closingCash || 0) : 0);
+
+  page.innerHTML = `
+    <div class="grid">
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>${headerLabel}</h3>
+            <p>${view === 'global'
+              ? 'Vue globale mensuelle de tresorerie par entite : solde initial, encaissements, decaissements et solde final.'
+              : 'Vue budgetaire annuelle par entite, hierarchisee par categories et sous-categories du sens choisi.'}</p>
+          </div>
+        </div>
+        ${renderAnnualToolbar_()}
+      </div>
+
+      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgete' : 'Total annuel budgete'}</div></div>
+      <div class="card kpi"><div class="label">Realise</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final realise' : 'Total annuel realise'}</div></div>
+      <div class="card kpi"><div class="label">Ecart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Realise moins budget</div></div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>Graphe annuel budget vs realise</h3>
+            <p>${view === 'global' ? 'Comparaison mensuelle du budget de tresorerie globale avec la tresorerie reelle.' : 'Comparaison mensuelle du budget avec le realise.'}</p>
+          </div>
+        </div>
+        ${renderForecastGroupedBarChart_({ chartPoints: chartPoints })}
+      </div>
+
+      <div class="card panel-full">
+        <div class="section-title">
+          <div>
+            <h3>${view === 'global' ? 'Tableau du budget de tresorerie global' : 'Tableau annuel du budget'}</h3>
+            <p>${view === 'global' ? 'Le solde initial du premier mois reprend le solde reel de l entite, puis chaque mois repart du solde final precedent.' : 'Les categories et sous-categories restent rangees sous Encaissements ou Decaissements selon leur sens.'}</p>
+          </div>
+        </div>
+        ${renderAnnualPivotTable_(rows)}
+      </div>
+    </div>`;
+}
+
 function renderAccueil() {
   const d = state.bootstrap.dashboard;
   const annualData = getAnnualPilotageData_();
@@ -3524,6 +3679,429 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
     .catch(function(error) {
       showToast(error.message || error, 'error');
     });
+}
+
+function splitForecastRowsBySection_(rows) {
+  const sections = { encaissements: [], decaissements: [] };
+  let currentSection = '';
+  (rows || []).forEach(function(row) {
+    if (!row) return;
+    if (row.kind === 'section') {
+      if (row.id === 'encaissements') currentSection = 'encaissements';
+      else if (row.id === 'decaissements') currentSection = 'decaissements';
+      else currentSection = '';
+    }
+    if (currentSection) sections[currentSection].push(row);
+  });
+  return sections;
+}
+
+function mergeForecastSectionRows_(realisedRows, forecastRows) {
+  const merged = [];
+  const seen = {};
+  (realisedRows || []).forEach(function(row) {
+    if (!row || seen[row.id]) return;
+    merged.push(row);
+    seen[row.id] = true;
+  });
+  (forecastRows || []).forEach(function(row) {
+    if (!row || seen[row.id]) return;
+    merged.push(row);
+    seen[row.id] = true;
+  });
+  return merged;
+}
+
+function buildForecastPlanningModel_() {
+  const annualData = getAnnualPilotageData_();
+  const forecast = annualData && annualData.forecast ? annualData.forecast : null;
+  const realised = annualData && annualData.realised ? annualData.realised : null;
+  if (!forecast || !realised) return null;
+
+  const forecastRows = forecast.forecastRows || [];
+  const realisedRows = forecast.realisedRows || realised.rows || [];
+  const forecastMap = {};
+  const realisedMap = {};
+  forecastRows.forEach(function(row) { forecastMap[row.id] = row; });
+  realisedRows.forEach(function(row) { realisedMap[row.id] = row; });
+
+  const forecastSections = splitForecastRowsBySection_(forecastRows);
+  const realisedSections = splitForecastRowsBySection_(realisedRows);
+  const openingRow = forecastMap['opening-balance'] || realisedMap['opening-balance'];
+  const structureRows = [];
+  if (openingRow) structureRows.push(openingRow);
+  mergeForecastSectionRows_(realisedSections.encaissements, forecastSections.encaissements).forEach(function(row) {
+    structureRows.push(row);
+  });
+  mergeForecastSectionRows_(realisedSections.decaissements, forecastSections.decaissements).forEach(function(row) {
+    structureRows.push(row);
+  });
+  ['net-variation', 'closing-balance'].forEach(function(rowId) {
+    const row = forecastMap[rowId] || realisedMap[rowId];
+    if (row) structureRows.push(row);
+  });
+
+  const meta = buildForecastPlanningMetadata_(structureRows);
+  const metaByKey = {};
+  const childKeysByParent = {};
+  meta.forEach(function(item) {
+    metaByKey[item.uniqueKey] = item;
+    if (item.parentKey) {
+      if (!childKeysByParent[item.parentKey]) childKeysByParent[item.parentKey] = [];
+      childKeysByParent[item.parentKey].push(item.uniqueKey);
+    }
+  });
+
+  const rows = [];
+  const rowByKey = {};
+  const actualClosingRow = realisedMap['closing-balance'];
+  const actualNetRow = realisedMap['net-variation'];
+  const actualEncRow = realisedMap['encaissements'];
+  const actualDecRow = realisedMap['decaissements'];
+
+  meta.forEach(function(metaRow) {
+    const row = metaRow.row;
+    const plannedSource = forecastMap[row.id] || null;
+    const actualSource = realisedMap[row.id] || null;
+    let rootMeta = metaRow;
+    while (rootMeta.parentKey) {
+      const parent = metaByKey[rootMeta.parentKey];
+      if (!parent) break;
+      rootMeta = parent;
+    }
+    const sectionLabel = String(rootMeta.row.label || '');
+    const sense = sectionLabel === 'Encaissements' ? 'Encaissement' : sectionLabel === 'Decaissements' ? 'Decaissement' : '';
+    const parentMeta = metaRow.parentKey ? metaByKey[metaRow.parentKey] : null;
+    const category = !sense ? '' : metaRow.level === 1 ? row.label : metaRow.level >= 2 && parentMeta ? parentMeta.row.label : '';
+    const subCategory = sense && metaRow.level >= 2 ? row.label : '';
+    const baseMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return toForecastAmount_(plannedSource && plannedSource.monthly ? plannedSource.monthly[monthIndex] : 0);
+    });
+    const directMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return toForecastAmount_(plannedSource && plannedSource.directMonthly ? plannedSource.directMonthly[monthIndex] : 0);
+    });
+    const directFlags = forecastMonthLabels_().map(function(_, monthIndex) {
+      return !!(plannedSource && plannedSource.directFlags ? plannedSource.directFlags[monthIndex] : false);
+    });
+    const actualMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      return getForecastActualValue_(actualSource, monthIndex);
+    });
+    let displayLabel = row.label;
+    if (row.id === 'encaissements') displayLabel = 'Encaissements previsionnels';
+    if (row.id === 'decaissements') displayLabel = 'Decaissements previsionnels';
+    if (row.id === 'net-variation') displayLabel = 'Variation nette previsionnelle';
+    if (row.id === 'closing-balance') displayLabel = 'Tresorerie previsionnelle';
+    const rowData = {
+      id: row.id,
+      uniqueKey: metaRow.uniqueKey,
+      parentKey: metaRow.parentKey,
+      hasChildren: metaRow.hasChildren,
+      level: metaRow.level,
+      kind: row.kind,
+      label: displayLabel,
+      sense: sense,
+      category: category,
+      subCategory: subCategory === 'Sans detail' ? '' : subCategory,
+      plannedMonthly: baseMonthly.slice(),
+      actualMonthly: actualMonthly,
+      directMonthly: directMonthly,
+      directFlags: directFlags,
+      totalPlanned: 0,
+      totalActual: 0,
+      editable: state.selectedEntite !== 'TOUTES' && !!sense && row.kind !== 'meta' && row.kind !== 'site',
+      canArchive: false,
+      manualScope: row.kind === 'section' ? 'section' : row.kind === 'category' ? 'category' : row.kind === 'subcategory' ? 'subcategory' : ''
+    };
+    rows.push(rowData);
+    rowByKey[rowData.uniqueKey] = rowData;
+  });
+
+  meta.slice().reverse().forEach(function(metaRow) {
+    const row = rowByKey[metaRow.uniqueKey];
+    if (!row || row.kind === 'meta') return;
+    const childKeys = childKeysByParent[metaRow.uniqueKey] || [];
+    if (!childKeys.length) {
+      row.plannedMonthly = row.plannedMonthly.map(function(value, monthIndex) {
+        return row.directFlags[monthIndex] ? row.directMonthly[monthIndex] : value;
+      });
+      return;
+    }
+    row.plannedMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+      if (row.directFlags[monthIndex]) return row.directMonthly[monthIndex];
+      return childKeys.reduce(function(sum, childKey) {
+        const childRow = rowByKey[childKey];
+        return sum + toForecastAmount_(childRow && childRow.plannedMonthly ? childRow.plannedMonthly[monthIndex] : 0);
+      }, 0);
+    });
+  });
+
+  rows.forEach(function(row) {
+    row.totalPlanned = row.plannedMonthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0);
+    row.totalActual = row.actualMonthly.reduce(function(sum, value) {
+      return value === null ? sum : sum + toForecastAmount_(value);
+    }, 0);
+    row.canArchive = row.editable && row.kind !== 'section' && row.totalActual === 0;
+  });
+
+  const forecastEncRow = rows.find(function(row) { return row.id === 'encaissements'; });
+  const forecastDecRow = rows.find(function(row) { return row.id === 'decaissements'; });
+  const netMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+    return toForecastAmount_(forecastEncRow && forecastEncRow.plannedMonthly ? forecastEncRow.plannedMonthly[monthIndex] : 0)
+      - toForecastAmount_(forecastDecRow && forecastDecRow.plannedMonthly ? forecastDecRow.plannedMonthly[monthIndex] : 0);
+  });
+  const openingMonthly = [];
+  const plannedClosing = [];
+  forecastMonthLabels_().forEach(function(_, monthIndex) {
+    const openingBalance = monthIndex === 0
+      ? (openingRow ? toForecastAmount_(openingRow.monthly && openingRow.monthly[0]) : 0)
+      : plannedClosing[monthIndex - 1];
+    openingMonthly.push(openingBalance);
+    plannedClosing.push(openingBalance + netMonthly[monthIndex]);
+  });
+
+  const actualClosingMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+    return getForecastActualValue_(actualClosingRow, monthIndex);
+  });
+  const actualOpeningMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+    if (monthIndex === 0) return openingMonthly[0] || 0;
+    const previousClosing = getForecastActualValue_(actualClosingRow, monthIndex - 1);
+    return previousClosing === null ? openingMonthly[monthIndex] : previousClosing;
+  });
+  const recalibratedClosing = [];
+  let rollingClosing = openingMonthly[0] || 0;
+  forecastMonthLabels_().forEach(function(_, monthIndex) {
+    const actualClosing = getForecastActualValue_(actualClosingRow, monthIndex);
+    if (actualClosing !== null) {
+      rollingClosing = actualClosing;
+    } else {
+      rollingClosing += netMonthly[monthIndex];
+    }
+    recalibratedClosing.push(rollingClosing);
+  });
+
+  rows.forEach(function(row) {
+    if (row.id === 'opening-balance') {
+      row.plannedMonthly = openingMonthly.slice();
+      row.actualMonthly = actualOpeningMonthly;
+      row.totalPlanned = openingMonthly[0] || 0;
+      row.totalActual = actualOpeningMonthly[0] || 0;
+      row.editable = false;
+      row.canArchive = false;
+    } else if (row.id === 'net-variation') {
+      row.plannedMonthly = netMonthly.slice();
+      row.actualMonthly = forecastMonthLabels_().map(function(_, monthIndex) {
+        return getForecastActualValue_(actualNetRow, monthIndex);
+      });
+      row.totalPlanned = netMonthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0);
+      row.totalActual = row.actualMonthly.reduce(function(sum, value) {
+        return value === null ? sum : sum + toForecastAmount_(value);
+      }, 0);
+      row.editable = false;
+      row.canArchive = false;
+    } else if (row.id === 'closing-balance') {
+      row.plannedMonthly = plannedClosing.slice();
+      row.actualMonthly = actualClosingMonthly;
+      row.totalPlanned = plannedClosing[plannedClosing.length - 1] || 0;
+      row.totalActual = actualClosingRow && typeof actualClosingRow.total !== 'undefined'
+        ? toForecastAmount_(actualClosingRow.total)
+        : actualClosingMonthly.reduce(function(sum, value) {
+            return value === null ? sum : sum + toForecastAmount_(value);
+          }, 0);
+      row.editable = false;
+      row.canArchive = false;
+    }
+  });
+
+  const closingIndex = rows.findIndex(function(row) { return row.id === 'closing-balance'; });
+  if (closingIndex !== -1) {
+    rows.splice(closingIndex + 1, 0, {
+      id: 'closing-balance-rebased',
+      uniqueKey: `closing-balance-rebased#${closingIndex + 1}`,
+      parentKey: '',
+      hasChildren: false,
+      level: 0,
+      kind: 'meta',
+      label: 'Tresorerie finale previsionnelle',
+      sense: '',
+      category: '',
+      subCategory: '',
+      plannedMonthly: recalibratedClosing,
+      actualMonthly: actualClosingMonthly,
+      totalPlanned: recalibratedClosing[recalibratedClosing.length - 1] || 0,
+      totalActual: actualClosingRow && typeof actualClosingRow.total !== 'undefined'
+        ? toForecastAmount_(actualClosingRow.total)
+        : actualClosingMonthly.reduce(function(sum, value) { return value === null ? sum : sum + toForecastAmount_(value); }, 0),
+      editable: false,
+      canArchive: false
+    });
+  }
+
+  const plannedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance'; });
+  const recalibratedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance-rebased'; });
+  if (plannedTreasuryRow && recalibratedTreasuryRow) {
+    plannedTreasuryRow.comparisonLabel = 'Tresorerie finale previsionnelle';
+    plannedTreasuryRow.comparisonMonthly = recalibratedTreasuryRow.plannedMonthly.slice();
+    plannedTreasuryRow.comparisonTotal = recalibratedTreasuryRow.totalPlanned;
+    plannedTreasuryRow.primaryVarianceLabel = 'Ecart de projection';
+    plannedTreasuryRow.secondaryVarianceLabel = 'Ecart de pilotage';
+    recalibratedTreasuryRow.comparisonLabel = 'Tresorerie previsionnelle';
+    recalibratedTreasuryRow.comparisonMonthly = plannedTreasuryRow.plannedMonthly.slice();
+    recalibratedTreasuryRow.comparisonTotal = plannedTreasuryRow.totalPlanned;
+    recalibratedTreasuryRow.primaryVarianceLabel = 'Ecart de pilotage';
+    recalibratedTreasuryRow.secondaryVarianceLabel = 'Ecart de projection';
+  }
+
+  return {
+    editable: state.selectedEntite !== 'TOUTES',
+    rows: rows,
+    chartPoints: forecastMonthLabels_().map(function(label, monthIndex) {
+      const planned = toForecastAmount_(plannedClosing[monthIndex]);
+      const actual = getForecastActualValue_(actualClosingRow, monthIndex);
+      return {
+        label: label,
+        planned: planned,
+        actual: actual,
+        variance: actual === null ? null : actual - planned,
+        progress: planned ? Math.round(((actual === null ? 0 : actual) / planned) * 100) : null
+      };
+    }),
+    totals: {
+      plannedEncaissements: forecastEncRow ? forecastEncRow.totalPlanned : 0,
+      plannedDecaissements: forecastDecRow ? forecastDecRow.totalPlanned : 0,
+      actualEncaissements: actualEncRow ? actualEncRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0,
+      actualDecaissements: actualDecRow ? actualDecRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0,
+      plannedNet: netMonthly.reduce(function(sum, value) { return sum + toForecastAmount_(value); }, 0),
+      actualNet: actualNetRow ? actualNetRow.monthly.reduce(function(sum, value) { return sum + (value === '' ? 0 : toForecastAmount_(value)); }, 0) : 0
+    }
+  };
+}
+
+function saveForecastCell(rowId, monthIndex, rawValue) {
+  const model = buildForecastPlanningModel_();
+  const row = model && model.rows ? model.rows.find(function(item) { return item.id === rowId && item.editable; }) : null;
+  if (!row) {
+    showToast('Cellule de prevision introuvable.', 'error');
+    return;
+  }
+  const year = Number(state.annualSelectedYear || new Date().getFullYear());
+  const month = Number(monthIndex) + 1;
+  const monthToken = `${year}-${String(month).padStart(2, '0')}`;
+  const amount = Math.abs(toForecastAmount_(rawValue));
+  const category = row.manualScope === 'section' ? '__SECTION__' : String(row.category || '').trim();
+  const subCategory = row.manualScope === 'section'
+    ? String(row.label || '').replace(/\s+previsionnels?$/i, '').trim()
+    : String(row.subCategory || '').trim();
+  const forecastId = ['PREVGRID', state.selectedEntite, row.sense, category || 'SansCategorie', subCategory || 'SansDetail', monthToken]
+    .join('|')
+    .replace(/\s+/g, '_');
+  const payload = {
+    Prevision_id: forecastId,
+    Entite: state.selectedEntite,
+    Compte_id: '',
+    Categorie: category,
+    Sous_categorie: subCategory,
+    Date_prevue: `${monthToken}-01`,
+    Periode: 'Mensuel',
+    Frequence: 'Mensuelle',
+    Sens: row.sense,
+    Montant_prevu: amount,
+    Mode_calcul: 'Manuel',
+    Base_reference: 'Tableau previsionnel',
+    Active: 'Oui',
+    Commentaire: 'Saisie depuis le tableau previsionnel'
+  };
+
+  runAppsScriptMethod_('upsertPrevision', payload)
+    .then(function(result) {
+      state.dataCache = {};
+      state.cacheTimestamp = {};
+      state.annualPilotageCache = {};
+      state.forecastCellDetailKey = '';
+      state.bootstrap.recentPrevisions = result.recentPrevisions || state.bootstrap.recentPrevisions;
+      state.bootstrap.forecastSummary = result.forecastSummary || state.bootstrap.forecastSummary;
+      state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      return loadAnnualPilotageData_(true);
+    })
+    .then(function() {
+      renderCurrentPage();
+      attachEventListeners();
+      showToast('Prevision enregistree.', 'success');
+    })
+    .catch(function(error) {
+      showToast(error.message || error, 'error');
+    });
+}
+
+function renderGraphiques() {
+  const points = state.bootstrap.graphData || [];
+  const summary = state.bootstrap.forecastSummary || { totals:{forecast:0,actual:0,previous:0}, currentMonth:'', previousMonth:'' };
+  const periodAnalytics = state.bootstrap.periodAnalytics || {};
+  const annualData = getAnnualPilotageData_() || {};
+  const budget = annualData.budget || null;
+  const realisedAnnual = annualData.realised || null;
+  const customComparison = periodAnalytics.custom || null;
+  const comparisonValues = customComparison ? [
+    { label: 'Periode active', montant: (customComparison.current || {}).net || 0 },
+    { label: 'Periode precedente', montant: (customComparison.previous || {}).net || 0 }
+  ] : [
+    { label: 'Prevu', montant: (summary.totals || {}).forecast || 0 },
+    { label: 'Realise', montant: (summary.totals || {}).actual || 0 },
+    { label: 'Mois precedent', montant: (summary.totals || {}).previous || 0 }
+  ];
+  const netPoints = points.map(function(point) {
+    return {
+      label: point.label,
+      net: point.net || 0
+    };
+  });
+  const budgetEncChart = budget ? renderForecastGroupedBarChart_({ chartPoints: buildBudgetChartPoints_(budget, realisedAnnual, 'encaissements') }) : '<div class="empty">Budget indisponible.</div>';
+  const budgetDecChart = budget ? renderForecastGroupedBarChart_({ chartPoints: buildBudgetChartPoints_(budget, realisedAnnual, 'decaissements') }) : '<div class="empty">Budget indisponible.</div>';
+  const budgetGlobalChart = budget ? renderForecastGroupedBarChart_({ chartPoints: buildBudgetChartPoints_(budget, realisedAnnual, 'global') }) : '<div class="empty">Budget indisponible.</div>';
+  document.getElementById('page-Graphiques').innerHTML = `
+    <div class="grid">
+      <div class="card panel-wide">
+        <h3>Evolution mensuelle nette</h3>
+        ${renderInteractiveLineChart_(netPoints, [
+          { key: 'net', label: 'Net mensuel', color: '#3669be' }
+        ], {
+          emptyText: 'Les graphiques se rempliront apres import des mouvements.',
+          ariaLabel: 'Courbe du net mensuel avec montants exacts au survol'
+        })}
+      </div>
+      <div class="card panel-side">
+        <h3>Lectures actives</h3>
+        <div class="list">
+          <div class="row"><div>Tresorerie<small>Jour, semaine, mois, trimestre, semestre, annee</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Previsionnel vs realise<small>Par categorie et sous-categorie</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>Budget vs realise<small>Encaissements, decaissements et tresorerie globale</small></div><div><span class="badge ok">Oui</span></div></div>
+        </div>
+      </div>
+      <div class="card panel-full">
+        <h3>${customComparison ? 'Comparaison de la periode personnalisee' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
+        ${renderInteractiveLineChart_(comparisonValues, [
+          { key: 'montant', label: 'Montant', color: '#d97706' }
+        ], {
+          ariaLabel: 'Courbe de comparaison avec montants exacts au survol'
+        })}
+      </div>
+      <div class="card panel-full">
+        <h3>Budget encaissements vs realise</h3>
+        ${budgetEncChart}
+      </div>
+      <div class="card panel-full">
+        <h3>Budget decaissements vs realise</h3>
+        ${budgetDecChart}
+      </div>
+      <div class="card panel-full">
+        <h3>Budget de tresorerie global vs realise</h3>
+        ${budgetGlobalChart}
+      </div>
+      <div class="card panel-full">
+        <h3>Comparaisons par periode</h3>
+        <div class="list">${renderPeriodAnalytics(periodAnalytics)}</div>
+      </div>
+    </div>`;
 }
 
 function renderPrevisionnel() {
