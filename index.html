@@ -858,7 +858,7 @@ const state = {
 };
 
 const pageMeta = {
-  'Budget': 'Budget annuel des encaissements et des dÃ©caissements, saisi mois par mois par entitÃ©.',
+  'Budget': 'Budget annuel des encaissements et des décaissements, saisi mois par mois par entité.',
   'Accueil': 'Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.',
   'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions récentes et onglet À classer.',
   'Graphiques': 'Courbes de trésorerie, prévisionnel vs réalisé et comparaison avec la période précédente.',
@@ -882,11 +882,11 @@ const tresorerieNavItems = [
 ];
 
 const budgetNavItems = [
-  ['encaissements', 'Budget encaissement'],
-  ['decaissements', 'Budget décaissement']
+  ['encaissements', 'Budget encaissements'],
+  ['decaissements', 'Budget décaissements']
 ];
 
-budgetNavItems.push(['global', 'Budget de tresorerie']);
+budgetNavItems.push(['global', 'Budget de trésorerie']);
 
 function init() {
   console.log('init() called');
@@ -1694,7 +1694,7 @@ function saveCompte() {
       state.bootstrap.counts = result.counts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Compte enregistre.', 'success');
+      showToast('Compte enregistré.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1880,7 +1880,7 @@ function saveAlertSettings() {
       state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Seuils d alerte enregistres.', 'success');
+      showToast('Seuils d’alerte enregistrés.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1894,7 +1894,7 @@ function enableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       showPage('Parametres');
-      showToast(result.message || 'Synchronisation automatique activee.', 'success');
+      showToast(result.message || 'Synchronisation automatique activée.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1907,7 +1907,7 @@ function disableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       showPage('Parametres');
-      showToast(result.message || 'Synchronisation automatique desactivee.', 'success');
+      showToast(result.message || 'Synchronisation automatique désactivée.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1922,7 +1922,7 @@ function saveDriveRoot(entite) {
       state.bootstrap.config.driveRoots = result.driveConfig || state.bootstrap.config.driveRoots;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Dossier Drive enregistre.', 'success');
+      showToast('Dossier Drive enregistré.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -2412,7 +2412,7 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script a jour pour charger ses donnees.</p>
+              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
@@ -2454,12 +2454,12 @@ function renderBudget() {
 
       <div class="card kpi"><div class="label">Budget ${esc(viewLabel)}</div><div class="value">${euro(plannedTotal)}</div><div class="hint">Total annuel saisi</div></div>
       <div class="card kpi"><div class="label">Realise ${esc(viewLabel)}</div><div class="value">${euro(actualTotal)}</div><div class="hint">Transactions annuelles</div></div>
-      <div class="card kpi"><div class="label">Ecart</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Realise moins budget</div></div>
+      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Réalisé moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs realise</h3>
+            <h3>Graphe annuel budget vs réalisé</h3>
             <p>Lecture mensuelle du budget et du realise pour les ${esc(viewLabel)}.</p>
           </div>
         </div>
@@ -2565,11 +2565,11 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script a jour pour charger ses donnees.</p>
+              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
-          <div class="empty">Deploie <code>Code.gs</code> pour afficher le budget de l'entite selectionnee.</div>
+          <div class="empty">Déploie <code>Code.gs</code> pour afficher le budget de l'entité sélectionnée.</div>
         </div>
       </div>`;
     return;
@@ -2581,8 +2581,8 @@ function renderBudget() {
   const headerLabel = view === 'encaissements'
     ? 'Budget encaissements'
     : view === 'decaissements'
-      ? 'Budget decaissements'
-      : 'Budget de tresorerie global';
+      ? 'Budget décaissements'
+      : 'Budget de trésorerie global';
   const plannedTotal = view === 'encaissements'
     ? (totals.budgetEncaissements || 0)
     : view === 'decaissements'
@@ -2608,15 +2608,15 @@ function renderBudget() {
         ${renderAnnualToolbar_()}
       </div>
 
-      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgete' : 'Total annuel budgete'}</div></div>
-      <div class="card kpi"><div class="label">Realise</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final realise' : 'Total annuel realise'}</div></div>
-      <div class="card kpi"><div class="label">Ecart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Realise moins budget</div></div>
+      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgété' : 'Total annuel budgété'}</div></div>
+      <div class="card kpi"><div class="label">Réalisé</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final réalisé' : 'Total annuel réalisé'}</div></div>
+      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Réalisé moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs realise</h3>
-            <p>${view === 'global' ? 'Comparaison mensuelle du budget de tresorerie globale avec la tresorerie reelle.' : 'Comparaison mensuelle du budget avec le realise.'}</p>
+            <h3>Graphe annuel budget vs réalisé</h3>
+            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trésorerie global avec la trésorerie réelle.' : 'Comparaison mensuelle du budget avec le réalisé.'}</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_({ chartPoints: chartPoints })}
@@ -2625,8 +2625,8 @@ function renderBudget() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>${view === 'global' ? 'Tableau du budget de tresorerie global' : 'Tableau annuel du budget'}</h3>
-            <p>${view === 'global' ? 'Le solde initial du premier mois reprend le solde reel de l entite, puis chaque mois repart du solde final precedent.' : 'Les categories et sous-categories restent rangees sous Encaissements ou Decaissements selon leur sens.'}</p>
+            <h3>${view === 'global' ? 'Tableau du budget de trésorerie global' : 'Tableau annuel du budget'}</h3>
+            <p>${view === 'global' ? 'Le solde initial du premier mois reprend le solde reel de l entite, puis chaque mois repart du solde final precedent.' : 'Les catégories et sous-catégories restent rangées sous Encaissements ou Décaissements selon leur sens.'}</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(rows)}
@@ -2902,7 +2902,7 @@ function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const categories = Object.keys(categoryMap);
-  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entite</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Site / magasin</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entité</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Site / magasin</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const firstCategory = row.Categorie_proposee || categories[0] || '';
     const catOptions = categories.map(function(cat) {
       return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(cat)}</option>`;
@@ -3146,6 +3146,16 @@ function isDecaissementSectionId_(value) {
   return normalizeForecastKey_(value) === 'DECAISSEMENTS';
 }
 
+function resolveProgressFillClass_(sense, progressPercent, hasActual) {
+  if (!hasActual || progressPercent <= 0) return 'neutral';
+  const normalizedSense = normalizeForecastKey_(sense);
+  const isEncaissement = normalizedSense === 'ENCAISSEMENT' || normalizedSense === 'ENCAISSEMENTS';
+  const isDecaissement = normalizedSense === 'DECAISSEMENT' || normalizedSense === 'DECAISSEMENTS';
+  if (isEncaissement) return progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
+  if (isDecaissement) return progressPercent <= 45 ? 'good' : progressPercent <= 75 ? 'warning' : 'alert';
+  return progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
+}
+
 function buildForecastPlanningMetadata_(rows) {
   const metadata = [];
   rows.forEach(function(row, index) {
@@ -3370,16 +3380,7 @@ function renderForecastProgressCell_(row, monthIndex, compact) {
   const primaryLabel = row.primaryVarianceLabel || 'Écart';
   const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
   const detailHtml = expanded ? `<div class="forecast-grid-subline">Réalisé ${actual === null ? '-' : euro(actual)}<br>${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonValue)}<br>${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
-  let fillClass = 'neutral';
-  if (actual !== null && progressPercent > 0) {
-    if (row.sense === 'Encaissement') {
-      fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    } else if (row.sense === 'Decaissement') {
-      fillClass = progressPercent <= 45 ? 'good' : progressPercent <= 75 ? 'warning' : 'alert';
-    } else {
-      fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    }
-  }
+  const fillClass = resolveProgressFillClass_(row.sense, progressPercent, actual !== null);
   const showProgress = row.editable || row.kind === 'subcategory';
   const progressBar = showProgress ? `<div class="forecast-progress-row">
         <span class="forecast-progress-track">
@@ -3426,16 +3427,7 @@ function renderForecastTotalCell_(row) {
   const comparisonVariance = comparisonTotal === null ? null : actual - comparisonTotal;
   const primaryLabel = row.primaryVarianceLabel || 'Écart';
   const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
-  let fillClass = 'neutral';
-  if (hasActual && progressPercent > 0) {
-    if (row.sense === 'Encaissement') {
-      fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    } else if (row.sense === 'Decaissement') {
-      fillClass = progressPercent <= 45 ? 'good' : progressPercent <= 75 ? 'warning' : 'alert';
-    } else {
-      fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    }
-  }
+  const fillClass = resolveProgressFillClass_(row.sense, progressPercent, hasActual);
   return `<div class="forecast-grid-cell">
     <div class="forecast-grid-value">${euro(planned)}</div>
     ${hasActual ? `<div class="forecast-progress-row">
@@ -4228,7 +4220,7 @@ function renderScenarios() {
 
 function renderFacturesToPay(rows) {
   if (!rows.length) return '<div class="empty">Aucune facture a regler pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Mois</th><th>Fournisseur</th><th>Numero</th><th>Montant TTC</th><th>Statut</th><th>Paiement</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Mois</th><th>Fournisseur</th><th>Numero</th><th>Montant TTC</th><th>Statut</th><th>Paiement</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const id = esc(row.Facture_id);
     const status = esc(row.Statut_paiement || 'A_REGLER');
     return `<tr>
@@ -4432,7 +4424,7 @@ function renderParametres() {
         </div>
         <div class="card panel-full">
           <h3>Dossiers Drive des factures</h3>
-          <div class="table-wrap"><table class="table"><thead><tr><th>Entite</th><th>Dossier racine</th><th>Action</th></tr></thead><tbody>${['GROUPE ONSEN','ALTERACIG','OSLO SHOP','VAPOTE & COMPAGNIE','LCDV'].map(function(entite) {
+          <div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Dossier racine</th><th>Action</th></tr></thead><tbody>${['GROUPE ONSEN','ALTERACIG','OSLO SHOP','VAPOTE & COMPAGNIE','LCDV'].map(function(entite) {
             const match = driveRoots.find(function(row) { return row.entite === entite; }) || { folderId: '' };
             return `<tr>
               <td>${esc(entite)}</td>
@@ -4451,7 +4443,7 @@ function renderParametres() {
           <div class="field"><label>RIB / IBAN</label><input id="param-compte-rib" placeholder="FR..."></div>
           <div class="field"><label>Devise</label><input id="param-compte-devise" value="EUR"></div>
           <div class="field"><label>Actif</label><select id="param-compte-actif"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Type d’entité</label><select id="param-compte-type"><option value="societe">société</option><option value="groupe">groupe</option></select></div>
+          <div class="field"><label>Type d’entité</label><select id="param-compte-type"><option value="societe">Société</option><option value="groupe">Groupe</option></select></div>
         </div>
         <div class="actions-row"><button class="btn secondary" onclick="saveCompte()">Enregistrer compte</button></div>
       </div>
@@ -5134,8 +5126,8 @@ function renderPrevisionnel() {
           </div>
         </div>
         ${state.selectedEntite !== 'TOUTES' ? `<div class="forecast-add-grid">
-          <div class="field"><label>Categorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-categorie</label><input id="forecast-add-subcategory" placeholder="Ex. AXA"></div>
+          <div class="field"><label>Catégorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catégorie</label><input id="forecast-add-subcategory" placeholder="Ex. AXA"></div>
           <div class="field"><label>Sens</label><select id="forecast-add-sense"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
           <div class="field"><label>Mois</label><select id="forecast-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
@@ -5151,8 +5143,8 @@ function renderPrevisionnel() {
           <div class="field"><label>Prevision_id</label><input id="prev-id" placeholder="Laisser vide pour creation"></div>
           <div class="field"><label>Entite</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
           <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non specifie</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Categorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-categorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>Catégorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catégorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
           <div class="field"><label>Date prevue</label><input id="prev-date" type="date"></div>
           <div class="field"><label>Periode</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
           <div class="field"><label>Frequence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
@@ -5389,11 +5381,7 @@ function renderBudgetProgressCell_(row, monthIndex, compact) {
   const progressText = actual === null ? '0%' : formatForecastPercent_(planned, actual);
   const detailKey = `${row.uniqueKey}:${monthIndex}`;
   const expanded = state.budgetCellDetailKey === detailKey;
-  let fillClass = 'neutral';
-  if (actual !== null && progressPercent > 0) {
-    if (row.sense === 'Encaissement') fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    else fillClass = progressPercent <= 45 ? 'good' : progressPercent <= 75 ? 'warning' : 'alert';
-  }
+  const fillClass = resolveProgressFillClass_(row.sense, progressPercent, actual !== null);
   const progressBar = `<div class="forecast-progress-row">
       <span class="forecast-progress-track">
         <span class="forecast-progress-fill ${fillClass}" style="width:${progressWidth}%"></span>
@@ -5425,11 +5413,7 @@ function renderBudgetTotalCell_(row) {
   const progressText = hasActual ? formatForecastPercent_(planned, actual) : '0%';
   const detailKey = `${row.uniqueKey}:total`;
   const expanded = state.budgetCellDetailKey === detailKey;
-  let fillClass = 'neutral';
-  if (hasActual && progressPercent > 0) {
-    if (row.sense === 'Encaissement') fillClass = progressPercent <= 45 ? 'alert' : progressPercent <= 75 ? 'warning' : 'good';
-    else fillClass = progressPercent <= 45 ? 'good' : progressPercent <= 75 ? 'warning' : 'alert';
-  }
+  const fillClass = resolveProgressFillClass_(row.sense, progressPercent, hasActual);
   return `<div class="forecast-grid-cell">
     <div class="forecast-grid-value">${euro(planned)}</div>
     ${hasActual ? `<div class="forecast-progress-row">
@@ -5631,11 +5615,11 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script a jour pour charger ses donnees.</p>
+              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
-          <div class="empty">Deploie <code>Code.gs</code> pour afficher le budget de l'entite selectionnee.</div>
+          <div class="empty">Déploie <code>Code.gs</code> pour afficher le budget de l'entité sélectionnée.</div>
         </div>
       </div>`;
     return;
@@ -5645,8 +5629,8 @@ function renderBudget() {
   const headerLabel = view === 'encaissements'
     ? 'Budget encaissements'
     : view === 'decaissements'
-      ? 'Budget decaissements'
-      : 'Budget de tresorerie global';
+      ? 'Budget décaissements'
+      : 'Budget de trésorerie global';
   const totals = budget.totals || {};
   const plannedTotal = view === 'encaissements'
     ? (totals.budgetEncaissements || 0)
@@ -5666,16 +5650,16 @@ function renderBudget() {
           <div>
             <h3>${headerLabel}</h3>
             <p>${view === 'global'
-              ? 'Vue globale mensuelle de tresorerie par entite.'
-              : 'Les categories et sous-categories restent rangees sous Encaissements ou Decaissements selon leur sens.'}</p>
+              ? 'Vue globale mensuelle de trésorerie par entité.'
+              : 'Les catégories et sous-catégories restent rangées sous Encaissements ou Décaissements selon leur sens.'}</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
-        ${state.selectedEntite === 'TOUTES' && view !== 'global' ? `<div class="hint" style="margin-top:10px">Le budget consolide est en lecture seule. Selectionne une entite pour saisir, ajouter ou supprimer des lignes.</div>` : ''}
+        ${state.selectedEntite === 'TOUTES' && view !== 'global' ? `<div class="hint" style="margin-top:10px">Le budget consolidé est en lecture seule. Sélectionne une entité pour saisir, ajouter ou supprimer des lignes.</div>` : ''}
         ${state.selectedEntite !== 'TOUTES' && view !== 'global' ? `<div class="forecast-add-grid" style="margin-top:10px">
-          <div class="field"><label>Categorie</label><input id="budget-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-categorie</label><input id="budget-add-subcategory" placeholder="Ex. AXA"></div>
-          <div class="field"><label>Sous-sous-categorie</label><input id="budget-add-detail" placeholder="Optionnel"></div>
+          <div class="field"><label>Catégorie</label><input id="budget-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catégorie</label><input id="budget-add-subcategory" placeholder="Ex. AXA"></div>
+          <div class="field"><label>Sous-sous-catégorie</label><input id="budget-add-detail" placeholder="Optionnel"></div>
           <div class="field"><label>Mois</label><select id="budget-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
           }).join('')}</select></div>
@@ -5684,15 +5668,15 @@ function renderBudget() {
         </div>` : ''}
       </div>
 
-      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgete' : 'Total annuel budgete'}</div></div>
-      <div class="card kpi"><div class="label">Realise</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final realise' : 'Total annuel realise'}</div></div>
-      <div class="card kpi"><div class="label">Ecart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Realise moins budget</div></div>
+      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgété' : 'Total annuel budgété'}</div></div>
+      <div class="card kpi"><div class="label">Réalisé</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final réalisé' : 'Total annuel réalisé'}</div></div>
+      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Réalisé moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs realise</h3>
-            <p>${view === 'global' ? 'Comparaison mensuelle du budget de tresorerie globale avec la tresorerie reelle.' : 'Comparaison mensuelle du budget avec le realise.'}</p>
+            <h3>Graphe annuel budget vs réalisé</h3>
+            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trésorerie global avec la trésorerie réelle.' : 'Comparaison mensuelle du budget avec le réalisé.'}</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_(model)}
@@ -5701,8 +5685,8 @@ function renderBudget() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>${view === 'global' ? 'Tableau du budget de tresorerie global' : 'Tableau annuel du budget'}</h3>
-            <p>${view === 'global' ? 'Solde initial, Total Encaissements, Total Decaissements et Solde final.' : 'Saisie manuelle par ligne, avec total mensuel et pourcentage de realisation.'}</p>
+            <h3>${view === 'global' ? 'Tableau du budget de trésorerie global' : 'Tableau annuel du budget'}</h3>
+            <p>${view === 'global' ? 'Solde initial, Total Encaissements, Total Décaissements, Variation nette et Solde final.' : 'Saisie manuelle par ligne, avec total mensuel et pourcentage de réalisation.'}</p>
           </div>
         </div>
         ${view === 'global' ? renderAnnualPivotTable_(model.rows) : renderBudgetPlanningTable_(model)}
@@ -5712,6 +5696,7 @@ function renderBudget() {
 </script>
 </body>
 </html>
+
 
 
 
