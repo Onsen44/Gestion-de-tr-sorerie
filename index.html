@@ -1437,6 +1437,13 @@ function attachEventListeners() {
     };
   });
 
+  document.querySelectorAll('.deleteImportHistoryBtn').forEach(function(btn) {
+    btn.onclick = function(e) {
+      e.preventDefault();
+      deleteImportHistoryEntry(this.getAttribute('data-import-id'));
+    };
+  });
+
   document.querySelectorAll('.saveDriveRootBtn').forEach(function(btn) {
     btn.onclick = function(e) {
       e.preventDefault();
@@ -4294,7 +4301,7 @@ function renderImportHistory(rows) {
       <td>${esc(row.Nouvelles_lignes)}</td>
       <td>${esc(row.Doublons)}</td>
       <td>${esc(row.Statut)}</td>
-      <td>${canRollback ? `<button class="btn secondary rollbackImportBtn" data-import-id="${importId}">Annuler cet import</button>` : '<span class="empty">Déjà annulé</span>'}</td>
+      <td><div class="flex">${canRollback ? `<button class="btn secondary rollbackImportBtn" data-import-id="${importId}">Annuler cet import</button>` : '<span class="empty">Déjà annulé</span>'}<button class="btn ghost deleteImportHistoryBtn" data-import-id="${importId}" title="Supprimer cette ligne de l’historique" aria-label="Supprimer cette ligne de l’historique">×</button></div></td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
@@ -5023,6 +5030,28 @@ function rollbackImport(importId) {
       showToast(error.message || error, 'error');
     })
     .rollbackImport({ importId: importId });
+}
+
+function deleteImportHistoryEntry(importId) {
+  if (!importId) return;
+  if (!confirm('Supprimer cette ligne de l’historique des imports ? Les mouvements importés resteront inchangés.')) return;
+  google.script.run
+    .withSuccessHandler(function(result) {
+      state.bootstrap.importHistory = result.importHistory || [];
+      state.bootstrap.counts = result.counts || state.bootstrap.counts;
+      renderCurrentPage();
+      attachEventListeners();
+      showToast('Ligne d’historique supprimée.', 'success');
+    })
+    .withFailureHandler(function(error) {
+      showToast(error.message || error, 'error');
+    })
+    .deleteImportHistoryEntry({
+      importId: importId,
+      entite: state.selectedEntite || 'TOUTES',
+      dateStart: (state.customPeriod && state.customPeriod.active) ? state.customPeriod.start : '',
+      dateEnd: (state.customPeriod && state.customPeriod.active) ? state.customPeriod.end : ''
+    });
 }
 
 function runInvoiceOcr() {
