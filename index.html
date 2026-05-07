@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gestion de trésorerie ONSEN</title>
+<title>Gestion de trÃ©sorerie ONSEN</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -253,33 +253,33 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
 <body>
 <div id="login-screen">
   <div id="login-container">
-    <h1>Accès sécurisé</h1>
-    <p>Entrez le mot de passe pour accéder à la gestion de trésorerie</p>
+    <h1>AccÃ¨s sÃ©curisÃ©</h1>
+    <p>Entrez le mot de passe pour accÃ©der Ã  la gestion de trÃ©sorerie</p>
     <input id="login-pwd" type="password" placeholder="Mot de passe" onkeypress="if(event.key==='Enter') loginSubmit()">
     <button id="login-btn" onclick="loginSubmit()">Connexion</button>
     <div id="login-error"></div>
     <div id="login-setup" style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:14px;text-align:left;font-size:12px;color:#92400e;line-height:1.6;margin-top:12px;display:none;">
-      <strong>⚙️ Configuration (première fois)</strong><br>
+      <strong>âš™ï¸ Configuration (premiÃ¨re fois)</strong><br>
       URL Google Apps Script :<br>
       <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;padding:6px 10px;border:1px solid #fde68a;border-radius:6px;font-size:12px;margin-top:6px;" onchange="saveApiUrl_(this.value)">
     </div>
     <div style="text-align:center;margin-top:12px;">
-      <button id="config-toggle-btn" onclick="toggleConfigSection_()" style="background:none;border:none;color:#697b90;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;">Paramètres</button>
+      <button id="config-toggle-btn" onclick="toggleConfigSection_()" style="background:none;border:none;color:#697b90;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;">ParamÃ¨tres</button>
     </div>
   </div>
 </div>
 
 <div class="app hidden">
   <aside class="sidebar">
-    <div class="brand">ONSEN TRÉSORERIE</div>
-    <div class="brand-sub">Trésorerie actuelle, imports bancaires, prévisionnel, rapprochement bancaire et factures à régler.</div>
+    <div class="brand">ONSEN TRÃ‰SORERIE</div>
+    <div class="brand-sub">TrÃ©sorerie actuelle, imports bancaires, prÃ©visionnel, rapprochement bancaire et factures Ã  rÃ©gler.</div>
     <div class="nav" id="nav"></div>
   </aside>
   <main class="main">
     <div class="topbar">
       <div style="display:flex; gap:20px; align-items:center; flex:1;">
         <div>
-          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Entité active</label>
+          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Entités</label>
           <select id="selectedEntite" onchange="changeEntite()" style="padding:8px 12px; border:1px solid #d8e0ea; border-radius:8px; font-weight:700; background:#fff; cursor:pointer;">
             <option value="TOUTES">TOUTES LES ENTITÉS</option>
             <option value="ALTERACIG">ALTERACIG</option>
@@ -290,7 +290,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
           </select>
         </div>
         <div>
-          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Compte affichÃ©</label>
+          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Comptes</label>
           <select id="selectedCompte" onchange="changeCompteGlobal()" style="padding:8px 12px; border:1px solid #d8e0ea; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; min-width:260px;">
             <option value="">Tous les comptes</option>
           </select>
@@ -298,7 +298,7 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
         <div class="title" style="flex:1;">
           <h1 id="pageTitle">Accueil</h1>
           <div id="periodToolbar"></div>
-          <p id="pageSubtitle">Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.</p>
+          <p id="pageSubtitle">Vue immÃ©diate de la trÃ©sorerie actuelle, par entitÃ© et par compte bancaire.</p>
         </div>
       </div>
       <div class="actions">
@@ -519,29 +519,29 @@ function renderPeriodToolbar_() {
   const end = (state.customPeriod && state.customPeriod.end) || '';
   const active = hasActiveCustomPeriod_();
   const status = active
-    ? `Période active : du ${esc(formatPeriodLabel_(start))} au ${esc(formatPeriodLabel_(end))}`
-    : 'Vue par défaut active. Ouvre le calendrier pour choisir une période.';
+    ? `PÃ©riode active : du ${esc(formatPeriodLabel_(start))} au ${esc(formatPeriodLabel_(end))}`
+    : 'Vue par dÃ©faut active. Ouvre le calendrier pour choisir une pÃ©riode.';
   const presets = [
     ['hier', 'Hier'],
     ['semaine_cours', 'Semaine en cours'],
-    ['semaine_derniere', 'Semaine dernière'],
+    ['semaine_derniere', 'Semaine derniÃ¨re'],
     ['mois_cours', 'Mois en cours'],
     ['mois_complet', 'Mois complet'],
     ['mois_dernier', 'Mois dernier'],
-    ['annee_cours', 'Année en cours'],
-    ['annee_complete', 'Année complète'],
-    ['annee_derniere', 'Année dernière'],
+    ['annee_cours', 'AnnÃ©e en cours'],
+    ['annee_complete', 'AnnÃ©e complÃ¨te'],
+    ['annee_derniere', 'AnnÃ©e derniÃ¨re'],
     ['personnaliser', 'Personnaliser']
   ];
   target.innerHTML = `
     <div class="period-shell">
       <button class="period-trigger" type="button" onclick="togglePeriodPicker_()">
-        <span class="period-trigger-icon">📅</span>
+        <span class="period-trigger-icon">ðŸ“…</span>
         <span class="period-trigger-copy">
-          <span class="period-trigger-label">${active ? 'Période personnalisée' : 'Vue active'}</span>
+          <span class="period-trigger-label">${active ? 'PÃ©riode personnalisÃ©e' : 'Vue active'}</span>
           <span class="period-trigger-value">${esc(getPeriodToolbarSummary_())}</span>
         </span>
-        <span class="period-trigger-chevron">${state.periodPickerOpen ? '▲' : '▼'}</span>
+        <span class="period-trigger-chevron">${state.periodPickerOpen ? 'â–²' : 'â–¼'}</span>
       </button>
       ${state.periodPickerOpen ? `<div class="period-popover">
         <div class="period-popover-grid">
@@ -553,7 +553,7 @@ function renderPeriodToolbar_() {
           <div class="period-config">
             <div class="period-inputs">
               <div class="field-inline">
-                <label>Date de début</label>
+                <label>Date de dÃ©but</label>
                 <input id="periodStart" type="date" value="${esc(start)}">
               </div>
               <div class="field-inline">
@@ -563,7 +563,7 @@ function renderPeriodToolbar_() {
             </div>
             <div class="period-actions">
               <button class="btn secondary" type="button" onclick="applyCustomPeriod()">Appliquer</button>
-              <button class="btn ghost" type="button" onclick="resetCustomPeriod()"${active ? '' : ' disabled'}>Réinitialiser</button>
+              <button class="btn ghost" type="button" onclick="resetCustomPeriod()"${active ? '' : ' disabled'}>RÃ©initialiser</button>
             </div>
             <div class="period-status">${status}</div>
           </div>
@@ -867,35 +867,35 @@ const state = {
 };
 
 const pageMeta = {
-  'Budget': 'Budget annuel des encaissements et des décaissements, saisi mois par mois par entité.',
-  'Accueil': 'Vue immédiate de la trésorerie actuelle, par entité et par compte bancaire.',
-  'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions récentes et onglet À classer.',
-  'Graphiques': 'Courbes de trésorerie, prévisionnel vs réalisé et comparaison avec la période précédente.',
-  'Previsionnel': 'Prévisions par catégorie ou sous-catégorie, fréquences et comparaison des périodes.',
-  'Scenarios': 'Simulations séparées du réel pour tester une hausse, une baisse ou un montant cible.',
-  'Rapprochement bancaire': 'Rapprochements validés, à vérifier, transactions sans facture et factures à régler.',
-  'Parametres': 'Comptes, catégories, règles, Drive et état OCR.'
+  'Budget': 'Budget annuel des encaissements et des dÃ©caissements, saisi mois par mois par entitÃ©.',
+  'Accueil': 'Vue immÃ©diate de la trÃ©sorerie actuelle, par entitÃ© et par compte bancaire.',
+  'Gestion de tresorerie': 'Import bancaire, anti-doublon, transactions rÃ©centes et onglet Ã€ classer.',
+  'Graphiques': 'Courbes de trÃ©sorerie, prÃ©visionnel vs rÃ©alisÃ© et comparaison avec la pÃ©riode prÃ©cÃ©dente.',
+  'Previsionnel': 'PrÃ©visions par catÃ©gorie ou sous-catÃ©gorie, frÃ©quences et comparaison des pÃ©riodes.',
+  'Scenarios': 'Simulations sÃ©parÃ©es du rÃ©el pour tester une hausse, une baisse ou un montant cible.',
+  'Rapprochement bancaire': 'Rapprochements validÃ©s, Ã  vÃ©rifier, transactions sans facture et factures Ã  rÃ©gler.',
+  'Parametres': 'Comptes, catÃ©gories, rÃ¨gles, Drive et Ã©tat OCR.'
 };
 
 const rapprochementNavItems = [
-  ['a_verifier', 'À vérifier'],
-  ['valides', 'Validés'],
+  ['a_verifier', 'Ã€ vÃ©rifier'],
+  ['valides', 'ValidÃ©s'],
   ['transactions_sans_facture', 'Transactions sans facture'],
-  ['factures_a_regler', 'Factures à régler']
+  ['factures_a_regler', 'Factures Ã  rÃ©gler']
 ];
 
 const tresorerieNavItems = [
   ['mouvements', 'Mouvements'],
-  ['a_classer', 'Mouvements à classer'],
+  ['a_classer', 'Mouvements Ã  classer'],
   ['imports', 'Historique des imports bancaires']
 ];
 
 const budgetNavItems = [
   ['encaissements', 'Budget encaissements'],
-  ['decaissements', 'Budget décaissements']
+  ['decaissements', 'Budget dÃ©caissements']
 ];
 
-budgetNavItems.push(['global', 'Budget de trésorerie']);
+budgetNavItems.push(['global', 'Budget de trÃ©sorerie']);
 
 function init() {
   console.log('init() called');
@@ -1049,10 +1049,10 @@ function renderNav() {
 
 function displayPageName(page) {
   const labels = {
-    'Gestion de tresorerie': 'Gestion de trésorerie',
-    'Previsionnel': 'Prévisionnel',
-    'Scenarios': 'Scénarios',
-    'Parametres': 'Paramètres'
+    'Gestion de tresorerie': 'Gestion de trÃ©sorerie',
+    'Previsionnel': 'PrÃ©visionnel',
+    'Scenarios': 'ScÃ©narios',
+    'Parametres': 'ParamÃ¨tres'
   };
   return labels[page] || page;
 }
@@ -1114,7 +1114,7 @@ function renderPageErrorState_(page, error) {
   const target = document.getElementById('page-' + page);
   if (!target) return;
   const message = error && error.message ? error.message : String(error || 'Erreur inconnue');
-  target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} n’a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">Détail technique : ${esc(message)}</div></div>`;
+  target.innerHTML = `<div class="card panel-full"><h3>Page indisponible temporairement</h3><p class="empty">Le contenu de ${esc(displayPageName(page))} nâ€™a pas pu se charger correctement.</p><div class="note" style="margin-top:12px">DÃ©tail technique : ${esc(message)}</div></div>`;
 }
 
 function currentDataCacheKey_(entite) {
@@ -1154,7 +1154,7 @@ function applyCustomPeriod() {
   const start = startInput ? String(startInput.value || '').trim() : '';
   const end = endInput ? String(endInput.value || '').trim() : '';
   if (!start || !end) {
-    showToast('Renseigne une date de début et une date de fin.', 'warn');
+    showToast('Renseigne une date de dÃ©but et une date de fin.', 'warn');
     return;
   }
   const startDate = parseUiDate_(start);
@@ -1164,7 +1164,7 @@ function applyCustomPeriod() {
     return;
   }
   if (startDate.getTime() > endDate.getTime()) {
-    showToast('La date de début doit être antérieure à la date de fin.', 'warn');
+    showToast('La date de dÃ©but doit Ãªtre antÃ©rieure Ã  la date de fin.', 'warn');
     return;
   }
   state.customPeriod = { start: start, end: end, active: true };
@@ -1197,7 +1197,7 @@ function renderGlobalCompteOptions_() {
   const filtered = comptes.filter(function(compte) {
     return selectedEntite === 'TOUTES' || String(compte.Entite || '').trim() === selectedEntite;
   });
-  const defaultLabel = selectedEntite === 'TOUTES' ? 'Tous les comptes' : 'Tous les comptes de l’entité';
+  const defaultLabel = selectedEntite === 'TOUTES' ? 'Tous les comptes' : 'Tous les comptes de lâ€™entitÃ©';
   const options = [`<option value="">${esc(defaultLabel)}</option>`];
   filtered.forEach(function(compte) {
     const compteId = String(compte.Compte_id || '').trim();
@@ -1217,20 +1217,20 @@ function syncGlobalCompteSelect_() {
 }
 
 function changeEntite() {
-  // Récupère l'entité sélectionnée
+  // RÃ©cupÃ¨re l'entitÃ© sÃ©lectionnÃ©e
   const select = document.getElementById('selectedEntite');
   const newEntite = select.value;
 
-  // Si même entité, ne rien faire
+  // Si mÃªme entitÃ©, ne rien faire
   if (newEntite === state.selectedEntite) return;
 
-  // Changer l'entité
+  // Changer l'entitÃ©
   state.selectedEntite = newEntite;
   state.selectedCompteId = '';
   state.movementFilters.compteId = '';
   state.movementCacheKey = '';
 
-  // Vérifier si les données sont en cache et non expirées
+  // VÃ©rifier si les donnÃ©es sont en cache et non expirÃ©es
   const now = Date.now();
   const cacheKey = currentDataCacheKey_(newEntite);
   if (state.dataCache[cacheKey] && state.cacheTimestamp[cacheKey] &&
@@ -1248,14 +1248,14 @@ function changeEntite() {
     return;
   }
 
-  // Sinon, charger les données du backend
+  // Sinon, charger les donnÃ©es du backend
   google.script.run
     .withSuccessHandler(function(data) {
       // Mettre en cache
       state.dataCache[cacheKey] = data;
       state.cacheTimestamp[cacheKey] = Date.now();
 
-      // Mettre à jour l'état
+      // Mettre Ã  jour l'Ã©tat
       updateStateWithData_(data);
       syncGlobalCompteSelect_();
 
@@ -1288,7 +1288,7 @@ function changeCompteGlobal() {
 }
 
 function updateStateWithData_(data) {
-  // Met à jour l'état avec les nouvelles données
+  // Met Ã  jour l'Ã©tat avec les nouvelles donnÃ©es
   if (data.dashboard) state.bootstrap.dashboard = data.dashboard;
   if (data.aClasser) state.bootstrap.aClasser = data.aClasser;
   if (data.recentMovements) state.bootstrap.recentMovements = data.recentMovements;
@@ -1531,14 +1531,14 @@ function attachEventListeners() {
 
 function euro(value) {
   if (value === '' || value === null || value === undefined) return '';
-  const normalized = typeof value === 'number' ? value : Number(String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/€/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
+  const normalized = typeof value === 'number' ? value : Number(String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/â‚¬/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(isNaN(normalized) ? 0 : normalized);
 }
 
 function toNumberUi_(value) {
   if (value === '' || value === null || value === undefined) return 0;
   if (typeof value === 'number') return value;
-  const normalized = String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/€/g, '').replace(/â‚¬/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  const normalized = String(value || '0').replace(/\s/g, '').replace(/EUR/gi, '').replace(/â‚¬/g, '').replace(/Ã¢â€šÂ¬/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
   const parsed = parseFloat(normalized);
   return isNaN(parsed) ? 0 : parsed;
 }
@@ -1623,36 +1623,36 @@ function formatImportHistoryDate(value) {
   if (!date) return String(value || '');
   const pad = function(number) { return String(number).padStart(2, '0'); };
   return pad(date.getDate()) + '/' + pad(date.getMonth() + 1) + '/' + pad(date.getFullYear() % 100) +
-    ' à ' + pad(date.getHours()) + 'h' + pad(date.getMinutes());
+    ' Ã  ' + pad(date.getHours()) + 'h' + pad(date.getMinutes());
 }
 
 function frLabel(value) {
   const labels = {
-    Securite: 'Sécurité',
-    Electricite: 'Électricité',
-    Decaissement: 'Décaissement',
-    Regles: 'Règles',
-    Categories: 'Catégories',
-    Categorie: 'Catégorie',
-    Sous_categorie: 'Sous-catégorie',
-    Frequence: 'Fréquence',
-    Entite: 'Entité',
-    Parametres: 'Paramètres',
-    Previsionnel: 'Prévisionnel',
-    Scenarios: 'Scénarios',
-    Tresorerie: 'Trésorerie',
-    A_classer: 'À classer',
-    Non_classe: 'Non classé',
-    A_definir: 'À définir',
-    'A definir': 'À définir',
-    'Non classe': 'Non classé',
+    Securite: 'SÃ©curitÃ©',
+    Electricite: 'Ã‰lectricitÃ©',
+    Decaissement: 'DÃ©caissement',
+    Regles: 'RÃ¨gles',
+    Categories: 'CatÃ©gories',
+    Categorie: 'CatÃ©gorie',
+    Sous_categorie: 'Sous-catÃ©gorie',
+    Frequence: 'FrÃ©quence',
+    Entite: 'EntitÃ©',
+    Parametres: 'ParamÃ¨tres',
+    Previsionnel: 'PrÃ©visionnel',
+    Scenarios: 'ScÃ©narios',
+    Tresorerie: 'TrÃ©sorerie',
+    A_classer: 'Ã€ classer',
+    Non_classe: 'Non classÃ©',
+    A_definir: 'Ã€ dÃ©finir',
+    'A definir': 'Ã€ dÃ©finir',
+    'Non classe': 'Non classÃ©',
     Variable: 'Variable',
     Mensuelle: 'Mensuelle',
     Trimestrielle: 'Trimestrielle',
     Semestrielle: 'Semestrielle',
     Annuelle: 'Annuelle',
     Ponctuelle: 'Ponctuelle',
-    societe: 'société',
+    societe: 'sociÃ©tÃ©',
     groupe: 'groupe'
   };
   const raw = String(value == null ? '' : value);
@@ -1661,35 +1661,35 @@ function frLabel(value) {
 
 function frLabel(value) {
   const labels = {
-    Securite: 'Sécurité',
-    Electricite: 'Électricité',
-    Decaissement: 'Décaissement',
+    Securite: 'SÃ©curitÃ©',
+    Electricite: 'Ã‰lectricitÃ©',
+    Decaissement: 'DÃ©caissement',
     Encaissement: 'Encaissement',
-    Regles: 'Règles',
-    Categories: 'Catégories',
-    Categorie: 'Catégorie',
-    Sous_categorie: 'Sous-catégorie',
-    Frequence: 'Fréquence',
-    Entite: 'Entité',
-    Parametres: 'Paramètres',
-    Previsionnel: 'Prévisionnel',
-    Scenarios: 'Scénarios',
-    Tresorerie: 'Trésorerie',
-    A_classer: 'À classer',
-    Non_classe: 'Non classé',
-    A_definir: 'À définir',
-    'A definir': 'À définir',
-    'Non classe': 'Non classé',
-    'Non renseigne': 'Non renseigné',
-    'Non renseignee': 'Non renseignée',
-    Mode_reglement: 'Mode de règlement',
+    Regles: 'RÃ¨gles',
+    Categories: 'CatÃ©gories',
+    Categorie: 'CatÃ©gorie',
+    Sous_categorie: 'Sous-catÃ©gorie',
+    Frequence: 'FrÃ©quence',
+    Entite: 'EntitÃ©',
+    Parametres: 'ParamÃ¨tres',
+    Previsionnel: 'PrÃ©visionnel',
+    Scenarios: 'ScÃ©narios',
+    Tresorerie: 'TrÃ©sorerie',
+    A_classer: 'Ã€ classer',
+    Non_classe: 'Non classÃ©',
+    A_definir: 'Ã€ dÃ©finir',
+    'A definir': 'Ã€ dÃ©finir',
+    'Non classe': 'Non classÃ©',
+    'Non renseigne': 'Non renseignÃ©',
+    'Non renseignee': 'Non renseignÃ©e',
+    Mode_reglement: 'Mode de rÃ¨glement',
     Compte_id: 'Compte bancaire',
     Date_valeur: 'Date de valeur',
-    Date_creation: 'Date de création',
-    Date_maj: 'Date de mise à jour',
-    Sous_categorie_proposee: 'Sous-catégorie proposée',
-    Categorie_proposee: 'Catégorie proposée',
-    Source_import: 'Source d’import',
+    Date_creation: 'Date de crÃ©ation',
+    Date_maj: 'Date de mise Ã  jour',
+    Sous_categorie_proposee: 'Sous-catÃ©gorie proposÃ©e',
+    Categorie_proposee: 'CatÃ©gorie proposÃ©e',
+    Source_import: 'Source dâ€™import',
     Statut_classement: 'Statut de classement',
     Statut_rapprochement: 'Statut de rapprochement',
     Variable: 'Variable',
@@ -1698,7 +1698,7 @@ function frLabel(value) {
     Semestrielle: 'Semestrielle',
     Annuelle: 'Annuelle',
     Ponctuelle: 'Ponctuelle',
-    societe: 'société',
+    societe: 'sociÃ©tÃ©',
     groupe: 'groupe'
   };
   const raw = String(value == null ? '' : value);
@@ -1758,7 +1758,7 @@ function saveCompte() {
       state.bootstrap.counts = result.counts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Compte enregistré.', 'success');
+      showToast('Compte enregistrÃ©.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1781,7 +1781,7 @@ function saveCategorie() {
       state.bootstrap.counts = result.counts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Catégorie enregistrée.', 'success');
+      showToast('CatÃ©gorie enregistrÃ©e.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1811,7 +1811,7 @@ function saveRegle() {
       state.bootstrap.counts = result.counts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Règle enregistrée.', 'success');
+      showToast('RÃ¨gle enregistrÃ©e.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1944,7 +1944,7 @@ function saveAlertSettings() {
       state.bootstrap.alerts = result.alerts || state.bootstrap.alerts;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Seuils d’alerte enregistrés.', 'success');
+      showToast('Seuils dâ€™alerte enregistrÃ©s.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1958,7 +1958,7 @@ function enableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       showPage('Parametres');
-      showToast(result.message || 'Synchronisation automatique activée.', 'success');
+      showToast(result.message || 'Synchronisation automatique activÃ©e.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1971,7 +1971,7 @@ function disableAutomaticSync() {
     .withSuccessHandler(function(result) {
       state.bootstrap.automaticSync = result.automaticSync;
       showPage('Parametres');
-      showToast(result.message || 'Synchronisation automatique désactivée.', 'success');
+      showToast(result.message || 'Synchronisation automatique dÃ©sactivÃ©e.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -1986,7 +1986,7 @@ function saveDriveRoot(entite) {
       state.bootstrap.config.driveRoots = result.driveConfig || state.bootstrap.config.driveRoots;
       renderCurrentPage();
       showPage('Parametres');
-      showToast('Dossier Drive enregistré.', 'success');
+      showToast('Dossier Drive enregistrÃ©.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -2003,8 +2003,8 @@ function runAppsScriptMethod_(methodName, payload) {
 }
 
 function renderRecentPrevisions(rows) {
-  if (!rows.length) return '<div class="empty">Aucune prévision enregistrée pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Date</th><th>Fréquence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucune prÃ©vision enregistrÃ©e pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Date</th><th>FrÃ©quence</th><th>Sens</th><th>Montant</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(frLabel(row.Entite))}</td>
       <td>${esc(frLabel(row.Categorie))}</td>
@@ -2019,8 +2019,8 @@ function renderRecentPrevisions(rows) {
 }
 
 function renderRecentScenarios(rows) {
-  if (!rows.length) return '<div class="empty">Aucun scénario enregistré pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Type</th><th>Valeur</th><th>Cible</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucun scÃ©nario enregistrÃ© pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Nom</th><th>EntitÃ©</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Type</th><th>Valeur</th><th>Cible</th><th>Actif</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Nom_scenario)}</td>
       <td>${esc(frLabel(row.Entite))}</td>
@@ -2036,8 +2036,8 @@ function renderRecentScenarios(rows) {
 
 function renderScenarioTable(summary) {
   const lines = (summary && summary.lines) || [];
-  if (!lines.length) return '<div class="empty">Aucun scénario actif pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Scénario</th><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Base</th><th>Projeté</th><th>Impact</th></tr></thead><tbody>${lines.map(function(row) {
+  if (!lines.length) return '<div class="empty">Aucun scÃ©nario actif pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>ScÃ©nario</th><th>EntitÃ©</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Base</th><th>ProjetÃ©</th><th>Impact</th></tr></thead><tbody>${lines.map(function(row) {
     return `<tr>
       <td>${esc(row.nom)}</td>
       <td>${esc(frLabel(row.entite))}</td>
@@ -2059,7 +2059,7 @@ function renderAlerts(rows) {
 function renderPeriodAnalytics(periodAnalytics) {
   if (!periodAnalytics) return '<div class="empty">Aucune analyse de periode pour le moment.</div>';
   if (periodAnalytics.custom) {
-    return `<div class="row"><div>Personnalisé<small>${esc(periodAnalytics.custom.currentLabel)} vs ${esc(periodAnalytics.custom.previousLabel)}</small></div><div>${euro(periodAnalytics.custom.current.net)} / ${euro(periodAnalytics.custom.previous.net)}</div></div>`;
+    return `<div class="row"><div>PersonnalisÃ©<small>${esc(periodAnalytics.custom.currentLabel)} vs ${esc(periodAnalytics.custom.previousLabel)}</small></div><div>${euro(periodAnalytics.custom.current.net)} / ${euro(periodAnalytics.custom.previous.net)}</div></div>`;
   }
   const labels = [
     ['day', 'Jour'],
@@ -2067,7 +2067,7 @@ function renderPeriodAnalytics(periodAnalytics) {
     ['month', 'Mois'],
     ['quarter', 'Trimestre'],
     ['semester', 'Semestre'],
-    ['year', 'Année']
+    ['year', 'AnnÃ©e']
   ];
   return labels.map(function(item) {
     const data = periodAnalytics[item[0]];
@@ -2078,7 +2078,7 @@ function renderPeriodAnalytics(periodAnalytics) {
 
 function renderTransactionsWithoutInvoice(rows) {
   if (!rows || !rows.length) return '<div class="empty">Aucune transaction sans facture visible pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entité</th><th>Compte</th><th>Libellé</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>EntitÃ©</th><th>Compte</th><th>LibellÃ©</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Date)}</td>
       <td>${esc(row.Entite)}</td>
@@ -2093,7 +2093,7 @@ function renderTransactionsWithoutInvoice(rows) {
 function renderForecastTable(summary) {
   const lines = (summary && summary.lines) || [];
   if (!lines.length) return '<div class="empty">Aucune ligne de prevision exploitable pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Catégorie</th><th>Sous-catégorie</th><th>Prévu</th><th>Réalisé</th><th>Mois précédent</th><th>Écart vs prévu</th><th>Écart vs précédent</th></tr></thead><tbody>${lines.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>PrÃ©vu</th><th>RÃ©alisÃ©</th><th>Mois prÃ©cÃ©dent</th><th>Ã‰cart vs prÃ©vu</th><th>Ã‰cart vs prÃ©cÃ©dent</th></tr></thead><tbody>${lines.map(function(row) {
     return `<tr>
       <td>${esc(frLabel(row.entite))}</td>
       <td>${esc(frLabel(row.categorie))}</td>
@@ -2197,10 +2197,10 @@ function buildActionItems_() {
   const txWithoutInvoice = (state.bootstrap.transactionsWithoutInvoice || []).length;
   const urgentInvoices = buildPilotageSnapshot_().urgentInvoices.length;
   return [
-    { title: 'Transactions à classer', detail: 'Opérations en attente d’une catégorie fiable.', badge: String(aClasser), badgeLevel: aClasser ? 'warn' : 'ok' },
-    { title: 'Factures à vérifier', detail: 'Documents à contrôler ou lecture OCR incertaine.', badge: String(facturesToVerify), badgeLevel: facturesToVerify ? 'warn' : 'ok' },
-    { title: 'Transactions sans facture', detail: 'Décaissements encore non rapprochés.', badge: String(txWithoutInvoice), badgeLevel: txWithoutInvoice ? 'danger' : 'ok' },
-    { title: 'Factures à échéance sous 7 jours', detail: 'Paiements à arbitrer rapidement.', badge: String(urgentInvoices), badgeLevel: urgentInvoices ? 'danger' : 'ok' }
+    { title: 'Transactions Ã  classer', detail: 'OpÃ©rations en attente dâ€™une catÃ©gorie fiable.', badge: String(aClasser), badgeLevel: aClasser ? 'warn' : 'ok' },
+    { title: 'Factures Ã  vÃ©rifier', detail: 'Documents Ã  contrÃ´ler ou lecture OCR incertaine.', badge: String(facturesToVerify), badgeLevel: facturesToVerify ? 'warn' : 'ok' },
+    { title: 'Transactions sans facture', detail: 'DÃ©caissements encore non rapprochÃ©s.', badge: String(txWithoutInvoice), badgeLevel: txWithoutInvoice ? 'danger' : 'ok' },
+    { title: 'Factures Ã  Ã©chÃ©ance sous 7 jours', detail: 'Paiements Ã  arbitrer rapidement.', badge: String(urgentInvoices), badgeLevel: urgentInvoices ? 'danger' : 'ok' }
   ];
 }
 
@@ -2210,11 +2210,11 @@ function buildUrgentInvoiceItems_() {
     .slice(0, 5)
     .map(function(row) {
       const diff = diffDaysFromToday_(row.Date_echeance);
-      const badge = diff === 0 ? 'Aujourd’hui' : (diff < 0 ? 'En retard' : diff + ' j');
+      const badge = diff === 0 ? 'Aujourdâ€™hui' : (diff < 0 ? 'En retard' : diff + ' j');
       const badgeLevel = diff <= 1 ? 'danger' : 'warn';
       return {
         title: [row.Entite, row.Fournisseur || row.Nom_fichier || 'Facture'].filter(Boolean).join(' - '),
-        detail: 'Échéance ' + (row.Date_echeance || 'non renseignée'),
+        detail: 'Ã‰chÃ©ance ' + (row.Date_echeance || 'non renseignÃ©e'),
         badge: badge,
         badgeLevel: badgeLevel,
         amount: euro(row.Montant_TTC)
@@ -2247,7 +2247,7 @@ function renderAnnualToolbar_(options) {
   });
   return `<div class="toolbar">
     <div class="field-inline">
-      <label>Année</label>
+      <label>AnnÃ©e</label>
       <select onchange="changeAnnualYear(this.value)">${years.map(function(year) {
         return `<option value="${year}"${Number(year) === Number(state.annualSelectedYear) ? ' selected' : ''}>${year}</option>`;
       }).join('')}</select>
@@ -2258,7 +2258,7 @@ function renderAnnualToolbar_(options) {
 }
 
 function renderInteractiveLineChart_(points, seriesDefs, options) {
-  if (!points || !points.length) return `<div class="empty">${esc((options && options.emptyText) || 'Aucune donnée disponible.')}</div>`;
+  if (!points || !points.length) return `<div class="empty">${esc((options && options.emptyText) || 'Aucune donnÃ©e disponible.')}</div>`;
   const width = (options && options.width) || 960;
   const height = (options && options.height) || 320;
   const padding = Object.assign({ top: 18, right: 18, bottom: 40, left: 52 }, (options && options.padding) || {});
@@ -2346,7 +2346,7 @@ function renderInteractiveLineChart_(points, seriesDefs, options) {
 }
 
 function renderAnnualComboChart_(points, mode) {
-  if (!points || !points.length) return '<div class="empty">Aucune donnée annuelle disponible pour cette sélection.</div>';
+  if (!points || !points.length) return '<div class="empty">Aucune donnÃ©e annuelle disponible pour cette sÃ©lection.</div>';
   const chartPoints = points.map(function(point) {
     return {
       label: point.label,
@@ -2356,9 +2356,9 @@ function renderAnnualComboChart_(points, mode) {
     };
   });
   return renderInteractiveLineChart_(chartPoints, [
-    { key: 'tresorerie', label: 'Trésorerie', color: '#173d7a' },
+    { key: 'tresorerie', label: 'TrÃ©sorerie', color: '#173d7a' },
     { key: 'encaissements', label: 'Encaissements', color: '#0f9d58' },
-    { key: 'decaissements', label: 'Décaissements', color: '#c62828' }
+    { key: 'decaissements', label: 'DÃ©caissements', color: '#c62828' }
   ], {
     ariaLabel: 'Courbes annuelles interactives avec montants exacts au survol'
   });
@@ -2438,7 +2438,7 @@ function renderAnnualPivotTable_(rows) {
     const row = meta.row;
     const isExpanded = !!state.pivotExpanded[meta.rowKey];
     const toggleControl = meta.hasChildren
-      ? `<button type="button" class="pivot-toggle-btn" data-pivot-key="${esc(meta.rowKey)}" aria-label="${esc(isExpanded ? 'Replier' : 'Déplier')}">${isExpanded ? '−' : '+'}</button>`
+      ? `<button type="button" class="pivot-toggle-btn" data-pivot-key="${esc(meta.rowKey)}" aria-label="${esc(isExpanded ? 'Replier' : 'DÃ©plier')}">${isExpanded ? 'âˆ’' : '+'}</button>`
       : '<span class="pivot-toggle-spacer"></span>';
     return `<tr class="level-${row.level || 0} ${row.kind === 'section' ? 'section-row' : ''} ${isVisible(meta) ? '' : 'pivot-row-hidden'}">
       <td><span class="pivot-label-wrap">${toggleControl}<span>${esc(row.label)}</span></span></td>
@@ -2476,7 +2476,7 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
+              <p>Le module Budget a besoin du backend Apps Script Ã  jour pour charger ses donnÃ©es.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
@@ -2518,12 +2518,12 @@ function renderBudget() {
 
       <div class="card kpi"><div class="label">Budget ${esc(viewLabel)}</div><div class="value">${euro(plannedTotal)}</div><div class="hint">Total annuel saisi</div></div>
       <div class="card kpi"><div class="label">Realise ${esc(viewLabel)}</div><div class="value">${euro(actualTotal)}</div><div class="hint">Transactions annuelles</div></div>
-      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Réalisé moins budget</div></div>
+      <div class="card kpi"><div class="label">Ã‰cart</div><div class="value">${euro(varianceTotal)}</div><div class="hint">RÃ©alisÃ© moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs réalisé</h3>
+            <h3>Graphe annuel budget vs rÃ©alisÃ©</h3>
             <p>Lecture mensuelle du budget et du realise pour les ${esc(viewLabel)}.</p>
           </div>
         </div>
@@ -2629,11 +2629,11 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
+              <p>Le module Budget a besoin du backend Apps Script Ã  jour pour charger ses donnÃ©es.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
-          <div class="empty">Déploie <code>Code.gs</code> pour afficher le budget de l'entité sélectionnée.</div>
+          <div class="empty">DÃ©ploie <code>Code.gs</code> pour afficher le budget de l'entitÃ© sÃ©lectionnÃ©e.</div>
         </div>
       </div>`;
     return;
@@ -2645,8 +2645,8 @@ function renderBudget() {
   const headerLabel = view === 'encaissements'
     ? 'Budget encaissements'
     : view === 'decaissements'
-      ? 'Budget décaissements'
-      : 'Budget de trésorerie global';
+      ? 'Budget dÃ©caissements'
+      : 'Budget de trÃ©sorerie global';
   const plannedTotal = view === 'encaissements'
     ? (totals.budgetEncaissements || 0)
     : view === 'decaissements'
@@ -2672,15 +2672,15 @@ function renderBudget() {
         ${renderAnnualToolbar_()}
       </div>
 
-      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgété' : 'Total annuel budgété'}</div></div>
-      <div class="card kpi"><div class="label">Réalisé</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final réalisé' : 'Total annuel réalisé'}</div></div>
-      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Réalisé moins budget</div></div>
+      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgÃ©tÃ©' : 'Total annuel budgÃ©tÃ©'}</div></div>
+      <div class="card kpi"><div class="label">RÃ©alisÃ©</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final rÃ©alisÃ©' : 'Total annuel rÃ©alisÃ©'}</div></div>
+      <div class="card kpi"><div class="label">Ã‰cart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">RÃ©alisÃ© moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs réalisé</h3>
-            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trésorerie global avec la trésorerie réelle.' : 'Comparaison mensuelle du budget avec le réalisé.'}</p>
+            <h3>Graphe annuel budget vs rÃ©alisÃ©</h3>
+            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trÃ©sorerie global avec la trÃ©sorerie rÃ©elle.' : 'Comparaison mensuelle du budget avec le rÃ©alisÃ©.'}</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_({ chartPoints: chartPoints })}
@@ -2689,8 +2689,8 @@ function renderBudget() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>${view === 'global' ? 'Tableau du budget de trésorerie global' : 'Tableau annuel du budget'}</h3>
-            <p>${view === 'global' ? 'Le solde initial du premier mois reprend le solde reel de l entite, puis chaque mois repart du solde final precedent.' : 'Les catégories et sous-catégories restent rangées sous Encaissements ou Décaissements selon leur sens.'}</p>
+            <h3>${view === 'global' ? 'Tableau du budget de trÃ©sorerie global' : 'Tableau annuel du budget'}</h3>
+            <p>${view === 'global' ? 'Le solde initial du premier mois reprend le solde reel de l entite, puis chaque mois repart du solde final precedent.' : 'Les catÃ©gories et sous-catÃ©gories restent rangÃ©es sous Encaissements ou DÃ©caissements selon leur sens.'}</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(rows)}
@@ -2706,22 +2706,22 @@ function renderAccueil() {
     <div class="grid">
       <div class="card hero-card">
         <h3>Situation actuelle</h3>
-        <p>Résumé de trésorerie pour l’entité sélectionnée, ou vision consolidée si TOUTES LES ENTITÉS est active.</p>
+        <p>RÃ©sumÃ© de trÃ©sorerie pour lâ€™entitÃ© sÃ©lectionnÃ©e, ou vision consolidÃ©e si TOUTES LES ENTITÃ‰S est active.</p>
         <div class="hero-metrics">
           <div class="hero-metric">
-            <div class="label">Trésorerie actuelle</div>
+            <div class="label">TrÃ©sorerie actuelle</div>
             <div class="value">${euro(d.tresorerieActuelle)}</div>
-            <div class="hint">Situation courante de trésorerie</div>
+            <div class="hint">Situation courante de trÃ©sorerie</div>
           </div>
           <div class="hero-metric">
             <div class="label">Encaissements</div>
             <div class="value">${euro(d.encaissements)}</div>
-            <div class="hint">Flux positifs de l’entité choisie</div>
+            <div class="hint">Flux positifs de lâ€™entitÃ© choisie</div>
           </div>
           <div class="hero-metric">
-            <div class="label">Décaissements</div>
+            <div class="label">DÃ©caissements</div>
             <div class="value">${euro(d.decaissements)}</div>
-            <div class="hint">Flux négatifs de l’entité choisie</div>
+            <div class="hint">Flux nÃ©gatifs de lâ€™entitÃ© choisie</div>
           </div>
           <div class="hero-metric">
             <div class="label">Comptes visibles</div>
@@ -2734,8 +2734,8 @@ function renderAccueil() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Évolution annuelle de trésorerie</h3>
-            <p>Le graphe suit l’entité sélectionnée. En vue TOUTES, il montre le consolidé.</p>
+            <h3>Ã‰volution annuelle de trÃ©sorerie</h3>
+            <p>Le graphe suit lâ€™entitÃ© sÃ©lectionnÃ©e. En vue TOUTES, il montre le consolidÃ©.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
@@ -2745,33 +2745,33 @@ function renderAccueil() {
       <div class="card panel-wide">
         <div class="section-title">
           <div>
-            <h3>Trésorerie par entité</h3>
+            <h3>TrÃ©sorerie par entitÃ©</h3>
             <p>Lecture consolidee pour savoir quelle structure porte le cash ou la tension.</p>
           </div>
         </div>
-        <div class="list">${renderSimpleList(d.entites, 'Aucune entité alimentée pour le moment.', 'Solde de trésorerie calculé')}</div>
+        <div class="list">${renderSimpleList(d.entites, 'Aucune entitÃ© alimentÃ©e pour le moment.', 'Solde de trÃ©sorerie calculÃ©')}</div>
       </div>
       <div class="card panel-side">
         <div class="section-title">
           <div>
-            <h3>Comptes de l’entité</h3>
-            <p>Lecture directe des comptes bancaires reliés à la sélection courante.</p>
+            <h3>Comptes de lâ€™entitÃ©</h3>
+            <p>Lecture directe des comptes bancaires reliÃ©s Ã  la sÃ©lection courante.</p>
           </div>
         </div>
-        <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimenté.', 'Dernier solde connu ou net cumulé')}</div>
+        <div class="list">${renderSimpleList(d.comptes, 'Aucun compte bancaire alimentÃ©.', 'Dernier solde connu ou net cumulÃ©')}</div>
       </div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Base reliée</h3>
-            <p>Le socle technique du suivi de trésorerie.</p>
+            <h3>Base reliÃ©e</h3>
+            <p>Le socle technique du suivi de trÃ©sorerie.</p>
           </div>
         </div>
         <div class="list">
           <div class="row"><div>Google Sheet<small>Structure centrale du projet</small></div><div><span class="badge ok">Actif</span></div></div>
           <div class="row"><div>ID du sheet<small>${esc(state.bootstrap.spreadsheetId)}</small></div><div></div></div>
-          <div class="row"><div>Onglets synchronisés<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
+          <div class="row"><div>Onglets synchronisÃ©s<small>Structure V1</small></div><div>${Object.keys(state.bootstrap.counts).length}</div></div>
         </div>
         <div class="actions-row"><a class="btn secondary" href="${state.bootstrap.spreadsheetUrl}" target="_blank">Ouvrir le tableur</a></div>
       </div>
@@ -2803,18 +2803,18 @@ function renderTresorerie() {
   const isOverview = activeView === 'overview';
   state.tresorerieView = activeView;
   const activeViewLabel = isOverview
-    ? 'Gestion de trésorerie'
+    ? 'Gestion de trÃ©sorerie'
     : ((tresorerieNavItems.find(function(item) { return item[0] === activeView; }) || tresorerieNavItems[0])[1]);
   const mainTitle = activeView === 'a_classer'
-    ? 'Transactions à classer'
+    ? 'Transactions Ã  classer'
     : activeView === 'imports'
       ? 'Historique des imports bancaires'
       : 'Mouvements du mois';
   const mainSubtitle = activeView === 'a_classer'
-    ? 'Accès direct aux transactions en attente de classement, sans avoir à parcourir toute la page.'
+    ? 'AccÃ¨s direct aux transactions en attente de classement, sans avoir Ã  parcourir toute la page.'
     : activeView === 'imports'
-      ? 'Si un fichier a été importé par erreur, le bouton annule ses mouvements, classements et rapprochements liés.'
-      : 'Journal complet des mouvements pour le mois, la société et les filtres choisis.';
+      ? 'Si un fichier a Ã©tÃ© importÃ© par erreur, le bouton annule ses mouvements, classements et rapprochements liÃ©s.'
+      : 'Journal complet des mouvements pour le mois, la sociÃ©tÃ© et les filtres choisis.';
   const mainContent = activeView === 'a_classer'
     ? renderReapplyRulesAction_() + renderAClasserTable(aClasser)
     : activeView === 'imports'
@@ -2832,7 +2832,7 @@ function renderTresorerie() {
       <div class="card panel-full">
         <h3>Import bancaire</h3>
         <div class="form-grid">
-          <div class="field"><label>Société</label><select id="importEntite" onchange="updateImportEntiteSelection()">${entites.map(e => `<option value="${esc(e)}"${importEntite === e ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
+          <div class="field"><label>SociÃ©tÃ©</label><select id="importEntite" onchange="updateImportEntiteSelection()">${entites.map(e => `<option value="${esc(e)}"${importEntite === e ? ' selected' : ''}>${esc(e)}</option>`).join('')}</select></div>
           <div class="field"><label>Compte bancaire</label><select id="importCompte" onchange="updateImportCompteSelection()">${renderImportCompteOptions_(importEntite)}</select></div>
           <div class="field"><label>Fichier bancaire</label><input type="file" id="bankFile" accept=".xlsx,.xls,.csv" onchange="handleBankFile(event)"></div>
           <div class="field"><label>Nom source</label><input type="text" id="sourceName" value="import_banque"></div>
@@ -2844,7 +2844,7 @@ function renderTresorerie() {
         <div class="section-title">
           <div>
             <h3>Pilotage annuel des mouvements</h3>
-            <p>Vue annuelle du réalisé par catégorie et sous-catégorie, avec graphe d’évolution pour l’entité choisie ou le consolidé.</p>
+            <p>Vue annuelle du rÃ©alisÃ© par catÃ©gorie et sous-catÃ©gorie, avec graphe dâ€™Ã©volution pour lâ€™entitÃ© choisie ou le consolidÃ©.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
@@ -2854,18 +2854,18 @@ function renderTresorerie() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel du réalisé</h3>
-            <p>Montants mensuels des mouvements réels, regroupés par encaissements, décaissements, catégories et sous-catégories.</p>
+            <h3>Tableau annuel du rÃ©alisÃ©</h3>
+            <p>Montants mensuels des mouvements rÃ©els, regroupÃ©s par encaissements, dÃ©caissements, catÃ©gories et sous-catÃ©gories.</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(realised ? realised.rows : [])}
       </div>
 
       <div class="card panel-side">
-        <h3>État des imports</h3>
+        <h3>Ã‰tat des imports</h3>
         <div class="list">
-          <div class="row"><div>À classer<small>Transactions non reconnues visibles</small></div><div>${aClasser.length}</div></div>
-          <div class="row"><div>Règles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
+          <div class="row"><div>Ã€ classer<small>Transactions non reconnues visibles</small></div><div>${aClasser.length}</div></div>
+          <div class="row"><div>RÃ¨gles<small>Apprentissage actif</small></div><div>${state.bootstrap.counts.Regles || 0}</div></div>
           <div class="row"><div>Logs imports<small>Historique des chargements</small></div><div>${state.bootstrap.counts.Logs_Imports || 0}</div></div>
         </div>
       </div>
@@ -2910,7 +2910,7 @@ function renderMovementsJournal_(rows, total, options) {
   const comptesForFilter = compteLocked
     ? (options.comptes || []).filter(function(compte) { return String(compte.Compte_id || '') === String(state.selectedCompteId || ''); })
     : (options.comptes || []);
-  const compteOptions = '<option value="">' + esc(compteLocked ? 'Compte sélectionné' : 'Tous') + '</option>' + comptesForFilter.map(function(compte) {
+  const compteOptions = '<option value="">' + esc(compteLocked ? 'Compte sÃ©lectionnÃ©' : 'Tous') + '</option>' + comptesForFilter.map(function(compte) {
     const value = compte.Compte_id || '';
     const label = [compte.Nom_compte, compte.Banque].filter(Boolean).join(' - ') || value;
     return `<option value="${esc(value)}"${state.movementFilters.compteId === value ? ' selected' : ''}>${esc(label)}</option>`;
@@ -2918,18 +2918,18 @@ function renderMovementsJournal_(rows, total, options) {
   return `
     <div class="form-grid" style="margin-bottom:12px">
       <div class="field"><label>Mois</label><select onchange="updateMovementFilter('month', this.value)">${monthOptions}</select></div>
-      <div class="field"><label>Année</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
+      <div class="field"><label>AnnÃ©e</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
       <div class="field"><label>Compte</label><select onchange="updateMovementFilter('compteId', this.value)"${compteLocked ? ' disabled' : ''}>${compteOptions}</select></div>
-      <div class="field"><label>Catégorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
-      <div class="field"><label>Sous-catégorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
+      <div class="field"><label>CatÃ©gorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
+      <div class="field"><label>Sous-catÃ©gorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
       <div class="field"><label>Site / magasin</label><select onchange="updateMovementFilter('site', this.value)">${selectOptions(options.sites, state.movementFilters.site)}</select></div>
       <div class="field"><label>Statut</label><select onchange="updateMovementFilter('status', this.value)">
         <option value="">Tous</option>
-        <option value="A_CLASSER"${state.movementFilters.status === 'A_CLASSER' ? ' selected' : ''}>À classer</option>
-        <option value="CLASSE"${state.movementFilters.status === 'CLASSE' ? ' selected' : ''}>Classé</option>
+        <option value="A_CLASSER"${state.movementFilters.status === 'A_CLASSER' ? ' selected' : ''}>Ã€ classer</option>
+        <option value="CLASSE"${state.movementFilters.status === 'CLASSE' ? ' selected' : ''}>ClassÃ©</option>
       </select></div>
     </div>
-    <div class="note" style="margin-bottom:12px"><strong>${total || rows.length}</strong> mouvement(s) chargés pour le mois sélectionné. ${visibleRows.length} affiché(s) à l’écran pour garder la page fluide.</div>
+    <div class="note" style="margin-bottom:12px"><strong>${total || rows.length}</strong> mouvement(s) chargÃ©s pour le mois sÃ©lectionnÃ©. ${visibleRows.length} affichÃ©(s) Ã  lâ€™Ã©cran pour garder la page fluide.</div>
     ${renderMovementAnomalies_(rows)}
     <div class="table-wrap">${renderMovementsTable(visibleRows)}</div>
     ${visibleRows.length < (rows || []).length ? `<div class="actions-row"><button class="btn secondary" onclick="showMoreMovements()">Afficher 500 mouvements de plus</button></div>` : ''}`;
@@ -2946,31 +2946,31 @@ function renderMovementAnomalies_(rows) {
   const missingSub = anomalies.filter(function(row) { return !String(row.Sous_categorie || '').trim(); }).length;
   const missingSite = anomalies.filter(function(row) { return !String(row.Site || '').trim(); }).length;
   return `<div class="note" style="margin-bottom:12px;background:#fff7e9;border-color:#f5d9a6;color:#8a5a00">
-    Contrôle : ${anomalies.length} mouvement(s) du mois doivent être vérifiés.
-    Catégorie manquante : ${missingCategory}. Sous-catégorie manquante : ${missingSub}. Site manquant : ${missingSite}.
+    ContrÃ´le : ${anomalies.length} mouvement(s) du mois doivent Ãªtre vÃ©rifiÃ©s.
+    CatÃ©gorie manquante : ${missingCategory}. Sous-catÃ©gorie manquante : ${missingSub}. Site manquant : ${missingSite}.
   </div>`;
 }
 
 function renderMovementsTable(rows) {
   if (!rows.length) return '<div class="empty">Aucun mouvement pour le moment.</div>';
-  return `<table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Site</th><th>Catégorie</th><th>Sous-catégorie</th><th>Encaissement</th><th>Décaissement</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<table class="table"><thead><tr><th>Date</th><th>LibellÃ©</th><th>EntitÃ©</th><th>Compte</th><th>Site</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Encaissement</th><th>DÃ©caissement</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr><td>${esc(formatUiDate_(row.Date))}</td><td>${esc(row.Libelle)}</td><td>${esc(frLabel(row.Entite))}</td><td>${esc(frLabel(row.Compte))}</td><td>${esc(frLabel(row.Site || '-'))}</td><td>${esc(frLabel(row.Categorie || '-'))}</td><td>${esc(frLabel(row.Sous_categorie || '-'))}</td><td>${euro(row.Encaissement)}</td><td>${euro(row.Decaissement)}</td><td>${euro(row.Montant)}</td><td>${esc(frLabel(row.Statut_classement || '-'))}</td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
 function renderReapplyRulesAction_() {
-  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les rÃ¨gles aux mouvements dÃ©jÃ  importÃ©s</button></div>`;
 }
 
 function renderReapplyRulesAction_() {
-  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les rÃ¨gles aux mouvements dÃ©jÃ  importÃ©s</button></div>`;
 }
 
 function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const categories = Object.keys(categoryMap);
-  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>Entité</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Site / magasin</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) Ã  classer affichÃ©s.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libelle</th><th>EntitÃ©</th><th>Compte</th><th>Montant</th><th>Categorie</th><th>Sous-categorie</th><th>Site / magasin</th><th>Creer regle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const firstCategory = row.Categorie_proposee || categories[0] || '';
     const catOptions = categories.map(function(cat) {
       return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(cat)}</option>`;
@@ -2999,21 +2999,21 @@ function renderAClasserTable(rows) {
 }
 
 function renderReapplyRulesAction_() {
-  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les règles aux mouvements déjà importés</button></div>`;
+  return `<div class="actions-row"><button class="btn secondary" onclick="applyRulesToHistory()">Appliquer les rÃ¨gles aux mouvements dÃ©jÃ  importÃ©s</button></div>`;
 }
 
 function renderAClasserTable(rows) {
   if (!rows.length) return '<div class="empty">Aucune transaction en attente de classement.</div>';
   const categoryMap = state.bootstrap.config.categoryMap || {};
   const categories = Object.keys(categoryMap);
-  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) à classer affichés.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Libellé</th><th>Entité</th><th>Compte</th><th>Sens</th><th>Montant</th><th>Catégorie</th><th>Sous-catégorie</th><th>Site / magasin</th><th>Créer une règle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="note" style="margin-bottom:12px"><strong>${rows.length}</strong> mouvement(s) Ã  classer affichÃ©s.</div><div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>LibellÃ©</th><th>EntitÃ©</th><th>Compte</th><th>Sens</th><th>Montant</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Site / magasin</th><th>CrÃ©er une rÃ¨gle</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const firstCategory = row.Categorie_proposee || categories[0] || '';
     const catOptions = categories.map(function(cat) {
       return `<option value="${esc(cat)}"${cat === firstCategory ? ' selected' : ''}>${esc(frLabel(cat))}</option>`;
-    }).join('') + '<option value="__new__">+ Nouvelle catégorie</option>';
+    }).join('') + '<option value="__new__">+ Nouvelle catÃ©gorie</option>';
     const subOptions = (categoryMap[firstCategory] || []).map(function(sub) {
       return `<option value="${esc(sub)}">${esc(frLabel(sub))}</option>`;
-    }).join('') + '<option value="__new__">+ Nouvelle sous-catégorie</option>';
+    }).join('') + '<option value="__new__">+ Nouvelle sous-catÃ©gorie</option>';
     return `<tr>
       <td>${esc(formatUiDate_(row.Date))}</td>
       <td>${esc(row.Libelle)}</td>
@@ -3021,13 +3021,13 @@ function renderAClasserTable(rows) {
       <td>${esc(frLabel(row.Compte))}</td>
       <td><span class="badge ${row.Sens === 'Encaissement' ? 'ok' : 'warn'}">${esc(frLabel(row.Sens || (toNumberUi_(row.Montant) >= 0 ? 'Encaissement' : 'Decaissement')))}</span><input type="hidden" id="sens-${esc(row.Transaction_uid)}" value="${esc(row.Sens || (toNumberUi_(row.Montant) >= 0 ? 'Encaissement' : 'Decaissement'))}"></td>
       <td>${euro(row.Montant)}</td>
-      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select><div id="cat-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="cat-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle catégorie"></div></td>
-      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">À définir</option>'}</select><div id="sub-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="sub-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle sous-catégorie"></div></td>
-      <td><input class="inline-input" id="site-${esc(row.Transaction_uid)}" value="${esc(row.Site || '')}" placeholder="Ex. : Poiré"></td>
+      <td><select class="inline-select updateSousCategories" id="cat-${esc(row.Transaction_uid)}" data-transaction-uid="${esc(row.Transaction_uid)}">${catOptions}</select><div id="cat-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="cat-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle catÃ©gorie"></div></td>
+      <td><select class="inline-select" id="sub-${esc(row.Transaction_uid)}">${subOptions || '<option value="">Ã€ dÃ©finir</option>'}</select><div id="sub-new-wrap-${esc(row.Transaction_uid)}" class="hidden" style="margin-top:8px;"><input class="inline-input" id="sub-new-${esc(row.Transaction_uid)}" placeholder="Nouvelle sous-catÃ©gorie"></div></td>
+      <td><input class="inline-input" id="site-${esc(row.Transaction_uid)}" value="${esc(row.Site || '')}" placeholder="Ex. : PoirÃ©"></td>
       <td>
         <div class="flex">
           <input type="checkbox" id="rule-${esc(row.Transaction_uid)}">
-          <input class="inline-input" id="ruleValue-${esc(row.Transaction_uid)}" placeholder="Mot-clé ou fournisseur">
+          <input class="inline-input" id="ruleValue-${esc(row.Transaction_uid)}" placeholder="Mot-clÃ© ou fournisseur">
         </div>
       </td>
       <td><button class="btn secondary saveClassificationBtn" data-transaction-uid="${esc(row.Transaction_uid)}">Valider</button></td>
@@ -3057,24 +3057,24 @@ function renderGraphiques() {
   document.getElementById('page-Graphiques').innerHTML = `
     <div class="grid">
       <div class="card panel-wide">
-        <h3>Évolution mensuelle nette</h3>
+        <h3>Ã‰volution mensuelle nette</h3>
         ${renderInteractiveLineChart_(netPoints, [
           { key: 'net', label: 'Net mensuel', color: '#3669be' }
         ], {
-          emptyText: 'Les graphiques se rempliront après import des mouvements.',
+          emptyText: 'Les graphiques se rempliront aprÃ¨s import des mouvements.',
           ariaLabel: 'Courbe du net mensuel avec montants exacts au survol'
         })}
       </div>
       <div class="card panel-side">
         <h3>Lectures actives</h3>
         <div class="list">
-          <div class="row"><div>Trésorerie<small>Jour, semaine, mois, trimestre, semestre, année</small></div><div><span class="badge ok">Oui</span></div></div>
-          <div class="row"><div>Prévisionnel vs réalisé<small>Par catégorie et sous-catégorie</small></div><div><span class="badge ok">Oui</span></div></div>
-          <div class="row"><div>Réalisé vs période précédente<small>Mensuel, trimestriel, semestriel, annuel</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>TrÃ©sorerie<small>Jour, semaine, mois, trimestre, semestre, annÃ©e</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>PrÃ©visionnel vs rÃ©alisÃ©<small>Par catÃ©gorie et sous-catÃ©gorie</small></div><div><span class="badge ok">Oui</span></div></div>
+          <div class="row"><div>RÃ©alisÃ© vs pÃ©riode prÃ©cÃ©dente<small>Mensuel, trimestriel, semestriel, annuel</small></div><div><span class="badge ok">Oui</span></div></div>
         </div>
       </div>
       <div class="card panel-full">
-        <h3>${customComparison ? 'Comparaison de la période personnalisée' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
+        <h3>${customComparison ? 'Comparaison de la pÃ©riode personnalisÃ©e' : ('Comparaison ' + esc(summary.currentMonth || ''))}</h3>
         ${renderInteractiveLineChart_(comparisonValues, [
           { key: 'montant', label: 'Montant', color: '#d97706' }
         ], {
@@ -3082,7 +3082,7 @@ function renderGraphiques() {
         })}
       </div>
       <div class="card panel-full">
-        <h3>Comparaisons par période</h3>
+        <h3>Comparaisons par pÃ©riode</h3>
         <div class="list">${renderPeriodAnalytics(periodAnalytics)}</div>
       </div>
     </div>`;
@@ -3110,37 +3110,37 @@ function renderPrevisionnel() {
   }).join('');
   document.getElementById('page-Previsionnel').innerHTML = `
     <div class="grid">
-      <div class="card kpi"><div class="label">Prévu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total prévisionnel du mois</div></div>
-      <div class="card kpi"><div class="label">Réalisé ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).actual || 0)}</div><div class="hint">Total réalisé du mois</div></div>
-      <div class="card kpi"><div class="label">Réalisé ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative précédente</div></div>
-      <div class="card kpi"><div class="label">Lignes de prévision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">Prévisions enregistrées dans le sheet</div></div>
+      <div class="card kpi"><div class="label">PrÃ©vu ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).forecast || 0)}</div><div class="hint">Total prÃ©visionnel du mois</div></div>
+      <div class="card kpi"><div class="label">RÃ©alisÃ© ${esc(summary.currentMonth || '')}</div><div class="value">${euro((summary.totals || {}).actual || 0)}</div><div class="hint">Total rÃ©alisÃ© du mois</div></div>
+      <div class="card kpi"><div class="label">RÃ©alisÃ© ${esc(summary.previousMonth || '')}</div><div class="value">${euro((summary.totals || {}).previous || 0)}</div><div class="hint">Base comparative prÃ©cÃ©dente</div></div>
+      <div class="card kpi"><div class="label">Lignes de prÃ©vision</div><div class="value">${state.bootstrap.counts.Previsions || 0}</div><div class="hint">PrÃ©visions enregistrÃ©es dans le sheet</div></div>
 
       <div class="card panel-full">
-        <h3>Ajouter / modifier une prévision</h3>
+        <h3>Ajouter / modifier une prÃ©vision</h3>
         <div class="form-grid">
-          <div class="field"><label>Prévision_id</label><input id="prev-id" placeholder="Laisser vide pour création"></div>
-          <div class="field"><label>Entité</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non spécifié</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Catégorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-catégorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
-          <div class="field"><label>Date prévue</label><input id="prev-date" type="date"></div>
-          <div class="field"><label>Période</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
-          <div class="field"><label>Fréquence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
-          <div class="field"><label>Sens</label><select id="prev-sens"><option value="Decaissement">Décaissement</option><option value="Encaissement">Encaissement</option></select></div>
-          <div class="field"><label>Montant prévu</label><input id="prev-montant" type="number" step="0.01" placeholder="1200"></div>
-          <div class="field"><label>Mode de calcul</label><select id="prev-mode-calcul"><option value="Manuel">Manuel</option><option value="Historique">Historique</option><option value="Recurrent">Récurrent</option></select></div>
-          <div class="field"><label>Base de référence</label><input id="prev-base-reference" placeholder="3 derniers mois"></div>
+          <div class="field"><label>PrÃ©vision_id</label><input id="prev-id" placeholder="Laisser vide pour crÃ©ation"></div>
+          <div class="field"><label>EntitÃ©</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non spÃ©cifiÃ©</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>CatÃ©gorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>Date prÃ©vue</label><input id="prev-date" type="date"></div>
+          <div class="field"><label>PÃ©riode</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
+          <div class="field"><label>FrÃ©quence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
+          <div class="field"><label>Sens</label><select id="prev-sens"><option value="Decaissement">DÃ©caissement</option><option value="Encaissement">Encaissement</option></select></div>
+          <div class="field"><label>Montant prÃ©vu</label><input id="prev-montant" type="number" step="0.01" placeholder="1200"></div>
+          <div class="field"><label>Mode de calcul</label><select id="prev-mode-calcul"><option value="Manuel">Manuel</option><option value="Historique">Historique</option><option value="Recurrent">RÃ©current</option></select></div>
+          <div class="field"><label>Base de rÃ©fÃ©rence</label><input id="prev-base-reference" placeholder="3 derniers mois"></div>
           <div class="field"><label>Active</label><select id="prev-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
           <div class="field"><label>Commentaire</label><input id="prev-commentaire" placeholder="Loyer mensuel magasin Blain"></div>
         </div>
-        <div class="actions-row"><button class="btn primary" onclick="savePrevision()">Enregistrer la prévision</button></div>
+        <div class="actions-row"><button class="btn primary" onclick="savePrevision()">Enregistrer la prÃ©vision</button></div>
       </div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphiques annuels du prévisionnel</h3>
-            <p>Lecture annuelle du prévu, du réalisé et des écarts, toujours filtrée par entité ou consolidée selon la sélection.</p>
+            <h3>Graphiques annuels du prÃ©visionnel</h3>
+            <p>Lecture annuelle du prÃ©vu, du rÃ©alisÃ© et des Ã©carts, toujours filtrÃ©e par entitÃ© ou consolidÃ©e selon la sÃ©lection.</p>
           </div>
         </div>
         ${renderAnnualToolbar_({ viewButtons: previsionButtons })}
@@ -3150,20 +3150,20 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prévu' : state.previsionView === 'actual' ? 'du réalisé' : 'des écarts'}</h3>
-            <p>Structure annuelle par trésorerie, encaissements, décaissements, catégories et sous-catégories.</p>
+            <h3>Tableau annuel ${state.previsionView === 'forecast' ? 'du prÃ©vu' : state.previsionView === 'actual' ? 'du rÃ©alisÃ©' : 'des Ã©carts'}</h3>
+            <p>Structure annuelle par trÃ©sorerie, encaissements, dÃ©caissements, catÃ©gories et sous-catÃ©gories.</p>
           </div>
         </div>
         ${renderAnnualPivotTable_(previsionRows)}
       </div>
 
       <div class="card panel-full">
-        <h3>Prévisionnel vs réalisé du mois</h3>
+        <h3>PrÃ©visionnel vs rÃ©alisÃ© du mois</h3>
         ${renderForecastTable(summary)}
       </div>
 
       <div class="card panel-full">
-        <h3>Prévisions récentes</h3>
+        <h3>PrÃ©visions rÃ©centes</h3>
         ${renderRecentPrevisions(recentPrevisions)}
       </div>
       </div>`;
@@ -3394,16 +3394,16 @@ function buildForecastPlanningModel_() {
   const plannedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance'; });
   const recalibratedTreasuryRow = rows.find(function(row) { return row.id === 'closing-balance-rebased'; });
   if (plannedTreasuryRow && recalibratedTreasuryRow) {
-    plannedTreasuryRow.comparisonLabel = 'Trésorerie finale prévisionnelle';
+    plannedTreasuryRow.comparisonLabel = 'TrÃ©sorerie finale prÃ©visionnelle';
     plannedTreasuryRow.comparisonMonthly = recalibratedTreasuryRow.plannedMonthly.slice();
     plannedTreasuryRow.comparisonTotal = recalibratedTreasuryRow.totalPlanned;
-    plannedTreasuryRow.primaryVarianceLabel = 'Écart de projection';
-    plannedTreasuryRow.secondaryVarianceLabel = 'Écart de pilotage';
-    recalibratedTreasuryRow.comparisonLabel = 'Trésorerie prévisionnelle';
+    plannedTreasuryRow.primaryVarianceLabel = 'Ã‰cart de projection';
+    plannedTreasuryRow.secondaryVarianceLabel = 'Ã‰cart de pilotage';
+    recalibratedTreasuryRow.comparisonLabel = 'TrÃ©sorerie prÃ©visionnelle';
     recalibratedTreasuryRow.comparisonMonthly = plannedTreasuryRow.plannedMonthly.slice();
     recalibratedTreasuryRow.comparisonTotal = plannedTreasuryRow.totalPlanned;
-    recalibratedTreasuryRow.primaryVarianceLabel = 'Écart de pilotage';
-    recalibratedTreasuryRow.secondaryVarianceLabel = 'Écart de projection';
+    recalibratedTreasuryRow.primaryVarianceLabel = 'Ã‰cart de pilotage';
+    recalibratedTreasuryRow.secondaryVarianceLabel = 'Ã‰cart de projection';
   }
 
   const chartPoints = forecastMonthLabels_().map(function(label, monthIndex) {
@@ -3445,9 +3445,9 @@ function renderForecastProgressCell_(row, monthIndex, compact) {
   const expanded = state.forecastCellDetailKey === detailKey;
   const comparisonValue = row.comparisonMonthly ? Math.abs(toForecastAmount_(row.comparisonMonthly[monthIndex])) : null;
   const comparisonVariance = actual === null || comparisonValue === null ? null : actual - comparisonValue;
-  const primaryLabel = row.primaryVarianceLabel || 'Écart';
-  const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
-  const detailHtml = expanded ? `<div class="forecast-grid-subline">Réalisé ${actual === null ? '-' : euro(actual)}<br>${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonValue)}<br>${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
+  const primaryLabel = row.primaryVarianceLabel || 'Ã‰cart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Ã‰cart secondaire';
+  const detailHtml = expanded ? `<div class="forecast-grid-subline">RÃ©alisÃ© ${actual === null ? '-' : euro(actual)}<br>${esc(primaryLabel)} ${actual === null ? '-' : euro(variance || 0)}${comparisonValue !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonValue)}<br>${esc(secondaryLabel)} ${comparisonVariance === null ? '-' : euro(comparisonVariance)}` : ''}</div>` : '';
   const fillClass = resolveProgressFillClass_(row.sense, progressPercent, actual !== null);
   const showProgress = row.editable || row.kind === 'subcategory';
   const progressBar = showProgress ? `<div class="forecast-progress-row">
@@ -3455,9 +3455,9 @@ function renderForecastProgressCell_(row, monthIndex, compact) {
           <span class="forecast-progress-fill ${fillClass}" style="width:${progressWidth}%"></span>
           <span class="forecast-progress-label">${esc(progressText)}</span>
         </span>
-        <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le réalisé et l'écart" title="Voir le réalisé et l'écart">&#9998;</button>
+        <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le rÃ©alisÃ© et l'Ã©cart" title="Voir le rÃ©alisÃ© et l'Ã©cart">&#9998;</button>
       </div>
-      <span class="forecast-progress-text">${actual === null ? 'Sans réalisé' : `Réalisé ${euro(actual)}`}</span>` : '';
+      <span class="forecast-progress-text">${actual === null ? 'Sans rÃ©alisÃ©' : `RÃ©alisÃ© ${euro(actual)}`}</span>` : '';
 
   if (compact && !row.editable) {
     return `<div class="forecast-grid-cell">
@@ -3493,8 +3493,8 @@ function renderForecastTotalCell_(row) {
   const expanded = state.forecastCellDetailKey === detailKey;
   const comparisonTotal = row.comparisonTotal === undefined ? null : Math.abs(toForecastAmount_(row.comparisonTotal));
   const comparisonVariance = comparisonTotal === null ? null : actual - comparisonTotal;
-  const primaryLabel = row.primaryVarianceLabel || 'Écart';
-  const secondaryLabel = row.secondaryVarianceLabel || 'Écart secondaire';
+  const primaryLabel = row.primaryVarianceLabel || 'Ã‰cart';
+  const secondaryLabel = row.secondaryVarianceLabel || 'Ã‰cart secondaire';
   const fillClass = resolveProgressFillClass_(row.sense, progressPercent, hasActual);
   return `<div class="forecast-grid-cell">
     <div class="forecast-grid-value">${euro(planned)}</div>
@@ -3503,15 +3503,15 @@ function renderForecastTotalCell_(row) {
         <span class="forecast-progress-fill ${fillClass}" style="width:${progressWidth}%"></span>
         <span class="forecast-progress-label">${esc(progressText)}</span>
       </span>
-      <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le réalisé et l'écart" title="Voir le réalisé et l'écart">&#9998;</button>
+      <button type="button" class="forecast-progress-btn forecast-progress-icon" onclick='toggleForecastCellDetail(${JSON.stringify(detailKey)})' aria-label="Voir le rÃ©alisÃ© et l'Ã©cart" title="Voir le rÃ©alisÃ© et l'Ã©cart">&#9998;</button>
     </div>
-    <span class="forecast-progress-text">Réalisé ${euro(actual)}</span>` : ''}
-    ${expanded ? `<div class="forecast-grid-subline">Réalisé ${euro(actual)}<br>${esc(primaryLabel)} ${euro(actual - planned)}${comparisonTotal !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonTotal)}<br>${esc(secondaryLabel)} ${euro(comparisonVariance || 0)}` : ''}</div>` : ''}
+    <span class="forecast-progress-text">RÃ©alisÃ© ${euro(actual)}</span>` : ''}
+    ${expanded ? `<div class="forecast-grid-subline">RÃ©alisÃ© ${euro(actual)}<br>${esc(primaryLabel)} ${euro(actual - planned)}${comparisonTotal !== null ? `<br>${esc(row.comparisonLabel)} ${euro(comparisonTotal)}<br>${esc(secondaryLabel)} ${euro(comparisonVariance || 0)}` : ''}</div>` : ''}
   </div>`;
 }
 
 function renderForecastPlanningTable_(model) {
-  if (!model || !model.rows.length) return '<div class="empty">Aucune structure annuelle disponible pour cette sélection.</div>';
+  if (!model || !model.rows.length) return '<div class="empty">Aucune structure annuelle disponible pour cette sÃ©lection.</div>';
   state.forecastPivotExpanded = state.forecastPivotExpanded || {};
   model.rows.forEach(function(row) {
     if (row.hasChildren && state.forecastPivotExpanded[row.uniqueKey] === undefined) {
@@ -3536,7 +3536,7 @@ function renderForecastPlanningTable_(model) {
       ? `<span class="forecast-row-actions"><button type="button" class="forecast-delete-btn" onclick='archiveForecastLine(${JSON.stringify(row.category)}, ${JSON.stringify(row.subCategory || '')}, ${JSON.stringify(row.sense)})' aria-label="Supprimer la ligne de prevision" title="Supprimer la ligne de prevision">x</button></span>`
       : '';
     const labelContent = row.hasChildren
-      ? `<button type="button" class="forecast-toggle-label ${state.forecastPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'Déplier')}">
+      ? `<button type="button" class="forecast-toggle-label ${state.forecastPivotExpanded[row.uniqueKey] ? 'is-open' : ''}" onclick='toggleForecastPivot(${JSON.stringify(row.uniqueKey)})' aria-label="${esc(state.forecastPivotExpanded[row.uniqueKey] ? 'Replier' : 'DÃ©plier')}">
           <span class="forecast-toggle-caret">${state.forecastPivotExpanded[row.uniqueKey] ? '-' : '+'}</span>
           <span>${esc(row.label)}</span>
         </button>`
@@ -3554,14 +3554,14 @@ function renderForecastPlanningTable_(model) {
 }
 
 function renderForecastGroupedBarChart_(model) {
-  if (!model || !model.chartPoints.length) return '<div class="empty">Aucune comparaison annuelle disponible pour cette sélection.</div>';
+  if (!model || !model.chartPoints.length) return '<div class="empty">Aucune comparaison annuelle disponible pour cette sÃ©lection.</div>';
   const maxValue = Math.max.apply(null, model.chartPoints.map(function(point) {
     return Math.max(Math.abs(point.planned || 0), Math.abs(point.actual || 0), 1);
   }));
   return `<div class="forecast-bar-chart">
     <div class="forecast-bar-legend">
-      <span><i style="background:#cbdaf3"></i>Prévu</span>
-      <span><i style="background:#173d7a"></i>Réalisé</span>
+      <span><i style="background:#cbdaf3"></i>PrÃ©vu</span>
+      <span><i style="background:#173d7a"></i>RÃ©alisÃ©</span>
     </div>
     <div style="display:grid;grid-template-columns:repeat(12,minmax(70px,1fr));gap:12px;align-items:end;min-height:240px;">
       ${model.chartPoints.map(function(point) {
@@ -3569,10 +3569,10 @@ function renderForecastGroupedBarChart_(model) {
         const actualHeight = point.actual === null ? 0 : Math.max(6, Math.round((Math.abs(point.actual || 0) / maxValue) * 160));
         const tooltip = [
           point.label,
-          `Prévu: ${euro(point.planned || 0)}`,
-          `Réalisé: ${point.actual === null ? '-' : euro(point.actual)}`,
-          `Écart: ${point.variance === null ? '-' : euro(point.variance)}`,
-          `% de réalisation: ${point.progress === null ? '-' : point.progress + '%'}`
+          `PrÃ©vu: ${euro(point.planned || 0)}`,
+          `RÃ©alisÃ©: ${point.actual === null ? '-' : euro(point.actual)}`,
+          `Ã‰cart: ${point.variance === null ? '-' : euro(point.variance)}`,
+          `% de rÃ©alisation: ${point.progress === null ? '-' : point.progress + '%'}`
         ].join(' | ');
         return `<button type="button" class="forecast-bar-group" title="${esc(tooltip)}" style="border:none;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:10px;">
           <div style="display:flex;align-items:flex-end;justify-content:center;gap:8px;height:180px;width:100%;">
@@ -3587,7 +3587,7 @@ function renderForecastGroupedBarChart_(model) {
 }
 
 function renderForecastRealisedSummary_(model) {
-  if (!model) return '<div class="empty">Aucune lecture du réalisé disponible.</div>';
+  if (!model) return '<div class="empty">Aucune lecture du rÃ©alisÃ© disponible.</div>';
   const rowsById = {};
   (model.rows || []).forEach(function(row) {
     rowsById[row.id] = row;
@@ -3599,10 +3599,10 @@ function renderForecastRealisedSummary_(model) {
   const actualNet = rowsById['net-variation'] ? rowsById['net-variation'].totalActual : 0;
   const actualClosing = rowsById['closing-balance'] ? rowsById['closing-balance'].totalActual : 0;
   return `<div class="table-wrap"><table class="table"><thead><tr><th>Ligne</th><th>Formule</th><th>Total annuel</th></tr></thead><tbody>
-    <tr><td>Encaissements réalisés</td><td>Crédits catégorisés</td><td>${euro(actualEnc)}</td></tr>
-    <tr><td>Décaissements réalisés</td><td>Débits catégorisés</td><td>${euro(actualDec)}</td></tr>
-    <tr><td>Variation nette réalisée</td><td>Encaissements - Décaissements</td><td>${euro(actualNet)}</td></tr>
-    <tr><td>Trésorerie finale réelle</td><td>Solde initial + Encaissements - Décaissements</td><td>${euro(actualClosing)}</td></tr>
+    <tr><td>Encaissements rÃ©alisÃ©s</td><td>CrÃ©dits catÃ©gorisÃ©s</td><td>${euro(actualEnc)}</td></tr>
+    <tr><td>DÃ©caissements rÃ©alisÃ©s</td><td>DÃ©bits catÃ©gorisÃ©s</td><td>${euro(actualDec)}</td></tr>
+    <tr><td>Variation nette rÃ©alisÃ©e</td><td>Encaissements - DÃ©caissements</td><td>${euro(actualNet)}</td></tr>
+    <tr><td>TrÃ©sorerie finale rÃ©elle</td><td>Solde initial + Encaissements - DÃ©caissements</td><td>${euro(actualClosing)}</td></tr>
   </tbody></table></div>`;
 }
 
@@ -3618,11 +3618,11 @@ function addForecastLine() {
   const month = Number(monthInput ? monthInput.value : 1);
   const amount = Math.abs(toForecastAmount_(amountInput ? amountInput.value : 0));
   if (state.selectedEntite === 'TOUTES') {
-    showToast('Sélectionne une entité pour ajouter une ligne de prévision.', 'error');
+    showToast('SÃ©lectionne une entitÃ© pour ajouter une ligne de prÃ©vision.', 'error');
     return;
   }
   if (!categorie) {
-    showToast('Catégorie manquante.', 'error');
+    showToast('CatÃ©gorie manquante.', 'error');
     return;
   }
   const monthToken = `${Number(state.annualSelectedYear || new Date().getFullYear())}-${String(month).padStart(2, '0')}`;
@@ -3641,9 +3641,9 @@ function addForecastLine() {
     Sens: sens,
     Montant_prevu: amount,
     Mode_calcul: 'Manuel',
-    Base_reference: 'Ligne ajoutée depuis le prévisionnel',
+    Base_reference: 'Ligne ajoutÃ©e depuis le prÃ©visionnel',
     Active: 'Oui',
-    Commentaire: 'Ajout manuel dans le tableau prévisionnel'
+    Commentaire: 'Ajout manuel dans le tableau prÃ©visionnel'
   }).then(function(result) {
     state.dataCache = {};
     state.cacheTimestamp = {};
@@ -3655,7 +3655,7 @@ function addForecastLine() {
   }).then(function() {
     renderCurrentPage();
     attachEventListeners();
-    showToast('Ligne de prévision ajoutée.', 'success');
+    showToast('Ligne de prÃ©vision ajoutÃ©e.', 'success');
   }).catch(function(error) {
     showToast(error.message || error, 'error');
   });
@@ -3663,7 +3663,7 @@ function addForecastLine() {
 
 function archiveForecastLine(categorie, sousCategorie, sens) {
   if (state.selectedEntite === 'TOUTES') {
-    showToast('Sélectionne une entité pour modifier le prévisionnel.', 'error');
+    showToast('SÃ©lectionne une entitÃ© pour modifier le prÃ©visionnel.', 'error');
     return;
   }
   runAppsScriptMethod_('archiveForecastRow', {
@@ -3683,7 +3683,7 @@ function archiveForecastLine(categorie, sousCategorie, sens) {
   }).then(function() {
     renderCurrentPage();
     attachEventListeners();
-    showToast('Ligne retirée du prévisionnel.', 'success');
+    showToast('Ligne retirÃ©e du prÃ©visionnel.', 'success');
   }).catch(function(error) {
     showToast(error.message || error, 'error');
   });
@@ -3704,7 +3704,7 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
   const model = buildForecastPlanningModel_();
   const row = model && model.rows ? model.rows.find(function(item) { return item.id === rowId && item.editable; }) : null;
   if (!row) {
-    showToast('Cellule de prévision introuvable.', 'error');
+    showToast('Cellule de prÃ©vision introuvable.', 'error');
     return;
   }
   const year = Number(state.annualSelectedYear || new Date().getFullYear());
@@ -3727,9 +3727,9 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
     Sens: row.sense,
     Montant_prevu: amount,
     Mode_calcul: 'Manuel',
-    Base_reference: 'Tableau prévisionnel',
+    Base_reference: 'Tableau prÃ©visionnel',
     Active: 'Oui',
-    Commentaire: 'Saisie depuis le tableau prévisionnel'
+    Commentaire: 'Saisie depuis le tableau prÃ©visionnel'
   };
 
   runAppsScriptMethod_('upsertPrevision', payload)
@@ -3747,7 +3747,7 @@ function saveForecastCell(rowId, monthIndex, rawValue) {
     .then(function() {
       renderCurrentPage();
       attachEventListeners();
-      showToast('Prévision enregistrée.', 'success');
+      showToast('PrÃ©vision enregistrÃ©e.', 'success');
     })
     .catch(function(error) {
       showToast(error.message || error, 'error');
@@ -4191,17 +4191,17 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Tableau annuel du prévisionnel</h3>
-            <p>Saisie manuelle des montants par mois, suivi du réalisé depuis les transactions et lecture immédiate des écarts.</p>
+            <h3>Tableau annuel du prÃ©visionnel</h3>
+            <p>Saisie manuelle des montants par mois, suivi du rÃ©alisÃ© depuis les transactions et lecture immÃ©diate des Ã©carts.</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
         <p class="forecast-plan-note">${model && model.editable
-          ? 'Chaque cellule saisit le prévu du mois. La barre montre le pourcentage de réalisation. Clique sur la barre pour voir le réalisé et l’écart en euros.'
-          : 'La vue TOUTES LES ENTITÉS reste en lecture seule. Sélectionne une entité pour saisir les prévisions mois par mois.'}</p>
+          ? 'Chaque cellule saisit le prÃ©vu du mois. La barre montre le pourcentage de rÃ©alisation. Clique sur la barre pour voir le rÃ©alisÃ© et lâ€™Ã©cart en euros.'
+          : 'La vue TOUTES LES ENTITÃ‰S reste en lecture seule. SÃ©lectionne une entitÃ© pour saisir les prÃ©visions mois par mois.'}</p>
         ${state.selectedEntite !== 'TOUTES' ? `<div class="forecast-add-grid">
-          <div class="field"><label>Catégorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-catégorie</label><input id="forecast-add-subcategory" placeholder="Ex. Nouveau fournisseur"></div>
+          <div class="field"><label>CatÃ©gorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="forecast-add-subcategory" placeholder="Ex. Nouveau fournisseur"></div>
           <div class="field"><label>Sens</label><select id="forecast-add-sense"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
           <div class="field"><label>Mois</label><select id="forecast-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
@@ -4211,16 +4211,16 @@ function renderPrevisionnel() {
         </div>` : ''}
       </div>
 
-      <div class="card kpi forecast-summary-kpi"><div class="label">Encaissements prévus</div><div class="value">${euro(model ? model.totals.plannedEncaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Décaissements prévus</div><div class="value">${euro(model ? model.totals.plannedDecaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Réalisé net</div><div class="value">${euro(model ? model.totals.actualNet : 0)}</div><div class="hint">Transactions annuelles cumulées</div></div>
-      <div class="card kpi forecast-summary-kpi"><div class="label">Écart net</div><div class="value">${euro(varianceTotal)}</div><div class="hint">Réalisé moins prévu</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Encaissements prÃ©vus</div><div class="value">${euro(model ? model.totals.plannedEncaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">DÃ©caissements prÃ©vus</div><div class="value">${euro(model ? model.totals.plannedDecaissements : 0)}</div><div class="hint">Total annuel saisi</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">RÃ©alisÃ© net</div><div class="value">${euro(model ? model.totals.actualNet : 0)}</div><div class="hint">Transactions annuelles cumulÃ©es</div></div>
+      <div class="card kpi forecast-summary-kpi"><div class="label">Ã‰cart net</div><div class="value">${euro(varianceTotal)}</div><div class="hint">RÃ©alisÃ© moins prÃ©vu</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel prévu vs réalisé</h3>
-            <p>Lecture interactive de la trésorerie prévue et de la trésorerie réelle, mois par mois.</p>
+            <h3>Graphe annuel prÃ©vu vs rÃ©alisÃ©</h3>
+            <p>Lecture interactive de la trÃ©sorerie prÃ©vue et de la trÃ©sorerie rÃ©elle, mois par mois.</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_(model)}
@@ -4229,16 +4229,16 @@ function renderPrevisionnel() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Pilotage mensuel des catégories</h3>
-            <p>Le réalisé vient des transactions. Les détails d’écart restent accessibles au clic pour garder un tableau lisible.</p>
+            <h3>Pilotage mensuel des catÃ©gories</h3>
+            <p>Le rÃ©alisÃ© vient des transactions. Les dÃ©tails dâ€™Ã©cart restent accessibles au clic pour garder un tableau lisible.</p>
           </div>
         </div>
         ${renderForecastPlanningTable_(model)}
       </div>
 
       <div class="card panel-full">
-        <h3>Lecture du réalisé</h3>
-        <p class="forecast-locked-note">Encaissements = crédits catégorisés. Décaissements = débits catégorisés. Variation nette = encaissements moins décaissements.</p>
+        <h3>Lecture du rÃ©alisÃ©</h3>
+        <p class="forecast-locked-note">Encaissements = crÃ©dits catÃ©gorisÃ©s. DÃ©caissements = dÃ©bits catÃ©gorisÃ©s. Variation nette = encaissements moins dÃ©caissements.</p>
         ${renderForecastRealisedSummary_(model)}
       </div>
     </div>`;
@@ -4251,36 +4251,36 @@ function renderScenarios() {
   const recentScenarios = state.bootstrap.recentScenarios || [];
   document.getElementById('page-Scenarios').innerHTML = `
     <div class="grid">
-      <div class="card kpi"><div class="label">Base prévisionnelle</div><div class="value">${euro(summary.baseForecastTotal || 0)}</div><div class="hint">Avant scénario</div></div>
-      <div class="card kpi"><div class="label">Projection scénario</div><div class="value">${euro(summary.scenarioForecastTotal || 0)}</div><div class="hint">Après ajustements</div></div>
-      <div class="card kpi"><div class="label">Impact total</div><div class="value">${euro(summary.impactTotal || 0)}</div><div class="hint">Différence scénario - base</div></div>
-      <div class="card kpi"><div class="label">Scénarios</div><div class="value">${state.bootstrap.counts.Scenarios || 0}</div><div class="hint">Lignes dans le sheet</div></div>
+      <div class="card kpi"><div class="label">Base prÃ©visionnelle</div><div class="value">${euro(summary.baseForecastTotal || 0)}</div><div class="hint">Avant scÃ©nario</div></div>
+      <div class="card kpi"><div class="label">Projection scÃ©nario</div><div class="value">${euro(summary.scenarioForecastTotal || 0)}</div><div class="hint">AprÃ¨s ajustements</div></div>
+      <div class="card kpi"><div class="label">Impact total</div><div class="value">${euro(summary.impactTotal || 0)}</div><div class="hint">DiffÃ©rence scÃ©nario - base</div></div>
+      <div class="card kpi"><div class="label">ScÃ©narios</div><div class="value">${state.bootstrap.counts.Scenarios || 0}</div><div class="hint">Lignes dans le sheet</div></div>
 
       <div class="card panel-full">
-        <h3>Ajouter / modifier un scénario</h3>
+        <h3>Ajouter / modifier un scÃ©nario</h3>
         <div class="form-grid">
-          <div class="field"><label>Scenario_id</label><input id="scenario-id" placeholder="Laisser vide pour création"></div>
-          <div class="field"><label>Nom du scénario</label><input id="scenario-nom" placeholder="Ex. : Hausse du loyer été"></div>
-          <div class="field"><label>Entité</label><select id="scenario-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Catégorie</label><select id="scenario-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-catégorie</label><input id="scenario-sous" placeholder="Ex. : Blain ou EDF"></div>
-          <div class="field"><label>Type d’ajustement</label><select id="scenario-type"><option value="pourcentage">Pourcentage</option><option value="montant">Montant ajouté / retiré</option><option value="cible">Montant cible</option></select></div>
-          <div class="field"><label>Valeur d’ajustement</label><input id="scenario-valeur" type="number" step="0.01" placeholder="Ex. : 10 ou -150"></div>
+          <div class="field"><label>Scenario_id</label><input id="scenario-id" placeholder="Laisser vide pour crÃ©ation"></div>
+          <div class="field"><label>Nom du scÃ©nario</label><input id="scenario-nom" placeholder="Ex. : Hausse du loyer Ã©tÃ©"></div>
+          <div class="field"><label>EntitÃ©</label><select id="scenario-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
+          <div class="field"><label>CatÃ©gorie</label><select id="scenario-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="scenario-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>Type dâ€™ajustement</label><select id="scenario-type"><option value="pourcentage">Pourcentage</option><option value="montant">Montant ajoutÃ© / retirÃ©</option><option value="cible">Montant cible</option></select></div>
+          <div class="field"><label>Valeur dâ€™ajustement</label><input id="scenario-valeur" type="number" step="0.01" placeholder="Ex. : 10 ou -150"></div>
           <div class="field"><label>Montant cible</label><input id="scenario-cible" type="number" step="0.01" placeholder="Ex: 1400"></div>
-          <div class="field"><label>Date d’effet</label><input id="scenario-date" type="date"></div>
+          <div class="field"><label>Date dâ€™effet</label><input id="scenario-date" type="date"></div>
           <div class="field"><label>Active</label><select id="scenario-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Commentaire</label><input id="scenario-commentaire" placeholder="Scénario de test sans toucher au réel"></div>
+          <div class="field"><label>Commentaire</label><input id="scenario-commentaire" placeholder="ScÃ©nario de test sans toucher au rÃ©el"></div>
         </div>
-        <div class="actions-row"><button class="btn primary" onclick="saveScenario()">Enregistrer le scénario</button></div>
+        <div class="actions-row"><button class="btn primary" onclick="saveScenario()">Enregistrer le scÃ©nario</button></div>
       </div>
 
       <div class="card panel-full">
-        <h3>Impact des scénarios</h3>
+        <h3>Impact des scÃ©narios</h3>
         ${renderScenarioTable(summary)}
       </div>
 
       <div class="card panel-full">
-        <h3>Scénarios récents</h3>
+        <h3>ScÃ©narios rÃ©cents</h3>
         ${renderRecentScenarios(recentScenarios)}
       </div>
     </div>`;
@@ -4288,7 +4288,7 @@ function renderScenarios() {
 
 function renderFacturesToPay(rows) {
   if (!rows.length) return '<div class="empty">Aucune facture a regler pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Mois</th><th>Fournisseur</th><th>Numero</th><th>Montant TTC</th><th>Statut</th><th>Paiement</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>Mois</th><th>Fournisseur</th><th>Numero</th><th>Montant TTC</th><th>Statut</th><th>Paiement</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const id = esc(row.Facture_id);
     const status = esc(row.Statut_paiement || 'A_REGLER');
     return `<tr>
@@ -4317,8 +4317,8 @@ function renderFacturesToPay(rows) {
 
 function renderRapprochementTable(rows, options) {
   options = options || {};
-  if (!rows.length) return '<div class="empty">Aucun rapprochement enregistré pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Transaction</th><th>Facture</th><th>Écart</th><th>Score</th><th>Statut</th><th>Commentaire</th>${options.canValidate ? '<th>Action</th>' : ''}</tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucun rapprochement enregistrÃ© pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>Transaction</th><th>Facture</th><th>Ã‰cart</th><th>Score</th><th>Statut</th><th>Commentaire</th>${options.canValidate ? '<th>Action</th>' : ''}</tr></thead><tbody>${rows.map(function(row) {
     const action = options.canValidate
       ? `<td><button class="btn secondary validateRapprochementBtn" data-rapprochement-id="${esc(row.Rapprochement_id)}">Valider</button></td>`
       : '';
@@ -4336,8 +4336,8 @@ function renderRapprochementTable(rows, options) {
 }
 
 function renderFacturesToVerify(rows) {
-  if (!rows.length) return '<div class="empty">Aucune facture à vérifier pour le moment.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Nom fichier</th><th>Problème</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucune facture Ã  vÃ©rifier pour le moment.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>Nom fichier</th><th>ProblÃ¨me</th><th>Statut</th></tr></thead><tbody>${rows.map(function(row) {
     return `<tr>
       <td>${esc(row.Entite)}</td>
       <td>${esc(row.Nom_fichier)}</td>
@@ -4348,8 +4348,8 @@ function renderFacturesToVerify(rows) {
 }
 
 function renderImportHistory(rows) {
-  if (!rows.length) return '<div class="empty">Aucun import bancaire enregistré.</div>';
-  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Entité</th><th>Compte</th><th>Fichier</th><th>Lignes</th><th>Nouvelles</th><th>Doublons</th><th>Statut</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
+  if (!rows.length) return '<div class="empty">Aucun import bancaire enregistrÃ©.</div>';
+  return `<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>EntitÃ©</th><th>Compte</th><th>Fichier</th><th>Lignes</th><th>Nouvelles</th><th>Doublons</th><th>Statut</th><th>Action</th></tr></thead><tbody>${rows.map(function(row) {
     const importId = esc(row.Import_id || '');
     const status = String(row.Statut || '').trim();
     const canRollback = importId && status !== 'ANNULE';
@@ -4362,7 +4362,7 @@ function renderImportHistory(rows) {
       <td>${esc(row.Nouvelles_lignes)}</td>
       <td>${esc(row.Doublons)}</td>
       <td>${esc(row.Statut)}</td>
-      <td><div class="flex">${canRollback ? `<button class="btn secondary rollbackImportBtn" data-import-id="${importId}">Annuler cet import</button>` : '<span class="empty">Déjà annulé</span>'}<button class="btn ghost deleteImportHistoryBtn" data-import-id="${importId}" title="Supprimer cette ligne de l’historique" aria-label="Supprimer cette ligne de l’historique">×</button></div></td>
+      <td><div class="flex">${canRollback ? `<button class="btn secondary rollbackImportBtn" data-import-id="${importId}">Annuler cet import</button>` : '<span class="empty">DÃ©jÃ  annulÃ©</span>'}<button class="btn ghost deleteImportHistoryBtn" data-import-id="${importId}" title="Supprimer cette ligne de lâ€™historique" aria-label="Supprimer cette ligne de lâ€™historique">Ã—</button></div></td>
     </tr>`;
   }).join('')}</tbody></table></div>`;
 }
@@ -4384,44 +4384,44 @@ function renderRapprochement() {
   state.rapprochementView = view;
   const viewLabel = (rapprochementNavItems.find(function(item) { return item[0] === view; }) || rapprochementNavItems[0])[1];
   const activePanel = view === 'valides'
-    ? `<div class="card panel-full"><h3>Rapprochements validés</h3>${renderRapprochementTable(rapprochementsValides)}</div>`
+    ? `<div class="card panel-full"><h3>Rapprochements validÃ©s</h3>${renderRapprochementTable(rapprochementsValides)}</div>`
     : view === 'transactions_sans_facture'
       ? `<div class="card panel-full"><h3>Transactions sans facture</h3>${renderTransactionsWithoutInvoice(transactionsWithoutInvoice)}</div>`
       : view === 'factures_a_regler'
-        ? `<div class="card panel-full"><h3>Factures à régler</h3>${renderFacturesToPay(factures)}</div>`
-        : `<div class="card panel-full"><h3>Rapprochements à vérifier</h3>${renderRapprochementTable(rapprochementsAVerifier, { canValidate: true })}</div>`;
+        ? `<div class="card panel-full"><h3>Factures Ã  rÃ©gler</h3>${renderFacturesToPay(factures)}</div>`
+        : `<div class="card panel-full"><h3>Rapprochements Ã  vÃ©rifier</h3>${renderRapprochementTable(rapprochementsAVerifier, { canValidate: true })}</div>`;
   document.getElementById('page-Rapprochement bancaire').innerHTML = `
     <div class="grid">
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Contrôle du rapprochement bancaire</h3>
-            <p>Section active: <strong>${esc(viewLabel)}</strong>. Le choix de vue se fait maintenant depuis le menu à gauche.</p>
+            <h3>ContrÃ´le du rapprochement bancaire</h3>
+            <p>Section active: <strong>${esc(viewLabel)}</strong>. Le choix de vue se fait maintenant depuis le menu Ã  gauche.</p>
           </div>
         </div>
       </div>
       <div class="card panel-side">
         <h3>Compteurs</h3>
         <div class="list">
-          <div class="row"><div>Rapprochements à vérifier<small>Correspondances probables à confirmer</small></div><div>${rapprochementsAVerifier.length}</div></div>
-          <div class="row"><div>Rapprochements validés<small>Liens confirmés</small></div><div>${rapprochementsValides.length}</div></div>
-          <div class="row"><div>Transactions sans facture<small>Sorties bancaires non justifiées</small></div><div>${transactionsWithoutInvoice.length}</div></div>
-          <div class="row"><div>Factures à régler<small>Factures sans transaction liée</small></div><div>${factures.length}</div></div>
+          <div class="row"><div>Rapprochements Ã  vÃ©rifier<small>Correspondances probables Ã  confirmer</small></div><div>${rapprochementsAVerifier.length}</div></div>
+          <div class="row"><div>Rapprochements validÃ©s<small>Liens confirmÃ©s</small></div><div>${rapprochementsValides.length}</div></div>
+          <div class="row"><div>Transactions sans facture<small>Sorties bancaires non justifiÃ©es</small></div><div>${transactionsWithoutInvoice.length}</div></div>
+          <div class="row"><div>Factures Ã  rÃ©gler<small>Factures sans transaction liÃ©e</small></div><div>${factures.length}</div></div>
         </div>
       </div>
       <div class="card panel-wide">
-        <h3>Factures à vérifier côté lecture</h3>
-        <p class="empty" style="margin-top:0">Contrôle technique OCR/nom de fichier, séparé du rapprochement bancaire.</p>
+        <h3>Factures Ã  vÃ©rifier cÃ´tÃ© lecture</h3>
+        <p class="empty" style="margin-top:0">ContrÃ´le technique OCR/nom de fichier, sÃ©parÃ© du rapprochement bancaire.</p>
         ${renderFacturesToVerify(facturesToVerify)}
       </div>
       ${activePanel}
       <div class="card panel-full">
         <h3>Logique de rapprochement</h3>
         <table class="table"><thead><tr><th>Statut</th><th>Description</th></tr></thead><tbody>
-          <tr><td>RAPPROCHE / AUTO_RAPPROCHE</td><td>Transaction bancaire reliée à une facture avec score fort ou validation humaine.</td></tr>
-          <tr><td>A_VERIFIER</td><td>Correspondance plausible mais pas assez fiable pour être validée sans contrôle.</td></tr>
-          <tr><td>Transaction sans facture</td><td>Sortie bancaire sans justificatif rattaché.</td></tr>
-          <tr><td>Facture à régler</td><td>Facture présente dans Drive / Sheet sans transaction correspondante.</td></tr>
+          <tr><td>RAPPROCHE / AUTO_RAPPROCHE</td><td>Transaction bancaire reliÃ©e Ã  une facture avec score fort ou validation humaine.</td></tr>
+          <tr><td>A_VERIFIER</td><td>Correspondance plausible mais pas assez fiable pour Ãªtre validÃ©e sans contrÃ´le.</td></tr>
+          <tr><td>Transaction sans facture</td><td>Sortie bancaire sans justificatif rattachÃ©.</td></tr>
+          <tr><td>Facture Ã  rÃ©gler</td><td>Facture prÃ©sente dans Drive / Sheet sans transaction correspondante.</td></tr>
         </tbody></table>
       </div>
     </div>`;
@@ -4448,7 +4448,7 @@ function renderParametres() {
     <div class="grid">
       <div class="card panel-wide">
         <h3>Comptes bancaires</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Compte_id</th><th>Entité</th><th>Nom</th><th>Banque</th><th>RIB / IBAN</th><th>Actif</th></tr></thead><tbody>${comptes.map(function(row) {
+        <div class="table-wrap"><table class="table"><thead><tr><th>Compte_id</th><th>EntitÃ©</th><th>Nom</th><th>Banque</th><th>RIB / IBAN</th><th>Actif</th></tr></thead><tbody>${comptes.map(function(row) {
           return `<tr><td>${esc(row.Compte_id)}</td><td>${esc(row.Entite)}</td><td>${esc(row.Nom_compte)}</td><td>${esc(row.Banque)}</td><td>${esc(row.RIB_IBAN)}</td><td>${esc(row.Actif)}</td></tr>`;
         }).join('')}</tbody></table></div>
       </div>
@@ -4459,8 +4459,8 @@ function renderParametres() {
         }).join('')}</div>
       </div>
       <div class="card panel-wide">
-        <h3>Catégories de gestion</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Catégorie</th><th>Sous-catégorie</th><th>Flux</th><th>Fréquence</th><th>Action</th></tr></thead><tbody>${categories.map(function(row, index) {
+        <h3>CatÃ©gories de gestion</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Flux</th><th>FrÃ©quence</th><th>Action</th></tr></thead><tbody>${categories.map(function(row, index) {
           return `<tr><td>${esc(frLabel(row.Categorie))}</td><td>${esc(frLabel(row.Sous_categorie))}</td><td>${esc(frLabel(row.Type_flux))}</td><td>${esc(frLabel(row.Frequence))}</td><td><button class="btn secondary" onclick="editCategorie(${index})">Modifier</button></td></tr>`;
         }).join('')}</tbody></table></div>
       </div>
@@ -4468,31 +4468,31 @@ function renderParametres() {
           <h3>Drive et OCR</h3>
           <div class="list">
             ${driveRoots.map(function(row) {
-              return `<div class="row"><div>${esc(row.entite)}<small>Dossier factures racine</small></div><div><span class="badge ok">Lié</span></div></div>`;
+              return `<div class="row"><div>${esc(row.entite)}<small>Dossier factures racine</small></div><div><span class="badge ok">LiÃ©</span></div></div>`;
             }).join('')}
-            <div class="row"><div>OCR facture<small>OCR.space (gratuit)</small></div><div><span class="badge ok">Prêt</span></div></div>
+            <div class="row"><div>OCR facture<small>OCR.space (gratuit)</small></div><div><span class="badge ok">PrÃªt</span></div></div>
           </div>
         <div class="form-grid" style="margin-top:12px">
           <div class="field"><label>Factures par passage automatique</label><input id="ocr-limit" type="number" min="1" value="25"></div>
         </div>
-        <p class="empty" style="margin:8px 0 0">Le traitement automatique lit ce nombre de factures par société à chaque passage, puis rapproche leurs paiements avec les débits de la même société.</p>
+        <p class="empty" style="margin:8px 0 0">Le traitement automatique lit ce nombre de factures par sociÃ©tÃ© Ã  chaque passage, puis rapproche leurs paiements avec les dÃ©bits de la mÃªme sociÃ©tÃ©.</p>
         <div class="actions-row">
             <button class="btn primary" onclick="runInvoiceOcr()">Lancer un passage maintenant</button>
           </div>
         </div>
         <div class="card panel-full">
-          <h3>Seuils d’alerte</h3>
+          <h3>Seuils dâ€™alerte</h3>
           <div class="form-grid">
             <div class="field"><label>Solde faible</label><input id="setting-low-balance" type="number" step="0.01" value="${esc(settings.alertLowBalance)}"></div>
-            <div class="field"><label>Solde négatif</label><input id="setting-negative-balance" type="number" step="0.01" value="${esc(settings.alertNegativeBalance)}"></div>
-            <div class="field"><label>Écart montant</label><input id="setting-variance-amount" type="number" step="0.01" value="${esc(settings.alertVarianceAmount)}"></div>
-            <div class="field"><label>Écart pourcentage</label><input id="setting-variance-percent" type="number" step="0.01" value="${esc(settings.alertVariancePercent)}"></div>
+            <div class="field"><label>Solde nÃ©gatif</label><input id="setting-negative-balance" type="number" step="0.01" value="${esc(settings.alertNegativeBalance)}"></div>
+            <div class="field"><label>Ã‰cart montant</label><input id="setting-variance-amount" type="number" step="0.01" value="${esc(settings.alertVarianceAmount)}"></div>
+            <div class="field"><label>Ã‰cart pourcentage</label><input id="setting-variance-percent" type="number" step="0.01" value="${esc(settings.alertVariancePercent)}"></div>
           </div>
           <div class="actions-row"><button class="btn secondary" onclick="saveAlertSettings()">Enregistrer seuils</button></div>
         </div>
         <div class="card panel-full">
           <h3>Dossiers Drive des factures</h3>
-          <div class="table-wrap"><table class="table"><thead><tr><th>Entité</th><th>Dossier racine</th><th>Action</th></tr></thead><tbody>${['GROUPE ONSEN','ALTERACIG','OSLO SHOP','VAPOTE & COMPAGNIE','LCDV'].map(function(entite) {
+          <div class="table-wrap"><table class="table"><thead><tr><th>EntitÃ©</th><th>Dossier racine</th><th>Action</th></tr></thead><tbody>${['GROUPE ONSEN','ALTERACIG','OSLO SHOP','VAPOTE & COMPAGNIE','LCDV'].map(function(entite) {
             const match = driveRoots.find(function(row) { return row.entite === entite; }) || { folderId: '' };
             return `<tr>
               <td>${esc(entite)}</td>
@@ -4505,50 +4505,50 @@ function renderParametres() {
           <h3>Ajouter / modifier un compte</h3>
         <div class="form-grid">
           <div class="field"><label>Compte_id</label><input id="param-compte-id" placeholder="OSLO-002"></div>
-          <div class="field"><label>Entité</label><input id="param-compte-entite" placeholder="OSLO SHOP"></div>
+          <div class="field"><label>EntitÃ©</label><input id="param-compte-entite" placeholder="OSLO SHOP"></div>
           <div class="field"><label>Nom compte</label><input id="param-compte-nom" placeholder="Compte secondaire"></div>
           <div class="field"><label>Banque</label><input id="param-compte-banque" placeholder="BNP"></div>
           <div class="field"><label>RIB / IBAN</label><input id="param-compte-rib" placeholder="FR..."></div>
           <div class="field"><label>Devise</label><input id="param-compte-devise" value="EUR"></div>
           <div class="field"><label>Actif</label><select id="param-compte-actif"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Type d’entité</label><select id="param-compte-type"><option value="societe">Société</option><option value="groupe">Groupe</option></select></div>
+          <div class="field"><label>Type dâ€™entitÃ©</label><select id="param-compte-type"><option value="societe">SociÃ©tÃ©</option><option value="groupe">Groupe</option></select></div>
         </div>
         <div class="actions-row"><button class="btn secondary" onclick="saveCompte()">Enregistrer compte</button></div>
       </div>
       <div class="card panel-full">
-          <h3>Ajouter / modifier une catégorie</h3>
+          <h3>Ajouter / modifier une catÃ©gorie</h3>
         <div class="form-grid">
-          <div class="field"><label>Catégorie</label><input id="param-cat-categorie" placeholder="Électricité"></div>
-          <div class="field"><label>Sous-catégorie</label><input id="param-cat-sous" placeholder="EDF"></div>
-          <div class="field"><label>Type de flux</label><select id="param-cat-flux"><option value="Decaissement">Décaissement</option><option value="Encaissement">Encaissement</option><option value="Neutre">Neutre</option></select></div>
-          <div class="field"><label>Fréquence</label><select id="param-cat-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
+          <div class="field"><label>CatÃ©gorie</label><input id="param-cat-categorie" placeholder="Ã‰lectricitÃ©"></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="param-cat-sous" placeholder="EDF"></div>
+          <div class="field"><label>Type de flux</label><select id="param-cat-flux"><option value="Decaissement">DÃ©caissement</option><option value="Encaissement">Encaissement</option><option value="Neutre">Neutre</option></select></div>
+          <div class="field"><label>FrÃ©quence</label><select id="param-cat-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
           <div class="field"><label>Active</label><select id="param-cat-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Commentaire</label><input id="param-cat-commentaire" placeholder="Sous-catégorie = fournisseur"></div>
+          <div class="field"><label>Commentaire</label><input id="param-cat-commentaire" placeholder="Sous-catÃ©gorie = fournisseur"></div>
         </div>
-        <div class="actions-row"><button class="btn secondary" onclick="saveCategorie()">Enregistrer la catégorie</button></div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveCategorie()">Enregistrer la catÃ©gorie</button></div>
       </div>
       <div class="card panel-full">
-        <h3>Règles actives</h3>
-        <div class="table-wrap"><table class="table"><thead><tr><th>Valeur</th><th>Catégorie</th><th>Sous-catégorie</th><th>Flux</th><th>Fréquence</th><th>Priorité</th><th>Action</th></tr></thead><tbody>${regles.length ? regles.slice(0, 50).map(function(row, index) {
+        <h3>RÃ¨gles actives</h3>
+        <div class="table-wrap"><table class="table"><thead><tr><th>Valeur</th><th>CatÃ©gorie</th><th>Sous-catÃ©gorie</th><th>Flux</th><th>FrÃ©quence</th><th>PrioritÃ©</th><th>Action</th></tr></thead><tbody>${regles.length ? regles.slice(0, 50).map(function(row, index) {
           return `<tr><td>${esc(row.Valeur)}</td><td>${esc(frLabel(row.Categorie))}</td><td>${esc(frLabel(row.Sous_categorie))}</td><td>${esc(frLabel(row.Sens || '-'))}</td><td>${esc(frLabel(row.Frequence || '-'))}</td><td>${esc(row.Priorite || '')}</td><td><button class="btn secondary" onclick="editRegle(${index})">Modifier</button></td></tr>`;
-        }).join('') : '<tr><td colspan="7" class="empty">Les règles apparaîtront au fur et à mesure de l’apprentissage.</td></tr>'}</tbody></table></div>
+        }).join('') : '<tr><td colspan="7" class="empty">Les rÃ¨gles apparaÃ®tront au fur et Ã  mesure de lâ€™apprentissage.</td></tr>'}</tbody></table></div>
       </div>
       <div class="card panel-full">
-        <h3>Ajouter / modifier une règle</h3>
+        <h3>Ajouter / modifier une rÃ¨gle</h3>
         <div class="form-grid">
-          <div class="field"><label>ID de règle</label><input id="param-regle-id" placeholder="Automatique si vide"></div>
+          <div class="field"><label>ID de rÃ¨gle</label><input id="param-regle-id" placeholder="Automatique si vide"></div>
           <div class="field"><label>Active</label><select id="param-regle-active"><option value="Oui">Oui</option><option value="Non">Non</option></select></div>
-          <div class="field"><label>Société</label><select id="param-regle-entite"><option value="">Toutes</option>${entiteOptions}</select></div>
+          <div class="field"><label>SociÃ©tÃ©</label><select id="param-regle-entite"><option value="">Toutes</option>${entiteOptions}</select></div>
           <div class="field"><label>Compte bancaire</label><select id="param-regle-compte"><option value="">Tous</option>${compteOptions}</select></div>
-          <div class="field"><label>Mot-clé du libellé</label><input id="param-regle-valeur" placeholder="EDF, VERISURE, LOYER..."></div>
-          <div class="field"><label>Catégorie</label><select id="param-regle-categorie" onchange="updateParamRegleSousCategories()">${categoryOptions}</select></div>
-          <div class="field"><label>Sous-catégorie</label><select id="param-regle-sous"><option value="">Aucune</option></select></div>
-          <div class="field"><label>Flux</label><select id="param-regle-sens"><option value="">Automatique</option><option value="Encaissement">Encaissement</option><option value="Decaissement">Décaissement</option></select></div>
-          <div class="field"><label>Priorité</label><input id="param-regle-priorite" type="number" min="1" max="100" value="100"></div>
-          <div class="field"><label>Fréquence</label><select id="param-regle-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
+          <div class="field"><label>Mot-clÃ© du libellÃ©</label><input id="param-regle-valeur" placeholder="EDF, VERISURE, LOYER..."></div>
+          <div class="field"><label>CatÃ©gorie</label><select id="param-regle-categorie" onchange="updateParamRegleSousCategories()">${categoryOptions}</select></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><select id="param-regle-sous"><option value="">Aucune</option></select></div>
+          <div class="field"><label>Flux</label><select id="param-regle-sens"><option value="">Automatique</option><option value="Encaissement">Encaissement</option><option value="Decaissement">DÃ©caissement</option></select></div>
+          <div class="field"><label>PrioritÃ©</label><input id="param-regle-priorite" type="number" min="1" max="100" value="100"></div>
+          <div class="field"><label>FrÃ©quence</label><select id="param-regle-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option><option value="Variable">Variable</option></select></div>
           <div class="field"><label>Commentaire</label><input id="param-regle-commentaire" placeholder="Commentaire interne"></div>
         </div>
-        <div class="actions-row"><button class="btn secondary" onclick="saveRegle()">Enregistrer la règle</button></div>
+        <div class="actions-row"><button class="btn secondary" onclick="saveRegle()">Enregistrer la rÃ¨gle</button></div>
       </div>
     </div>`;
   updateParamRegleSousCategories();
@@ -4761,49 +4761,49 @@ function renderMappingArea(fileName) {
   const canImport = !!(compteId && state.mapping.date && state.mapping.libelle && (state.mapping.montant || state.mapping.debit || state.mapping.credit));
   const mappingSummary = [
     ['Date', state.mapping.date],
-    ['Libellé', state.mapping.libelle],
-    ['Débit', state.mapping.debit],
-    ['Crédit', state.mapping.credit],
-    ['Montant signé', state.mapping.montant],
+    ['LibellÃ©', state.mapping.libelle],
+    ['DÃ©bit', state.mapping.debit],
+    ['CrÃ©dit', state.mapping.credit],
+    ['Montant signÃ©', state.mapping.montant],
     ['Solde', state.mapping.solde],
     ['Site', state.mapping.site]
   ].filter(function(item) { return item[1]; });
   const detectionMessage = canImport
-    ? `J ai trouvé automatiquement les transactions dans l onglet <strong>${esc(detection.sheetName || 'détecté')}</strong>${detection.headerRow ? ', ligne ' + esc(detection.headerRow) : ''}. Aucun réglage à remplir.`
-    : 'Je n ai pas reconnu automatiquement toutes les informations obligatoires. Le fichier doit contenir Date, Libellé et Montant ou Débit/Crédit, et un compte bancaire doit être choisi.';
+    ? `J ai trouvÃ© automatiquement les transactions dans l onglet <strong>${esc(detection.sheetName || 'dÃ©tectÃ©')}</strong>${detection.headerRow ? ', ligne ' + esc(detection.headerRow) : ''}. Aucun rÃ©glage Ã  remplir.`
+    : 'Je n ai pas reconnu automatiquement toutes les informations obligatoires. Le fichier doit contenir Date, LibellÃ© et Montant ou DÃ©bit/CrÃ©dit, et un compte bancaire doit Ãªtre choisi.';
   const ribMessage = state.importRib
-    ? `<br>RIB détecté dans le fichier: <strong>${esc(state.importRib)}</strong>. Il sert seulement à sélectionner le compte dans la société choisie si ce RIB est connu.`
+    ? `<br>RIB dÃ©tectÃ© dans le fichier: <strong>${esc(state.importRib)}</strong>. Il sert seulement Ã  sÃ©lectionner le compte dans la sociÃ©tÃ© choisie si ce RIB est connu.`
     : '';
   const manualMapping = `
     <details ${canImport ? '' : 'open'} style="margin-top:12px">
-      <summary style="cursor:pointer;font-weight:800;color:#18396f">${canImport ? 'Afficher les réglages avancés' : 'Choisir les colonnes manuellement'}</summary>
+      <summary style="cursor:pointer;font-weight:800;color:#18396f">${canImport ? 'Afficher les rÃ©glages avancÃ©s' : 'Choisir les colonnes manuellement'}</summary>
       <div class="form-grid" style="margin-top:12px">
-        ${renderMappingSelect('Date opération', 'date', headers)}
+        ${renderMappingSelect('Date opÃ©ration', 'date', headers)}
         ${renderMappingSelect('Date valeur', 'dateValeur', headers)}
-        ${renderMappingSelect('Libellé', 'libelle', headers)}
-        ${renderMappingSelect('Référence bancaire', 'reference', headers)}
-        ${renderMappingSelect('Débit', 'debit', headers)}
-        ${renderMappingSelect('Crédit', 'credit', headers)}
-        ${renderMappingSelect('Montant signé', 'montant', headers)}
+        ${renderMappingSelect('LibellÃ©', 'libelle', headers)}
+        ${renderMappingSelect('RÃ©fÃ©rence bancaire', 'reference', headers)}
+        ${renderMappingSelect('DÃ©bit', 'debit', headers)}
+        ${renderMappingSelect('CrÃ©dit', 'credit', headers)}
+        ${renderMappingSelect('Montant signÃ©', 'montant', headers)}
         ${renderMappingSelect('Solde', 'solde', headers)}
         ${renderMappingSelect('Site / magasin', 'site', headers)}
-        ${renderMappingSelect('Mode règlement', 'modeReglement', headers)}
+        ${renderMappingSelect('Mode rÃ¨glement', 'modeReglement', headers)}
       </div>
     </details>`;
   const area = document.getElementById('mappingArea');
   area.classList.remove('hidden');
   area.innerHTML = `
-    <div class="note">Fichier chargé: <strong>${esc(fileName)}</strong>. ${detectionMessage}${ribMessage}</div>
+    <div class="note">Fichier chargÃ©: <strong>${esc(fileName)}</strong>. ${detectionMessage}${ribMessage}</div>
     <div class="note" style="margin-top:10px;background:${canImport ? '#edfdf4' : '#fff7e9'};border-color:${canImport ? '#b8ebca' : '#f5d9a6'};color:${canImport ? '#166534' : '#8a5a00'}">
-      <strong>${state.importRows.length} transaction(s) détectée(s).</strong>
-      ${mappingSummary.length ? '<br>Colonnes utilisées: ' + mappingSummary.map(function(item) { return esc(item[0]) + ' = <strong>' + esc(item[1]) + '</strong>'; }).join(' · ') : ''}
+      <strong>${state.importRows.length} transaction(s) dÃ©tectÃ©e(s).</strong>
+      ${mappingSummary.length ? '<br>Colonnes utilisÃ©es: ' + mappingSummary.map(function(item) { return esc(item[0]) + ' = <strong>' + esc(item[1]) + '</strong>'; }).join(' Â· ') : ''}
     </div>
     ${canImport ? '' : manualMapping}
     <div class="actions-row">
       <button class="btn primary" onclick="submitImport()" ${canImport && !state.importInProgress ? '' : 'disabled'}>${state.importInProgress ? 'Import en cours...' : 'Importer ces transactions'}</button>
-      <span class="footer-note">${canImport ? 'Le site utilisera la société choisie, le compte sélectionné, Date, Libellé et les montants Débit/Crédit.' : 'Information obligatoire manquante.'}</span>
+      <span class="footer-note">${canImport ? 'Le site utilisera la sociÃ©tÃ© choisie, le compte sÃ©lectionnÃ©, Date, LibellÃ© et les montants DÃ©bit/CrÃ©dit.' : 'Information obligatoire manquante.'}</span>
     </div>
-    ${canImport ? `<div class="actions-row"><button class="btn ghost" onclick="document.getElementById('advancedMappingArea').classList.toggle('hidden')">Afficher les réglages avancés</button></div><div id="advancedMappingArea" class="hidden">${manualMapping}</div>` : ''}
+    ${canImport ? `<div class="actions-row"><button class="btn ghost" onclick="document.getElementById('advancedMappingArea').classList.toggle('hidden')">Afficher les rÃ©glages avancÃ©s</button></div><div id="advancedMappingArea" class="hidden">${manualMapping}</div>` : ''}
     <div class="import-preview" style="margin-top:12px">${renderImportPreview()}</div>`;
 }
 
@@ -4839,6 +4839,10 @@ function renderImportPreview() {
 }
 
 function submitImport() {
+  if (state.importInProgress) {
+    showToast('Un import est déjà en cours. Attends sa fin avant de relancer.', 'warn');
+    return;
+  }
   const entite = document.getElementById('importEntite').value;
   const compteId = document.getElementById('importCompte').value;
   const sourceName = document.getElementById('sourceName').value || 'import_banque';
@@ -4912,7 +4916,7 @@ function updateSousCategories(transactionUid) {
   const options = cat === '__new__' ? [] : (categoryMap[cat] || []);
   sub.innerHTML = (options.length ? options.map(function(value) {
     return `<option value="${esc(value)}">${esc(frLabel(value))}</option>`;
-  }).join('') : '<option value="">À définir</option>') + '<option value="__new__">+ Nouvelle sous-catégorie</option>';
+  }).join('') : '<option value="">Ã€ dÃ©finir</option>') + '<option value="__new__">+ Nouvelle sous-catÃ©gorie</option>';
   if (subNewWrap) subNewWrap.classList.add('hidden');
   toggleNewSousCategorieField_(transactionUid);
 }
@@ -4936,14 +4940,14 @@ function saveClassification(transactionUid) {
   const createRule = document.getElementById('rule-' + transactionUid).checked;
   const ruleValue = document.getElementById('ruleValue-' + transactionUid).value;
   const sensEl = document.getElementById('sens-' + transactionUid);
-  const sens = sensEl ? sensEl.value : 'Décaissement';
+  const sens = sensEl ? sensEl.value : 'DÃ©caissement';
 
   if (!categorie) {
-    showToast('Renseigne une catégorie.', 'warn');
+    showToast('Renseigne une catÃ©gorie.', 'warn');
     return;
   }
   if (sousSelectValue === '__new__' && !sousCategorie) {
-    showToast('Renseigne une nouvelle sous-catégorie.', 'warn');
+    showToast('Renseigne une nouvelle sous-catÃ©gorie.', 'warn');
     return;
   }
 
@@ -4953,7 +4957,7 @@ function saveClassification(transactionUid) {
     Type_flux: sens,
     Frequence: 'Variable',
     Active: 'Oui',
-    Commentaire: 'Créée depuis Transactions à classer'
+    Commentaire: 'CrÃ©Ã©e depuis Transactions Ã  classer'
   };
 
   const beforeSave = (categorySelectValue === '__new__' || sousSelectValue === '__new__')
@@ -5009,7 +5013,7 @@ function saveClassification(transactionUid) {
 }
 
 function applyRulesToHistory() {
-  if (!confirm('Appliquer les règles aux mouvements déjà importés non classés ou incomplets ? Les montants, débits, crédits et sens bancaires ne seront pas modifiés.')) return;
+  if (!confirm('Appliquer les rÃ¨gles aux mouvements dÃ©jÃ  importÃ©s non classÃ©s ou incomplets ? Les montants, dÃ©bits, crÃ©dits et sens bancaires ne seront pas modifiÃ©s.')) return;
   google.script.run
     .withSuccessHandler(function(result) {
       applyRefreshPayload_(result);
@@ -5017,7 +5021,7 @@ function applyRulesToHistory() {
       const info = result.reclassification || {};
       loadAnnualPilotageData_(true).then(function() {
         showPage('Gestion de tresorerie');
-        showToast((info.message || 'Règles appliquées.') + ' Scannés: ' + (info.scanned || 0) + ', ignorés: ' + (info.skipped || 0) + '.', 'success');
+        showToast((info.message || 'RÃ¨gles appliquÃ©es.') + ' ScannÃ©s: ' + (info.scanned || 0) + ', ignorÃ©s: ' + (info.skipped || 0) + '.', 'success');
       }).catch(function(error) {
         showToast(error.message || error, 'error');
       });
@@ -5068,7 +5072,7 @@ function validateRapprochement(rapprochementId) {
     .withSuccessHandler(function(result) {
       applyRefreshPayload_(result);
       showPage('Rapprochement bancaire');
-      showToast('Rapprochement validé.', 'success');
+      showToast('Rapprochement validÃ©.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -5078,14 +5082,14 @@ function validateRapprochement(rapprochementId) {
 
 function rollbackImport(importId) {
   if (!importId) return;
-  if (!confirm('Annuler cet import bancaire ? Les mouvements, classements et rapprochements liés seront retirés.')) return;
+  if (!confirm('Annuler cet import bancaire ? Les mouvements, classements et rapprochements liÃ©s seront retirÃ©s.')) return;
   google.script.run
     .withSuccessHandler(function(result) {
       applyRefreshPayload_(result);
       state.movementCacheKey = '';
       showPage('Gestion de tresorerie');
       const rollback = result.rollback || {};
-      showToast(`Import annulé. ${rollback.movementsDeleted || 0} mouvement(s) supprimé(s).`, 'success');
+      showToast(`Import annulÃ©. ${rollback.movementsDeleted || 0} mouvement(s) supprimÃ©(s).`, 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -5095,14 +5099,14 @@ function rollbackImport(importId) {
 
 function deleteImportHistoryEntry(importId) {
   if (!importId) return;
-  if (!confirm('Supprimer cette ligne de l’historique des imports ? Les mouvements importés resteront inchangés.')) return;
+  if (!confirm('Supprimer cette ligne de lâ€™historique des imports ? Les mouvements importÃ©s resteront inchangÃ©s.')) return;
   google.script.run
     .withSuccessHandler(function(result) {
       state.bootstrap.importHistory = result.importHistory || [];
       state.bootstrap.counts = result.counts || state.bootstrap.counts;
       renderCurrentPage();
       attachEventListeners();
-      showToast('Ligne d’historique supprimée.', 'success');
+      showToast('Ligne dâ€™historique supprimÃ©e.', 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -5134,7 +5138,7 @@ function runInvoiceOcr() {
       state.bootstrap.ocrReady = result.ocrReady;
       state.bootstrap.ocrConfig = result.ocrConfig;
       showPage('Rapprochement bancaire');
-      showToast(`Passage OCR terminé. ${result.ok} facture(s) lue(s), ${result.failed} en échec.`, 'success');
+      showToast(`Passage OCR terminÃ©. ${result.ok} facture(s) lue(s), ${result.failed} en Ã©chec.`, 'success');
     })
     .withFailureHandler(function(error) {
       showToast(error.message || error, 'error');
@@ -5168,7 +5172,7 @@ function installWorkbook() {
 prefillLoginUrl_();
 autoLogin_();
 
-// Pré-remplir et afficher la section config
+// PrÃ©-remplir et afficher la section config
 const apiInput = document.getElementById('api-url-input');
 const setup = document.getElementById('login-setup');
 const configToggleBtn = document.getElementById('config-toggle-btn');
@@ -5217,8 +5221,8 @@ function renderPrevisionnel() {
           </div>
         </div>
         ${state.selectedEntite !== 'TOUTES' ? `<div class="forecast-add-grid">
-          <div class="field"><label>Catégorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-catégorie</label><input id="forecast-add-subcategory" placeholder="Ex. AXA"></div>
+          <div class="field"><label>CatÃ©gorie</label><input id="forecast-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="forecast-add-subcategory" placeholder="Ex. AXA"></div>
           <div class="field"><label>Sens</label><select id="forecast-add-sense"><option value="Decaissement">Decaissement</option><option value="Encaissement">Encaissement</option></select></div>
           <div class="field"><label>Mois</label><select id="forecast-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
@@ -5234,8 +5238,8 @@ function renderPrevisionnel() {
           <div class="field"><label>Prevision_id</label><input id="prev-id" placeholder="Laisser vide pour creation"></div>
           <div class="field"><label>Entite</label><select id="prev-entite">${entites.map(function(e){ return `<option value="${esc(e)}">${esc(e)}</option>`; }).join('')}</select></div>
           <div class="field"><label>Compte bancaire</label><select id="prev-compte"><option value="">Tous / non specifie</option>${comptes.map(function(c){ return `<option value="${esc(c.Compte_id)}">${esc(c.Entite)} - ${esc(c.Nom_compte)}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Catégorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
-          <div class="field"><label>Sous-catégorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
+          <div class="field"><label>CatÃ©gorie</label><select id="prev-categorie">${categories.map(function(c){ return `<option value="${esc(c)}">${esc(frLabel(c))}</option>`; }).join('')}</select></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="prev-sous" placeholder="Ex. : Blain ou EDF"></div>
           <div class="field"><label>Date prevue</label><input id="prev-date" type="date"></div>
           <div class="field"><label>Periode</label><select id="prev-periode"><option value="Mensuel">Mensuel</option><option value="Trimestriel">Trimestriel</option><option value="Semestriel">Semestriel</option><option value="Annuel">Annuel</option></select></div>
           <div class="field"><label>Frequence</label><select id="prev-frequence"><option value="Mensuelle">Mensuelle</option><option value="Trimestrielle">Trimestrielle</option><option value="Semestrielle">Semestrielle</option><option value="Annuelle">Annuelle</option><option value="Ponctuelle">Ponctuelle</option></select></div>
@@ -5706,11 +5710,11 @@ function renderBudget() {
           <div class="section-title">
             <div>
               <h3>Budget annuel</h3>
-              <p>Le module Budget a besoin du backend Apps Script à jour pour charger ses données.</p>
+              <p>Le module Budget a besoin du backend Apps Script Ã  jour pour charger ses donnÃ©es.</p>
             </div>
           </div>
           ${renderAnnualToolbar_()}
-          <div class="empty">Déploie <code>Code.gs</code> pour afficher le budget de l'entité sélectionnée.</div>
+          <div class="empty">DÃ©ploie <code>Code.gs</code> pour afficher le budget de l'entitÃ© sÃ©lectionnÃ©e.</div>
         </div>
       </div>`;
     return;
@@ -5720,8 +5724,8 @@ function renderBudget() {
   const headerLabel = view === 'encaissements'
     ? 'Budget encaissements'
     : view === 'decaissements'
-      ? 'Budget décaissements'
-      : 'Budget de trésorerie global';
+      ? 'Budget dÃ©caissements'
+      : 'Budget de trÃ©sorerie global';
   const totals = budget.totals || {};
   const plannedTotal = view === 'encaissements'
     ? (totals.budgetEncaissements || 0)
@@ -5741,16 +5745,16 @@ function renderBudget() {
           <div>
             <h3>${headerLabel}</h3>
             <p>${view === 'global'
-              ? 'Vue globale mensuelle de trésorerie par entité.'
-              : 'Les catégories et sous-catégories restent rangées sous Encaissements ou Décaissements selon leur sens.'}</p>
+              ? 'Vue globale mensuelle de trÃ©sorerie par entitÃ©.'
+              : 'Les catÃ©gories et sous-catÃ©gories restent rangÃ©es sous Encaissements ou DÃ©caissements selon leur sens.'}</p>
           </div>
         </div>
         ${renderAnnualToolbar_()}
-        ${state.selectedEntite === 'TOUTES' && view !== 'global' ? `<div class="hint" style="margin-top:10px">Le budget consolidé est en lecture seule. Sélectionne une entité pour saisir, ajouter ou supprimer des lignes.</div>` : ''}
+        ${state.selectedEntite === 'TOUTES' && view !== 'global' ? `<div class="hint" style="margin-top:10px">Le budget consolidÃ© est en lecture seule. SÃ©lectionne une entitÃ© pour saisir, ajouter ou supprimer des lignes.</div>` : ''}
         ${state.selectedEntite !== 'TOUTES' && view !== 'global' ? `<div class="forecast-add-grid" style="margin-top:10px">
-          <div class="field"><label>Catégorie</label><input id="budget-add-category" placeholder="Ex. Assurances"></div>
-          <div class="field"><label>Sous-catégorie</label><input id="budget-add-subcategory" placeholder="Ex. AXA"></div>
-          <div class="field"><label>Sous-sous-catégorie</label><input id="budget-add-detail" placeholder="Optionnel"></div>
+          <div class="field"><label>CatÃ©gorie</label><input id="budget-add-category" placeholder="Ex. Assurances"></div>
+          <div class="field"><label>Sous-catÃ©gorie</label><input id="budget-add-subcategory" placeholder="Ex. AXA"></div>
+          <div class="field"><label>Sous-sous-catÃ©gorie</label><input id="budget-add-detail" placeholder="Optionnel"></div>
           <div class="field"><label>Mois</label><select id="budget-add-month">${forecastMonthLabels_().map(function(label, index) {
             return `<option value="${index + 1}">${label}</option>`;
           }).join('')}</select></div>
@@ -5759,15 +5763,15 @@ function renderBudget() {
         </div>` : ''}
       </div>
 
-      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgété' : 'Total annuel budgété'}</div></div>
-      <div class="card kpi"><div class="label">Réalisé</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final réalisé' : 'Total annuel réalisé'}</div></div>
-      <div class="card kpi"><div class="label">Écart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">Réalisé moins budget</div></div>
+      <div class="card kpi"><div class="label">Budget</div><div class="value">${euro(plannedTotal)}</div><div class="hint">${view === 'global' ? 'Solde final budgÃ©tÃ©' : 'Total annuel budgÃ©tÃ©'}</div></div>
+      <div class="card kpi"><div class="label">RÃ©alisÃ©</div><div class="value">${euro(actualTotal)}</div><div class="hint">${view === 'global' ? 'Solde final rÃ©alisÃ©' : 'Total annuel rÃ©alisÃ©'}</div></div>
+      <div class="card kpi"><div class="label">Ã‰cart</div><div class="value">${euro(actualTotal - plannedTotal)}</div><div class="hint">RÃ©alisÃ© moins budget</div></div>
 
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>Graphe annuel budget vs réalisé</h3>
-            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trésorerie global avec la trésorerie réelle.' : 'Comparaison mensuelle du budget avec le réalisé.'}</p>
+            <h3>Graphe annuel budget vs rÃ©alisÃ©</h3>
+            <p>${view === 'global' ? 'Comparaison mensuelle du budget de trÃ©sorerie global avec la trÃ©sorerie rÃ©elle.' : 'Comparaison mensuelle du budget avec le rÃ©alisÃ©.'}</p>
           </div>
         </div>
         ${renderForecastGroupedBarChart_(model)}
@@ -5776,8 +5780,8 @@ function renderBudget() {
       <div class="card panel-full">
         <div class="section-title">
           <div>
-            <h3>${view === 'global' ? 'Tableau du budget de trésorerie global' : 'Tableau annuel du budget'}</h3>
-            <p>${view === 'global' ? 'Solde initial, Total Encaissements, Total Décaissements, Variation nette et Solde final.' : 'Saisie manuelle par ligne, avec total mensuel et pourcentage de réalisation.'}</p>
+            <h3>${view === 'global' ? 'Tableau du budget de trÃ©sorerie global' : 'Tableau annuel du budget'}</h3>
+            <p>${view === 'global' ? 'Solde initial, Total Encaissements, Total DÃ©caissements, Variation nette et Solde final.' : 'Saisie manuelle par ligne, avec total mensuel et pourcentage de rÃ©alisation.'}</p>
           </div>
         </div>
         ${view === 'global' ? renderAnnualPivotTable_(model.rows) : renderBudgetPlanningTable_(model)}
