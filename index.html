@@ -289,6 +289,12 @@ body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(1
             <option value="GROUPE ONSEN">GROUPE ONSEN</option>
           </select>
         </div>
+        <div>
+          <label style="font-size:12px; color:#697b90; font-weight:700; display:block; margin-bottom:6px;">Compte affichÃ©</label>
+          <select id="selectedCompte" onchange="changeCompteGlobal()" style="padding:8px 12px; border:1px solid #d8e0ea; border-radius:8px; font-weight:700; background:#fff; cursor:pointer; min-width:260px;">
+            <option value="">Tous les comptes</option>
+          </select>
+        </div>
         <div class="title" style="flex:1;">
           <h1 id="pageTitle">Accueil</h1>
           <div id="periodToolbar"></div>
@@ -367,6 +373,7 @@ function normalizeBackendUrl_(url) {
 function annualPilotageCacheKey_() {
   return [
     state.selectedEntite || 'TOUTES',
+    state.selectedCompteId || '',
     state.annualSelectedYear || new Date().getFullYear(),
     currentDateRangeKey_()
   ].join('|');
@@ -583,6 +590,7 @@ function loadAnnualPilotageData_(forceRefresh) {
       .withFailureHandler(reject)
       .getAnnualPilotageData({
         entite: state.selectedEntite,
+        compteId: state.selectedCompteId || '',
         year: state.annualSelectedYear,
         dateStart: currentDateRangePayload_().dateStart || '',
         dateEnd: currentDateRangePayload_().dateEnd || ''
@@ -809,6 +817,7 @@ const state = {
   bootstrap: null,
   currentPage: 'Accueil',
   selectedEntite: 'TOUTES',
+  selectedCompteId: '',
   tresorerieView: 'overview',
   rapprochementView: 'a_verifier',
   annualSelectedYear: new Date().getFullYear(),
@@ -907,6 +916,7 @@ function init() {
         showToast('Erreur renderNav: ' + e.message, 'error');
       }
       try {
+        syncGlobalCompteSelect_();
         renderPeriodToolbar_();
         renderCurrentPage();
         console.log('renderCurrentPage() succeeded');
@@ -1108,11 +1118,15 @@ function renderPageErrorState_(page, error) {
 }
 
 function currentDataCacheKey_(entite) {
-  return [String(entite || state.selectedEntite || 'TOUTES'), currentDateRangeKey_()].join('|');
+  return [
+    String(entite || state.selectedEntite || 'TOUTES'),
+    String(state.selectedCompteId || ''),
+    currentDateRangeKey_()
+  ].join('|');
 }
 
 function reloadSelectionData_(forceAnnualRefresh) {
-  const payload = Object.assign({ entite: state.selectedEntite }, currentDateRangePayload_());
+  const payload = Object.assign({ entite: state.selectedEntite, compteId: state.selectedCompteId || '' }, currentDateRangePayload_());
   return new Promise(function(resolve, reject) {
     google.script.run
       .withSuccessHandler(function(data) {
@@ -1120,6 +1134,7 @@ function reloadSelectionData_(forceAnnualRefresh) {
         state.dataCache[cacheKey] = data;
         state.cacheTimestamp[cacheKey] = Date.now();
         updateStateWithData_(data);
+        syncGlobalCompteSelect_();
         state.movementCacheKey = '';
         loadAnnualIfNeeded_(!!forceAnnualRefresh).then(function() {
           renderPeriodToolbar_();
@@ -1176,6 +1191,31 @@ function resetCustomPeriod() {
   });
 }
 
+function renderGlobalCompteOptions_() {
+  const comptes = ((state.bootstrap || {}).config || {}).comptes || [];
+  const selectedEntite = state.selectedEntite || 'TOUTES';
+  const filtered = comptes.filter(function(compte) {
+    return selectedEntite === 'TOUTES' || String(compte.Entite || '').trim() === selectedEntite;
+  });
+  const defaultLabel = selectedEntite === 'TOUTES' ? 'Tous les comptes' : 'Tous les comptes de l’entité';
+  const options = [`<option value="">${esc(defaultLabel)}</option>`];
+  filtered.forEach(function(compte) {
+    const compteId = String(compte.Compte_id || '').trim();
+    if (!compteId) return;
+    const label = selectedEntite === 'TOUTES'
+      ? [compte.Entite, compte.Nom_compte].filter(Boolean).join(' - ')
+      : (compte.Nom_compte || compte.Compte_id || '');
+    options.push(`<option value="${esc(compteId)}"${state.selectedCompteId === compteId ? ' selected' : ''}>${esc(label)}</option>`);
+  });
+  return options.join('');
+}
+
+function syncGlobalCompteSelect_() {
+  const select = document.getElementById('selectedCompte');
+  if (!select) return;
+  select.innerHTML = renderGlobalCompteOptions_();
+}
+
 function changeEntite() {
   // Récupère l'entité sélectionnée
   const select = document.getElementById('selectedEntite');
@@ -1186,6 +1226,8 @@ function changeEntite() {
 
   // Changer l'entité
   state.selectedEntite = newEntite;
+  state.selectedCompteId = '';
+  state.movementFilters.compteId = '';
   state.movementCacheKey = '';
 
   // Vérifier si les données sont en cache et non expirées
@@ -1196,6 +1238,7 @@ function changeEntite() {
     // Utiliser le cache
     const cachedData = state.dataCache[cacheKey];
     updateStateWithData_(cachedData);
+    syncGlobalCompteSelect_();
     loadAnnualIfNeeded_(false).then(function() {
       renderCurrentPage();
       showPage(state.currentPage);
@@ -1214,6 +1257,7 @@ function changeEntite() {
 
       // Mettre à jour l'état
       updateStateWithData_(data);
+      syncGlobalCompteSelect_();
 
       // Actualiser l'affichage
       state.movementCacheKey = '';
@@ -1227,7 +1271,20 @@ function changeEntite() {
     .withFailureHandler(function(error) {
       showToast('Erreur lors du chargement de l\'entite: ' + error.message, 'error');
     })
-    .getDataForEntite(Object.assign({ entite: newEntite }, currentDateRangePayload_()));
+    .getDataForEntite(Object.assign({ entite: newEntite, compteId: '' }, currentDateRangePayload_()));
+}
+
+function changeCompteGlobal() {
+  const select = document.getElementById('selectedCompte');
+  const newCompteId = select ? String(select.value || '').trim() : '';
+  if (newCompteId === String(state.selectedCompteId || '')) return;
+  state.selectedCompteId = newCompteId;
+  state.movementFilters.compteId = newCompteId;
+  state.movementCacheKey = '';
+  state.annualPilotageCache = {};
+  reloadSelectionData_(true).catch(function(error) {
+    showToast(error.message || error, 'error');
+  });
 }
 
 function updateStateWithData_(data) {
@@ -2849,7 +2906,11 @@ function renderMovementsJournal_(rows, total, options) {
       return `<option value="${esc(value)}"${String(selected || '') === String(value || '') ? ' selected' : ''}>${esc(value)}</option>`;
     }).join('');
   };
-  const compteOptions = '<option value="">Tous</option>' + (options.comptes || []).map(function(compte) {
+  const compteLocked = !!state.selectedCompteId;
+  const comptesForFilter = compteLocked
+    ? (options.comptes || []).filter(function(compte) { return String(compte.Compte_id || '') === String(state.selectedCompteId || ''); })
+    : (options.comptes || []);
+  const compteOptions = '<option value="">' + esc(compteLocked ? 'Compte sélectionné' : 'Tous') + '</option>' + comptesForFilter.map(function(compte) {
     const value = compte.Compte_id || '';
     const label = [compte.Nom_compte, compte.Banque].filter(Boolean).join(' - ') || value;
     return `<option value="${esc(value)}"${state.movementFilters.compteId === value ? ' selected' : ''}>${esc(label)}</option>`;
@@ -2858,7 +2919,7 @@ function renderMovementsJournal_(rows, total, options) {
     <div class="form-grid" style="margin-bottom:12px">
       <div class="field"><label>Mois</label><select onchange="updateMovementFilter('month', this.value)">${monthOptions}</select></div>
       <div class="field"><label>Année</label><select onchange="updateMovementFilter('year', this.value)">${yearOptions.join('')}</select></div>
-      <div class="field"><label>Compte</label><select onchange="updateMovementFilter('compteId', this.value)">${compteOptions}</select></div>
+      <div class="field"><label>Compte</label><select onchange="updateMovementFilter('compteId', this.value)"${compteLocked ? ' disabled' : ''}>${compteOptions}</select></div>
       <div class="field"><label>Catégorie</label><select onchange="updateMovementFilter('categorie', this.value)">${selectOptions(options.categories, state.movementFilters.categorie)}</select></div>
       <div class="field"><label>Sous-catégorie</label><select onchange="updateMovementFilter('sousCategorie', this.value)">${selectOptions(options.subCategories, state.movementFilters.sousCategorie)}</select></div>
       <div class="field"><label>Site / magasin</label><select onchange="updateMovementFilter('site', this.value)">${selectOptions(options.sites, state.movementFilters.site)}</select></div>
@@ -5049,6 +5110,7 @@ function deleteImportHistoryEntry(importId) {
     .deleteImportHistoryEntry({
       importId: importId,
       entite: state.selectedEntite || 'TOUTES',
+      compteId: state.selectedCompteId || '',
       dateStart: (state.customPeriod && state.customPeriod.active) ? state.customPeriod.start : '',
       dateEnd: (state.customPeriod && state.customPeriod.active) ? state.customPeriod.end : ''
     });
